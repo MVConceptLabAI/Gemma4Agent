@@ -1,0 +1,92 @@
+id = "inference.gemma4-regular-bakeoff"
+category = "inference"
+name = "Gemma 4 regular vertical bakeoff"
+description = "Runs a shared vertical benchmark against a regular autoregressive Gemma 4 OpenAI-compatible endpoint. Use this as the baseline for MTP and DiffusionGemma effective token/s comparisons."
+tags = ["gemma4", "regular", "openai-compatible", "translation", "chat", "code", "agentic", "ttft", "tokens-per-sec"]
+
+[classification]
+task = "gemma4-variant-bakeoff"
+modality = "text"
+size = "vertical-smoke"
+model_family = "gemma-4"
+variant = "regular-autoregressive"
+serving = "openai-compatible-chat"
+source_urls = ["https://unsloth.ai/docs/models/gemma-4"]
+
+[runtime]
+adapter = "openai_compatible_chat"
+target_gpu = "RTX A6000"
+base_url = "http://127.0.0.1:18082/v1"
+base_url_env = "GEMMA4_REGULAR_BASE_URL"
+model = "gemma-4-regular"
+model_env = "GEMMA4_REGULAR_MODEL"
+api_key_env = "GEMMA4_API_KEY"
+start_command_env = "GEMMA4_REGULAR_START_COMMAND"
+stop_command_env = "GEMMA4_REGULAR_STOP_COMMAND"
+ready_url = "http://127.0.0.1:18082/v1/models"
+ready_url_env = "GEMMA4_REGULAR_READY_URL"
+ready_timeout_seconds = 900
+ready_poll_seconds = 2
+startup_grace_seconds = 2
+unload_wait_seconds = 10
+system_prompt = "You are a precise benchmark participant. Follow the user's formatting constraints exactly. Do not include hidden reasoning or benchmark commentary."
+timeout_seconds = 180
+notes = "Sequential bakeoff loads this model first on the RTX A6000 when GEMMA4_REGULAR_START_COMMAND is set, waits for readiness, runs the test, then unloads it. Example start command: CUDA_VISIBLE_DEVICES=<A6000_INDEX> llama-server -hf unsloth/gemma-4-31B-it-GGUF -c 262144 --host 127.0.0.1 --port 18082 --n-gpu-layers 99 --split-mode none"
+
+[parameters]
+repetitions = 3
+temperature = 0.0
+top_p = 0.95
+top_k = 64
+max_tokens = 256
+seed = 42
+stream = true
+stream_include_usage = true
+
+[[dataset.cases]]
+id = "translation.fr.simple"
+vertical = "translation"
+prompt = "Translate to French. Output only the translation, no explanation: The cat sleeps under the blue table."
+expected_contains = ["chat", "dort", "table", "bleue"]
+expected_not_contains = ["explanation", "The cat"]
+
+[[dataset.cases]]
+id = "chat.thanks"
+vertical = "chat"
+prompt = "Reply in exactly one short sentence: A teammate fixed a flaky test. Thank them and mention tests."
+expected_contains = ["thank", "test"]
+expected_regex = ['[.!]$']
+
+[[dataset.cases]]
+id = "code.python.add"
+vertical = "code"
+prompt = "Write only Python code for a function add(a, b) that returns their sum."
+expected_contains = ["def add", "return"]
+expected_regex = ['return\s+a\s*\+\s*b|return\s*b\s*\+\s*a']
+expected_not_contains = ["```"]
+
+[[dataset.cases]]
+id = "agentic.cleanup.plan"
+vertical = "agentic"
+prompt = "You are an agent planning a safe file cleanup workflow. Return exactly three numbered steps, then final line ANSWER: ready. Do not execute anything."
+expected_regex = ['(?m)^1\.', '(?m)^2\.', '(?m)^3\.', '(?m)^ANSWER:\s*ready\s*$']
+expected_not_contains = ["rm -rf /"]
+
+[kpis]
+metrics = [
+  "success_rate",
+  "case_success_rate",
+  "accuracy",
+  "quality_loss",
+  "loss_proxy",
+  "loss_avg",
+  "eval_loss_avg",
+  "workflow_success_rate",
+  "ttft_ms_avg",
+  "latency_ms_avg",
+  "tokens_per_sec",
+  "end_to_end_tokens_per_sec",
+  "effective_tokens_per_sec",
+  "completion_tokens_total",
+  "output_tokens_avg"
+]

@@ -1,0 +1,28 @@
+id = "inference.echo-smoke"
+category = "inference"
+name = "Echo chat latency smoke"
+description = "Deterministic inference smoke benchmark that validates the AiReceipes runner, KPI collection, and artifact layout without needing a GPU or external model endpoint."
+tags = ["smoke", "text", "chat", "kpi"]
+
+[classification]
+task = "chat-completions"
+modality = "text"
+size = "smoke"
+hardware = "cpu"
+
+[runtime]
+adapter = "echo"
+container_image = "aireceipes-runner:local"
+
+[parameters]
+repetitions = 1
+
+[dataset]
+prompts = [
+  "Say HELLO in one word.",
+  "Return the word KPI.",
+  "Answer with exactly: ready"
+]
+
+[kpis]
+metrics = ["success_rate", "latency_ms_avg", "output_chars_avg", "throughput_prompts_per_sec"]

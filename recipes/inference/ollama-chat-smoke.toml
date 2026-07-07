@@ -1,0 +1,54 @@
+id = "inference.ollama-chat-smoke"
+category = "inference"
+name = "Ollama/OpenAI-compatible chat smoke"
+description = "Runs a tiny chat-completions benchmark against a local OpenAI-compatible endpoint such as Ollama, llama.cpp server, or vLLM. Defaults target Ollama on localhost with gemma4:latest."
+tags = ["smoke", "text", "chat", "openai-compatible", "ollama"]
+
+[classification]
+task = "chat-completions"
+modality = "text"
+size = "smoke"
+hardware = "local"
+
+[runtime]
+adapter = "openai_compatible_chat"
+base_url = "http://localhost:11434/v1"
+base_url_env = "AIRECEIPES_OPENAI_BASE_URL"
+model = "gemma4:latest"
+model_env = "AIRECEIPES_OPENAI_MODEL"
+api_key_env = "AIRECEIPES_OPENAI_API_KEY"
+system_prompt = "You are benchmarking an AI inference endpoint. Answer exactly and briefly."
+timeout_seconds = 120
+
+[parameters]
+temperature = 0.0
+max_tokens = 64
+
+[dataset]
+[[dataset.cases]]
+id = "readiness_exact"
+vertical = "inference"
+prompt = "Reply with exactly: READY"
+expected_exact = "READY"
+
+[[dataset.cases]]
+id = "kpi_contains_latency"
+vertical = "inference"
+prompt = "Name one KPI used for LLM inference benchmarks."
+expected_contains = "latency"
+
+[kpis]
+metrics = [
+  "success_rate",
+  "case_success_rate",
+  "accuracy",
+  "quality_loss",
+  "loss_proxy",
+  "latency_ms_avg",
+  "output_chars_avg",
+  "completion_tokens_total",
+  "output_tokens_avg",
+  "end_to_end_tokens_per_sec",
+  "effective_tokens_per_sec",
+  "throughput_prompts_per_sec"
+]

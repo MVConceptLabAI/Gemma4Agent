@@ -1,0 +1,13 @@
+services:
+  runner:
+    build: .
+    image: aireceipes-runner:local
+    working_dir: /app
+    environment:
+      AIRECEIPES_OPENAI_BASE_URL: ${AIRECEIPES_OPENAI_BASE_URL:-http://host.docker.internal:11434/v1}
+      AIRECEIPES_OPENAI_MODEL: ${AIRECEIPES_OPENAI_MODEL:-gemma4:latest}
+      AIRECEIPES_OPENAI_API_KEY: ${AIRECEIPES_OPENAI_API_KEY:-}
+    volumes:
+      - ./runs:/app/runs
+    entrypoint: ["aireceipes"]
+    command: ["run", "inference.echo-smoke", "--output-dir", "runs"]

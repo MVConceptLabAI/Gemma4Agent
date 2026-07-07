@@ -1,0 +1,32 @@
+{
+  "name": "aireceipes-benchmark-router",
+  "description": "Expose AiReceipes hardware benchmark launch and route planning tools to agentic workflows.",
+  "command": "python",
+  "args": ["-m", "aireceipes.mcp_server"],
+  "cwd": "${AIRECEIPES_ROOT}",
+  "tools": [
+    "aireceipes.detect_hardware",
+    "aireceipes.launch_benchmark",
+    "aireceipes.plan_route"
+  ],
+  "example_calls": [
+    {
+      "tool": "aireceipes.launch_benchmark",
+      "arguments": {
+        "hardware": "auto",
+        "model": "gemma-4-12b",
+        "workflow": "agentic",
+        "dry_run": true
+      }
+    },
+    {
+      "tool": "aireceipes.plan_route",
+      "arguments": {
+        "comparison": ["runs/latest/comparison.json"],
+        "workflow": "agentic",
+        "strategy": "balanced",
+        "min_accuracy": 0.8
+      }
+    }
+  ]
+}
