@@ -1,204 +1,144 @@
-# Gemma4Agent
+# Gemma4Agent RouteZero
 
-What if Gemma 4 could be used for all kind of jobs?
+Hybrid Token-Efficient Routing Agent for AMD Developer Hackathon ACT II — Track 1.
 
-This repository includes the AiReceipes benchmark router skill and MCP server for Gemma 4 / MTP / DiffusionGemma agent workflows. The MCP config is in `mcp/aireceipes-benchmark-router.json`; the reusable agent skill is in `skills/aireceipes-benchmark-router/SKILL.md`; and the dependency-free JSONL MCP shim runs with `python -m aireceipes.mcp_server`.
+Gemma4Agent RouteZero is packaged for the official Track 1 validation flow: the container reads `/input/tasks.json`, answers every task, and writes `/output/results.json` before exiting with code `0`.
 
-## AiReceipes benchmark package
+The default submission path is deliberately token-efficient:
 
-Container-friendly, classified AI benchmark recipes for inference, finetuning, and agentic workflows.
+- deterministic local solvers handle simple arithmetic and sentiment tasks with zero remote tokens;
+- low-confidence or knowledge-heavy tasks fall back to the sponsor-provided Fireworks-compatible endpoint;
+- fallback calls are restricted to `ALLOWED_MODELS` and always use `FIREWORKS_BASE_URL`;
+- the optional Gemma 4 / MTP / DiffusionGemma benchmark-router MCP technology from `feat/benchmark-router-mcp` remains included, but only as off-contest tooling.
 
-The MVP includes runnable inference recipes:
+## Competition container contract
 
-- `inference.echo-smoke` — deterministic text/chat smoke benchmark that proves recipe discovery, command-line execution, KPI collection, and run artifact generation.
-- `inference.ollama-chat-smoke` — real OpenAI-compatible `/v1/chat/completions` smoke benchmark for Ollama, llama.cpp server, vLLM, or similar local endpoints. Defaults target `http://localhost:11434/v1` with `gemma4:latest`.
-- `inference.gemma4-regular-bakeoff` — regular Gemma 4 vertical benchmark baseline.
-- `inference.gemma4-mtp-bakeoff` — same prompts against a Gemma 4 server launched with MTP / draft multi-token prediction.
-- `inference.diffusiongemma-bakeoff` — same prompts against a DiffusionGemma endpoint.
-
-The project keeps the original name spelling from `IDEA.md`: **AiReceipes**.
-
-## Quick start
+The Docker image defaults to the Track 1 agent:
 
 ```bash
-# From F:/hemes/AiReceipes
-uv run --with pytest python -m pytest -q
+docker build --platform linux/amd64 -t gemma4agent-track1:local .
+docker run --rm \
+  -v "$PWD/samples/track1:/input:ro" \
+  -v "$PWD/output:/output" \
+  -e FIREWORKS_API_KEY="$FIREWORKS_API_KEY" \
+  -e FIREWORKS_BASE_URL="$FIREWORKS_BASE_URL" \
+  -e ALLOWED_MODELS="$ALLOWED_MODELS" \
+  gemma4agent-track1:local
+```
+
+Expected output:
+
+```text
+/output/results.json
+```
+
+`results.json` is a JSON array with one object per input task:
+
+```json
+[
+  {"task_id": "math-1", "answer": "42"}
+]
+```
+
+A non-scored `/output/route_audit.json` is also written for transparency during local smoke tests. The official scorer should only need `/output/results.json`.
+
+## Required environment variables
+
+| Variable | Purpose |
+|---|---|
+| `FIREWORKS_API_KEY` | Bearer token for fallback model calls. |
+| `FIREWORKS_BASE_URL` | Base URL for all fallback calls, for example `https://api.fireworks.ai/inference/v1`. |
+| `ALLOWED_MODELS` | Comma-separated model allowlist supplied by the harness. The router prefers an allowed Gemma model when present, otherwise uses the first allowed model. |
+
+If these are absent, local smoke tests still write a valid result for every task; unknown tasks receive `I don't know.` instead of making any remote call. In official validation, the harness is expected to provide the variables.
+
+## Local validation commands
+
+```bash
+# Unit tests
+UV_LINK_MODE=copy uv run pytest -q
+
+# Docker smoke without secrets: local solvers answer math/sentiment and fallback-safe unknown tasks.
+rm -rf output && mkdir -p output
+docker build --platform linux/amd64 -t gemma4agent-track1:local .
+docker run --rm \
+  -v "$PWD/samples/track1:/input:ro" \
+  -v "$PWD/output:/output" \
+  gemma4agent-track1:local
+python -m json.tool output/results.json
+```
+
+With Fireworks credentials:
+
+```bash
+docker run --rm \
+  -v "$PWD/samples/track1:/input:ro" \
+  -v "$PWD/output:/output" \
+  -e FIREWORKS_API_KEY="$FIREWORKS_API_KEY" \
+  -e FIREWORKS_BASE_URL="$FIREWORKS_BASE_URL" \
+  -e ALLOWED_MODELS="$ALLOWED_MODELS" \
+  gemma4agent-track1:local
+```
+
+## Docker Compose
+
+The `competition` service is the submission path:
+
+```bash
+docker compose build competition
+docker compose run --rm competition
+```
+
+The `benchmark` service is optional and off contest:
+
+```bash
+docker compose run --rm benchmark list
+```
+
+## Off-contest option: local Gemma 4 benchmark and route MCP
+
+This repository keeps the installation and local benchmark technology as an optional add-on, not as the default validation flow.
+
+Included optional components:
+
+- CLI: `aireceipes list`, `aireceipes run`, `aireceipes bakeoff`, `aireceipes route`.
+- Benchmark recipes for regular Gemma 4, Gemma 4 MTP, DiffusionGemma, Ollama/OpenAI-compatible smoke tests.
+- Matrix launcher: `scripts/run_gemma_matrix.py`.
+- Portable benchmark packaging: `scripts/package_portable_benchmark.py`.
+- MCP JSONL shim: `python -m aireceipes.mcp_server`.
+- MCP config: `mcp/aireceipes-benchmark-router.json`.
+- Reusable agent skill: `skills/aireceipes-benchmark-router/SKILL.md`.
+
+Install for off-contest local exploration:
+
+```bash
+uv sync --dev
 uv run aireceipes list
-uv run aireceipes show inference.echo-smoke
 uv run aireceipes run inference.echo-smoke --output-dir runs
-uv run aireceipes run inference.ollama-chat-smoke --output-dir runs --run-id local-chat
-```
-
-A run writes:
-
-```text
-runs/<timestamp>-inference.echo-smoke/metrics.json
-```
-
-`metrics.json` contains recipe metadata, success/error counts, per-prompt outputs, vertical breakdowns, and KPIs.
-
-## Gemma 4 / MTP / DiffusionGemma bakeoff
-
-The bakeoff recipes compare three variants on the same vertical tests:
-
-| Recipe | Endpoint env | Model env | Purpose |
-|---|---|---|---|
-| `inference.gemma4-regular-bakeoff` | `GEMMA4_REGULAR_BASE_URL` | `GEMMA4_REGULAR_MODEL` | Autoregressive baseline |
-| `inference.gemma4-mtp-bakeoff` | `GEMMA4_MTP_BASE_URL` | `GEMMA4_MTP_MODEL` | Gemma 4 with server-side MTP enabled |
-| `inference.diffusiongemma-bakeoff` | `DIFFUSIONGEMMA_BASE_URL` | `DIFFUSIONGEMMA_MODEL` | DiffusionGemma block-denoising variant |
-
-Example launch shapes:
-
-```bash
-# Regular Gemma 4 baseline, no MTP/speculative decoding.
-llama-server -hf unsloth/gemma-4-31B-it-GGUF -c 262144 --port 18082
-
-# Gemma 4 MTP. Start with --spec-draft-n-max 2, then sweep 1..6 on your hardware.
-# When using a non-default CUDA GPU, set the draft device too.
-llama-server -hf unsloth/gemma-4-31B-it-GGUF \
-  --device CUDA0 \
-  --spec-type draft-mtp \
-  --spec-draft-n-max 2 \
-  --spec-draft-device CUDA0 \
-  -c 262144 \
-  --port 18083
-
-# DiffusionGemma: prefer a vLLM build with DiffusionGemma support, or a compatible
-# specialized server exposing /v1/chat/completions with streaming enabled.
-```
-
-Run the full sequential bakeoff. The command loads one model, waits for readiness,
-runs the test, writes that model's `metrics.json`, unloads it, then moves to the
-next model. It finally writes `comparison.json` and `comparison.html` for the
-three-model comparison.
-
-```bash
-# First identify the RTX A6000 index.
-nvidia-smi --query-gpu=index,name --format=csv
-
-# Replace <A6000_INDEX> and model names/paths with your local setup.
-export GEMMA4_REGULAR_BASE_URL=http://127.0.0.1:18082/v1
-export GEMMA4_REGULAR_MODEL=gemma-4-regular
-export GEMMA4_REGULAR_START_COMMAND='CUDA_VISIBLE_DEVICES=<A6000_INDEX> llama-server -hf unsloth/gemma-4-31B-it-GGUF -c 262144 --host 127.0.0.1 --port 18082 --n-gpu-layers 99 --split-mode none'
-
-export GEMMA4_MTP_BASE_URL=http://127.0.0.1:18083/v1
-export GEMMA4_MTP_MODEL=gemma-4-mtp
-export GEMMA4_MTP_START_COMMAND='CUDA_VISIBLE_DEVICES=<A6000_INDEX> llama-server -hf unsloth/gemma-4-31B-it-GGUF --spec-type draft-mtp --spec-draft-n-max 2 -c 262144 --host 127.0.0.1 --port 18083 --n-gpu-layers 99 --split-mode none'
-
-export DIFFUSIONGEMMA_BASE_URL=http://127.0.0.1:18081/v1
-export DIFFUSIONGEMMA_MODEL=diffusiongemma-26B-A4B-it
-export DIFFUSIONGEMMA_START_COMMAND='CUDA_VISIBLE_DEVICES=<A6000_INDEX> llama-diffusion-gemma-server -m <DIFFUSIONGEMMA_GGUF> --host 127.0.0.1 --port 18081 -c 4096 -ngl 99 --device CUDA0 --split-mode none --flash-attn on --diffusion-steps 8 --diffusion-block-length 256'
-
-uv run aireceipes bakeoff --output-dir runs --run-id a6000-gemma-variant
-```
-
-The suite output layout is:
-
-```text
-runs/a6000-gemma-variant-gemma-variant-bakeoff/
-  01-inference.gemma4-regular-bakeoff/metrics.json
-  02-inference.gemma4-mtp-bakeoff/metrics.json
-  03-inference.diffusiongemma-bakeoff/metrics.json
-  comparison.json
-  comparison.html
-  *-lifecycle.log
-```
-
-If you already started the three endpoints yourself, skip load/unload and only
-collect/report results with:
-
-```bash
 uv run aireceipes bakeoff --no-lifecycle --output-dir runs --run-id already-running
 ```
 
-Each bakeoff recipe uses the same verticals: `translation`, `chat`, `code`, and `agentic`.
-The runner records:
+For the portable Gemma 4 / MTP / DiffusionGemma matrix and ZIP workflow, see [`PORTABLE_BENCHMARK.md`](PORTABLE_BENCHMARK.md). Model binaries, local `runs/`, virtual environments, caches, and GGUF files are intentionally excluded from Git and Docker context.
 
-- `ttft_ms_avg` from streaming time-to-first-token.
-- `tokens_per_sec` from completion tokens over decode time (`latency - TTFT` when TTFT is available).
-- `end_to_end_tokens_per_sec` from completion tokens over full request latency.
-- `accuracy` from simple case checks (`expected_contains`, `expected_regex`, etc.).
-- `workflow_success_rate` from `vertical = "agentic"` cases.
-- `quality_loss` / `loss_proxy` as `1 - accuracy` when the endpoint does not expose real loss.
-- `loss_avg` / `eval_loss_avg` when a server response includes those fields.
-- `effective_tokens_per_sec = end_to_end_tokens_per_sec * quality_factor`, where `quality_factor` is scored accuracy when checks exist.
+## Architecture
 
-`comparison.html` also includes exact model filenames extracted from the lifecycle start commands, prompt-level check summaries, sample outputs, and per-prompt effective token/s. This makes speed comparisons auditable: a model only gets high effective throughput when it is both fast and passes the prompt checks.
-
-For a portable package that can be moved to another GPU machine, see [`PORTABLE_BENCHMARK.md`](PORTABLE_BENCHMARK.md). The helper launchers are `scripts/run_gemma_bakeoff.sh` for the compact 3-model run and `scripts/run_gemma_matrix.py` for the expanded matrix: MTP draft n = 2/4/6, thinking/non-thinking, 32k/64k/128k/256k contexts, and 12B + 26B-A4B model paths when available. `scripts/package_portable_benchmark.py` creates a ZIP without local model binaries or virtualenvs.
-
-## Categories
-
-Recipes are classified by top-level category and metadata:
-
-- `inference` — model serving, completion quality/latency, throughput, smoke checks.
-- `finetuning` — dataset prep, training runs, adapters/checkpoints, eval after training.
-- `agentic` — tool-use agents, workflow success, step counts, cost/latency, task completion.
-
-## Recipe format
-
-Recipes are TOML files under `recipes/<category>/`.
-
-```toml
-id = "inference.echo-smoke"
-category = "inference"
-name = "Echo chat latency smoke"
-description = "Deterministic smoke benchmark."
-tags = ["smoke", "text", "chat"]
-
-[classification]
-task = "chat-completions"
-modality = "text"
-size = "smoke"
-
-[runtime]
-adapter = "echo"
-container_image = "aireceipes-runner:local"
-
-[parameters]
-repetitions = 1
-
-[dataset]
-prompts = ["Say HELLO in one word."]
-
-[kpis]
-metrics = ["success_rate", "latency_ms_avg", "output_chars_avg"]
+```text
+/input/tasks.json
+      |
+      v
+src/aireceipes/track1_agent.py
+      |-- classify task category
+      |-- local zero-token solvers for confident tasks
+      |-- Fireworks fallback through FIREWORKS_BASE_URL for uncertain tasks
+      v
+/output/results.json
 ```
 
-For scored vertical benchmarks, use `[[dataset.cases]]` instead of `dataset.prompts`:
+The benchmark-router MCP remains available for developers who want to generate route plans from local Gemma-family performance reports, but the competition image does not require local GGUF downloads or GPU servers to answer the official Track 1 input file.
 
-```toml
-[[dataset.cases]]
-id = "code.python.add"
-vertical = "code"
-prompt = "Write only Python code for a function add(a, b) that returns their sum."
-expected_contains = ["def add", "return"]
-expected_regex = ['return\s+a\s*\+\s*b|return\s*b\s*\+\s*a']
-```
+## Repository hygiene
 
-## Container usage
-
-```bash
-docker compose build
-docker compose run --rm runner list
-docker compose run --rm runner run inference.echo-smoke --output-dir runs
-
-# Real local model endpoint from Docker Desktop on Windows/macOS:
-docker compose run --rm runner run inference.ollama-chat-smoke --output-dir runs --run-id docker-local-chat
-```
-
-The compose service mounts `./runs` so KPI artifacts stay on the host. For Docker, the compose file defaults `AIRECEIPES_OPENAI_BASE_URL` to `http://host.docker.internal:11434/v1`; local non-container runs use the recipe default `http://localhost:11434/v1`.
-
-Override the target endpoint/model without editing the recipe:
-
-```bash
-AIRECEIPES_OPENAI_BASE_URL=http://localhost:11434/v1 \
-AIRECEIPES_OPENAI_MODEL=gemma4:latest \
-uv run aireceipes run inference.ollama-chat-smoke --output-dir runs
-```
-
-## Next adapters to add
-
-1. `finetune_lora` — run a small LoRA/QLoRA container recipe and collect training/eval KPIs.
-2. `agentic_task` — run a real tool-using agent scenario and collect success rate, turns, latency, and cost.
-3. `openai_compatible_batch` — run multi-prompt throughput sweeps with concurrency and token KPIs.
+- Branch for validation: `main`.
+- Default image platform: `linux/amd64`.
+- License: MIT.
+- Ignored artifacts: `.venv/`, `.pytest_cache/`, `__pycache__/`, `dist/`, `runs/`, `models/`, `*.gguf`, `.env`.

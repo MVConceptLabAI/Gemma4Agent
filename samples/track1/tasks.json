@@ -1,0 +1,14 @@
+[
+  {
+    "task_id": "math-1",
+    "prompt": "What is 17 + 25? Answer with only the number."
+  },
+  {
+    "task_id": "sentiment-1",
+    "prompt": "Classify the sentiment as positive, negative, or neutral: I love this fast benchmark."
+  },
+  {
+    "task_id": "fact-1",
+    "prompt": "Who wrote Pride and Prejudice?"
+  }
+]

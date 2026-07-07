@@ -1,13 +1,29 @@
 services:
-  runner:
+  competition:
     build: .
-    image: aireceipes-runner:local
+    image: gemma4agent-track1:local
+    platform: linux/amd64
     working_dir: /app
+    environment:
+      FIREWORKS_API_KEY: ${FIREWORKS_API_KEY:-}
+      FIREWORKS_BASE_URL: ${FIREWORKS_BASE_URL:-}
+      ALLOWED_MODELS: ${ALLOWED_MODELS:-}
+    volumes:
+      - ./samples/track1:/input:ro
+      - ./output:/output
+
+  # Off-contest optional tooling: local Gemma 4/MTP/DiffusionGemma benchmark
+  # recipes and benchmark-router MCP skill from feat/benchmark-router-mcp.
+  benchmark:
+    build: .
+    image: gemma4agent-track1:local
+    platform: linux/amd64
+    working_dir: /app
+    entrypoint: ["aireceipes"]
+    command: ["list"]
     environment:
       AIRECEIPES_OPENAI_BASE_URL: ${AIRECEIPES_OPENAI_BASE_URL:-http://host.docker.internal:11434/v1}
       AIRECEIPES_OPENAI_MODEL: ${AIRECEIPES_OPENAI_MODEL:-gemma4:latest}
       AIRECEIPES_OPENAI_API_KEY: ${AIRECEIPES_OPENAI_API_KEY:-}
     volumes:
       - ./runs:/app/runs
-    entrypoint: ["aireceipes"]
-    command: ["run", "inference.echo-smoke", "--output-dir", "runs"]
