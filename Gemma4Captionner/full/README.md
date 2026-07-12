@@ -86,30 +86,30 @@ python scripts/preflight.py --strict --docker-build --docker-run
 make submit-check
 ```
 
-Low-rate live run with Groq/OpenRouter first and Fireworks as fallback:
+Run with OpenRouter first and Fireworks as fallback:
 
 ```bash
-PROVIDER_ORDER=groq,fireworks,openrouter \
-DESCRIBE_PROVIDER_ORDER=groq,openrouter,fireworks \
-STYLE_PROVIDER_ORDER=openrouter,groq,fireworks \
+PROVIDER_ORDER=openrouter,fireworks \
+DESCRIBE_PROVIDER_ORDER=openrouter,fireworks \
+STYLE_PROVIDER_ORDER=openrouter,fireworks \
 MAX_CONCURRENCY=1 \
 NUM_FRAMES=5 \
 FRAME_MAX_EDGE=512 \
 INPUT_PATH=data/sample_tasks.json \
-OUTPUT_PATH=out/groq_results_final.json \
+OUTPUT_PATH=out/openrouter_results_final.json \
 python -m app.main
 
-python eval/self_check.py --results out/groq_results_final.json
-python eval/quality_audit.py --results out/groq_results_final.json
+python eval/self_check.py --results out/openrouter_results_final.json
+python eval/quality_audit.py --results out/openrouter_results_final.json
 python scripts/quality_gate.py --results out/demo_quality_results.json --scores eval/scores_quality_openrouter.json
 ```
 
 Best measured quality profile on the public sample:
 
 ```bash
-PROVIDER_ORDER=openrouter,groq,fireworks \
-DESCRIBE_PROVIDER_ORDER=openrouter,groq,fireworks \
-STYLE_PROVIDER_ORDER=openrouter,groq,fireworks \
+PROVIDER_ORDER=openrouter,fireworks \
+DESCRIBE_PROVIDER_ORDER=openrouter,fireworks \
+STYLE_PROVIDER_ORDER=openrouter,fireworks \
 MAX_CONCURRENCY=1 \
 NUM_FRAMES=8 \
 FRAME_MAX_EDGE=640 \
@@ -178,31 +178,27 @@ Copy `.env.example` to `.env` for local development. Do not commit real keys.
 | `QWEN_DIRECT_RETRY_MAX_DELAY_S` | `4` | Cap for direct-engine 429/transport retry backoff. |
 | `QWEN_DIRECT_RETRY_JITTER_CAP_S` | `0.35` | Maximum random jitter added to direct-engine retries. |
 | `QWEN_DIRECT_PROMPT_PROFILE` | `v1` | Select `strong_v2` for the opt-in short, conservative, strongly styled prompt ablation. |
-| `PROVIDER_ORDER` | `groq,fireworks,openrouter` | Default provider priority. |
+| `PROVIDER_ORDER` | `openrouter,fireworks` | Default provider priority. |
 | `DESCRIBE_PROVIDER_ORDER` | `PROVIDER_ORDER` | Provider priority for video understanding. |
 | `STYLE_PROVIDER_ORDER` | `PROVIDER_ORDER` | Provider priority for style caption writing. |
 | `VLM_MODEL` | `accounts/fireworks/models/qwen2p5-vl-7b-instruct` | Describe-stage VLM. |
 | `VLM_FALLBACK_MODELS` | empty | Comma-separated describe-stage fallback models. |
 | `DIRECT_VIDEO_MODEL` | empty | Optional dedicated Fireworks video/audio model deployment. |
 | `DIRECT_VIDEO_MAX_SECONDS` | `60` | Max seconds sent to the direct video/audio path. |
-| `GROQ_VISION_MODEL` | `meta-llama/llama-4-scout-17b-16e-instruct` | Groq vision fallback/priority model. |
 | `OPENROUTER_API_KEY` | empty | Enables OpenRouter fallback. |
 | `OPENROUTER_VLM_MODEL` | `qwen/qwen3-vl-8b-instruct` | OpenRouter describe-stage model. |
 | `DESCRIBE_MAX_TOKENS` | `700` | Token budget for rich scene-facts JSON. |
 | `STYLE_MODEL` | `accounts/fireworks/models/gemma-3-27b-it` | Style rewriter, Gemma bonus path. |
 | `STYLE_LORA` | empty | Optional deployed LoRA model id. |
 | `STYLE_FALLBACK_MODELS` | empty | Comma-separated style fallback models. |
-| `GROQ_STYLE_MODEL` | `llama-3.3-70b-versatile` | Groq style model. |
 | `OPENROUTER_STYLE_MODEL` | `qwen/qwen3-vl-8b-instruct` | OpenRouter style fallback. |
 | `STYLE_MAX_TOKENS` | `140` | Token budget for one styled caption. |
 | `EVIDENCE_LOCK_ENABLED` | `0` | Enables experimental candidate/repair pass against visual evidence. |
 | `STYLE_CANDIDATES` | `2` | Candidate count when evidence-lock mode is enabled. |
 | `STYLE_REPAIR_ENABLED` | `1` | Enables model/deterministic repair for thin evidence-lock captions. |
-| `JUDGE_PROVIDER_ORDER` | `fireworks,openrouter,groq` | Provider priority for local LLM-judge proxy. |
+| `JUDGE_PROVIDER_ORDER` | `fireworks,openrouter` | Provider priority for local LLM-judge proxy. |
 | `FIREWORKS_JUDGE_MODEL` | `accounts/fireworks/models/qwen3p7-plus` | Fireworks judge model when available. |
-| `GROQ_JUDGE_MODEL` | `meta-llama/llama-4-scout-17b-16e-instruct` | Groq judge fallback. |
 | `OPENROUTER_JUDGE_MODEL` | `qwen/qwen3-vl-8b-instruct` | OpenRouter judge fallback. |
-| `GROQ_API_KEY` | empty | Enables optional Whisper transcription. |
 | `NUM_FRAMES` | `8` | Target number of keyframes. |
 | `FRAME_MAX_EDGE` | `720` | Max frame edge before upload. |
 | `SCENE_DETECT_ENABLED` | `1` | Enable scene-change sampling before uniform fill. |

@@ -27,7 +27,7 @@ from dotenv import load_dotenv
 
 load_dotenv(ROOT / ".env")  # machine-provided keys; nothing is baked in the repo
 
-missing = [k for k in ("OPENROUTER_API_KEY", "GROQ_API_KEY", "FIREWORKS_API_KEY")
+missing = [k for k in ("OPENROUTER_API_KEY", "FIREWORKS_API_KEY")
            if not os.environ.get(k)]
 if missing:
     print(f"note: {', '.join(missing)} not set - the tester will degrade to whatever provider is available")

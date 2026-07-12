@@ -95,7 +95,6 @@ def _docker_contract_run(image: str) -> bool:
         "-e",
         "FIREWORKS_API_KEY=",
         "-e",
-        "GROQ_API_KEY=",
         "-e",
         "OPENROUTER_API_KEY=",
         image,
@@ -205,7 +204,6 @@ def main() -> int:
             "OUTPUT_PATH": degraded_out,
             "PER_TASK_TIMEOUT_S": "1",
             "FIREWORKS_API_KEY": "",
-            "GROQ_API_KEY": "",
             "OPENROUTER_API_KEY": "",
         },
     )
@@ -216,7 +214,6 @@ def main() -> int:
 
     docker_ok = _docker_daemon_available()
     fw_ok = _env_present("FIREWORKS_API_KEY")
-    groq_ok = _env_present("GROQ_API_KEY")
 
     if args.docker_build and docker_ok:
         image = os.environ.get("IMAGE", "gemma4-captioner:dev")
@@ -239,8 +236,6 @@ def main() -> int:
     for name, status, note in CHECKS:
         print(f"{status.upper():4} {name} - {note}")
 
-    if not groq_ok:
-        print("NOTE GROQ_API_KEY is optional; audio transcription will be skipped.")
     return 0 if ok else 1
 
 

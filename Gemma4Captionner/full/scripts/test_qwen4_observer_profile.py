@@ -14,14 +14,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-V36_PROFILE: list[tuple[str, str]] = [
+SUBMISSION_PROFILE: list[tuple[str, str]] = [
     ("PYTHONPATH", "/app"),
     ("CAPTION_ENGINE", "ensemble"),
     (
         "ENSEMBLE_OBSERVERS",
         "openai/gpt-5.5,google/gemini-3.1-pro-preview,anthropic/claude-opus-4.5",
     ),
-    ("ENSEMBLE_WRITER", "anthropic/claude-opus-4.5"),
+    ("ENSEMBLE_WRITER", "google/gemma-4-31b-it"),
     ("STYLE_EXEMPLARS", "1"),
     ("STRICT_GROUNDING", "0"),
     ("WRITER_TEMP", "0.5"),
@@ -30,16 +30,14 @@ V36_PROFILE: list[tuple[str, str]] = [
     ("MAX_CAPTION_CHARS", "1600"),
     ("OPENROUTER_VLM_MODEL", "qwen/qwen3-vl-235b-a22b-instruct"),
     ("OPENROUTER_STYLE_MODEL", "google/gemma-4-31b-it"),
-    ("PROVIDER_ORDER", "openrouter,groq,fireworks"),
-    ("STYLE_PROVIDER_ORDER", "openrouter,fireworks,groq"),
+    ("PROVIDER_ORDER", "openrouter,fireworks"),
+    ("STYLE_PROVIDER_ORDER", "openrouter,fireworks"),
     ("STYLE_MODEL", "accounts/fireworks/models/gpt-oss-120b"),
     ("STYLE_REASONING_EFFORT", "low"),
     ("STYLE_MAX_TOKENS", "1400"),
     ("DETERMINISTIC_FORMAL", "1"),
     ("NUM_FRAMES", "10"),
     ("FRAME_MAX_EDGE", "896"),
-    ("GROQ_MAX_IMAGES", "4"),
-    ("GROQ_FRAME_MAX_EDGE", "448"),
     ("HTTP_429_RETRIES", "5"),
     ("HTTP_429_MAX_WAIT_S", "45"),
     ("RETRY_AFTER_GIVEUP_S", "60"),
@@ -108,7 +106,7 @@ def test_w4_style_split_is_enabled() -> None:
 
 
 def test_no_other_v38_submission_config_drift() -> None:
-    expected = list(V36_PROFILE)
+    expected = list(SUBMISSION_PROFILE)
     observer_index = next(
         index for index, (key, _value) in enumerate(expected)
         if key == "ENSEMBLE_OBSERVERS"

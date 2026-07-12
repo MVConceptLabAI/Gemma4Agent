@@ -24,7 +24,6 @@ docker run --rm \
     -v "$(pwd)/${WORK}/out:/output" \
     -e PER_TASK_TIMEOUT_S=1 \
     -e FIREWORKS_API_KEY= \
-    -e GROQ_API_KEY= \
     "${PUBLIC_IMAGE}"
 
 python eval/self_check.py --results "${WORK}/out/results.json"

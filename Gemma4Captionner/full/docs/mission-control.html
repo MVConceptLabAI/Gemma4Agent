@@ -864,10 +864,10 @@
 python scripts/preflight.py --strict --docker-build --docker-run</pre>
           </div>
           <div class="command">
-            <header>Run Groq live <button class="copy" data-copy="PROVIDER_ORDER=groq,fireworks,openrouter MAX_CONCURRENCY=1 NUM_FRAMES=5 FRAME_MAX_EDGE=512 INPUT_PATH=data/sample_tasks.json OUTPUT_PATH=out/groq_results_final.json python -m app.main">Copier</button></header>
-            <pre>PROVIDER_ORDER=groq,fireworks,openrouter \
+            <header>Run OpenRouter + Fireworks <button class="copy" data-copy="PROVIDER_ORDER=openrouter,fireworks MAX_CONCURRENCY=1 NUM_FRAMES=5 FRAME_MAX_EDGE=512 INPUT_PATH=data/sample_tasks.json OUTPUT_PATH=out/openrouter_results_final.json python -m app.main">Copier</button></header>
+            <pre>PROVIDER_ORDER=openrouter,fireworks \
 MAX_CONCURRENCY=1 NUM_FRAMES=5 FRAME_MAX_EDGE=512 \
-INPUT_PATH=data/sample_tasks.json OUTPUT_PATH=out/groq_results_final.json \
+INPUT_PATH=data/sample_tasks.json OUTPUT_PATH=out/openrouter_results_final.json \
 python -m app.main</pre>
           </div>
           <div class="command">
@@ -888,7 +888,7 @@ PUBLIC_IMAGE=ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v2 make v
         </div>
         <div class="section-body cards">
           <article class="card"><h3>FIREWORKS_API_KEY</h3><p>Necessaire pour vraie comprehension VLM, styling Gemma et local judge.</p></article>
-          <article class="card"><h3>GROQ_API_KEY</h3><p>Fournie localement: pont live valide, utile aussi pour Whisper audio.</p></article>
+          <article class="card"><h3>OPENROUTER_API_KEY</h3><p>Cle principale pour la comprehension visuelle et les captions de la soumission.</p></article>
           <article class="card"><h3>DIRECT_VIDEO_MODEL</h3><p>Optionnel: deploiement Fireworks dedie Qwen3 Omni/Molmo2 pour video+audio direct.</p></article>
           <article class="card"><h3>PUBLIC_IMAGE</h3><p>Necessaire pour push, pull anonyme, taille compressee et soumission finale.</p></article>
         </div>

@@ -46,16 +46,14 @@ ENV PYTHONPATH=/app \
     MAX_CAPTION_CHARS=1600 \
     OPENROUTER_VLM_MODEL=qwen/qwen3-vl-235b-a22b-instruct \
     OPENROUTER_STYLE_MODEL=google/gemma-4-31b-it \
-    PROVIDER_ORDER=openrouter,groq,fireworks \
-    STYLE_PROVIDER_ORDER=openrouter,fireworks,groq \
+    PROVIDER_ORDER=openrouter,fireworks \
+    STYLE_PROVIDER_ORDER=openrouter,fireworks \
     STYLE_MODEL=accounts/fireworks/models/gpt-oss-120b \
     STYLE_REASONING_EFFORT=low \
     STYLE_MAX_TOKENS=1400 \
     DETERMINISTIC_FORMAL=1 \
     NUM_FRAMES=10 \
     FRAME_MAX_EDGE=896 \
-    GROQ_MAX_IMAGES=4 \
-    GROQ_FRAME_MAX_EDGE=448 \
     HTTP_429_RETRIES=5 \
     HTTP_429_MAX_WAIT_S=45 \
     RETRY_AFTER_GIVEUP_S=60 \
@@ -71,10 +69,8 @@ ENV PYTHONPATH=/app \
 # API keys arrive as build args at publish time only (CI secrets) — the repo
 # and default builds stay key-free; without keys the image degrades safely.
 ARG OPENROUTER_API_KEY=""
-ARG GROQ_API_KEY=""
 ARG FIREWORKS_API_KEY=""
 ENV OPENROUTER_API_KEY=${OPENROUTER_API_KEY} \
-    GROQ_API_KEY=${GROQ_API_KEY} \
     FIREWORKS_API_KEY=${FIREWORKS_API_KEY}
 
 # Sanity: must start and be ready in < 60s. Keep the container thin.

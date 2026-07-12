@@ -12,7 +12,6 @@ On the GPU, run the Gemma 4 Full checkout and set secrets in that shell only:
 ```bash
 export DEMO_ORIGIN_TOKEN='generate-a-long-random-value'
 export OPENROUTER_API_KEY='your-provider-key'
-export GROQ_API_KEY='optional-fallback-key'
 export FIREWORKS_API_KEY='optional-fallback-key'
 chmod +x scripts/start_cloud_demo.sh
 ./scripts/start_cloud_demo.sh

@@ -391,16 +391,16 @@
         <code>python scripts/quality_gate.py --results out/demo_quality_results.json --scores eval/scores_quality_openrouter.json</code>
       </article>
       <article class="command-card">
-        <header><strong>Run qualite</strong><button type="button" class="copy" data-copy="DESCRIBE_PROVIDER_ORDER=openrouter,groq,fireworks STYLE_PROVIDER_ORDER=openrouter,groq,fireworks DESCRIBE_MAX_TOKENS=900 STYLE_MAX_TOKENS=180 python -m app.main">Copier</button></header>
-        <code>DESCRIBE_PROVIDER_ORDER=openrouter,groq,fireworks
-STYLE_PROVIDER_ORDER=openrouter,groq,fireworks
+        <header><strong>Run qualite</strong><button type="button" class="copy" data-copy="DESCRIBE_PROVIDER_ORDER=openrouter,fireworks STYLE_PROVIDER_ORDER=openrouter,fireworks DESCRIBE_MAX_TOKENS=900 STYLE_MAX_TOKENS=180 python -m app.main">Copier</button></header>
+        <code>DESCRIBE_PROVIDER_ORDER=openrouter,fireworks
+STYLE_PROVIDER_ORDER=openrouter,fireworks
 DESCRIBE_MAX_TOKENS=900
 STYLE_MAX_TOKENS=180
 python -m app.main</code>
       </article>
       <article class="command-card">
-        <header><strong>Juge proxy</strong><button type="button" class="copy" data-copy="JUDGE_PROVIDER_ORDER=openrouter,groq,fireworks python eval/local_judge.py --results out/demo_quality_results.json --clips eval/clips.json --out eval/scores_quality_openrouter.json">Copier</button></header>
-        <code>JUDGE_PROVIDER_ORDER=openrouter,groq,fireworks
+        <header><strong>Juge proxy</strong><button type="button" class="copy" data-copy="JUDGE_PROVIDER_ORDER=openrouter,fireworks python eval/local_judge.py --results out/demo_quality_results.json --clips eval/clips.json --out eval/scores_quality_openrouter.json">Copier</button></header>
+        <code>JUDGE_PROVIDER_ORDER=openrouter,fireworks
 python eval/local_judge.py --results out/demo_quality_results.json --clips eval/clips.json --out eval/scores_quality_openrouter.json</code>
       </article>
     </section>

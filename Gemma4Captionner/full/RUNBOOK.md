@@ -51,21 +51,21 @@ export FIREWORKS_API_KEY=fw_xxx
 bash scripts/smoke_test.sh
 ```
 
-Run the temporary live Groq path without waiting for Fireworks:
+Run with OpenRouter first and Fireworks as fallback:
 
 ```bash
-PROVIDER_ORDER=groq,fireworks,openrouter \
-DESCRIBE_PROVIDER_ORDER=groq,openrouter,fireworks \
-STYLE_PROVIDER_ORDER=openrouter,groq,fireworks \
+PROVIDER_ORDER=openrouter,fireworks \
+DESCRIBE_PROVIDER_ORDER=openrouter,fireworks \
+STYLE_PROVIDER_ORDER=openrouter,fireworks \
 MAX_CONCURRENCY=1 \
 NUM_FRAMES=5 \
 FRAME_MAX_EDGE=512 \
 INPUT_PATH=data/sample_tasks.json \
-OUTPUT_PATH=out/groq_results_final.json \
+OUTPUT_PATH=out/openrouter_results_final.json \
 python -m app.main
 
-python eval/self_check.py --results out/groq_results_final.json
-python eval/quality_audit.py --results out/groq_results_final.json
+python eval/self_check.py --results out/openrouter_results_final.json
+python eval/quality_audit.py --results out/openrouter_results_final.json
 python scripts/quality_gate.py \
   --results out/demo_quality_results.json \
   --scores eval/scores_quality_openrouter.json
@@ -74,9 +74,9 @@ python scripts/quality_gate.py \
 Run the best measured quality profile on the public sample:
 
 ```bash
-PROVIDER_ORDER=openrouter,groq,fireworks \
-DESCRIBE_PROVIDER_ORDER=openrouter,groq,fireworks \
-STYLE_PROVIDER_ORDER=openrouter,groq,fireworks \
+PROVIDER_ORDER=openrouter,fireworks \
+DESCRIBE_PROVIDER_ORDER=openrouter,fireworks \
+STYLE_PROVIDER_ORDER=openrouter,fireworks \
 MAX_CONCURRENCY=1 \
 NUM_FRAMES=8 \
 FRAME_MAX_EDGE=640 \
@@ -118,14 +118,12 @@ make verify-public
 | Variable | Default | Purpose |
 |---|---:|---|
 | `FIREWORKS_API_KEY` | empty | Required for real VLM/style calls. |
-| `GROQ_API_KEY` | empty | Enables optional Whisper transcription. |
 | `OPENROUTER_API_KEY` | empty | Enables OpenRouter fallback. |
-| `PROVIDER_ORDER` | `groq,fireworks,openrouter` | Default provider priority. |
+| `PROVIDER_ORDER` | `openrouter,fireworks` | Default provider priority. |
 | `DESCRIBE_PROVIDER_ORDER` | `PROVIDER_ORDER` | Provider priority for video understanding. |
 | `STYLE_PROVIDER_ORDER` | `PROVIDER_ORDER` | Provider priority for style captions. |
 | `VLM_MODEL` | `accounts/fireworks/models/qwen2p5-vl-7b-instruct` | Describe-stage VLM. |
 | `VLM_FALLBACK_MODELS` | empty | Comma-separated describe fallback models. |
-| `GROQ_VISION_MODEL` | `meta-llama/llama-4-scout-17b-16e-instruct` | Groq vision model. |
 | `OPENROUTER_VLM_MODEL` | `qwen/qwen3-vl-8b-instruct` | OpenRouter vision model. |
 | `DESCRIBE_MAX_TOKENS` | `700` | Token budget for rich scene-facts JSON. |
 | `DIRECT_VIDEO_MODEL` | empty | Optional dedicated video/audio model deployment id. |
@@ -133,17 +131,14 @@ make verify-public
 | `STYLE_MODEL` | `accounts/fireworks/models/gemma-3-27b-it` | Four style rewrites, Gemma bonus path. |
 | `STYLE_LORA` | empty | Optional deployed LoRA model id for style rewrites. |
 | `STYLE_FALLBACK_MODELS` | empty | Comma-separated style fallback models. |
-| `GROQ_STYLE_MODEL` | `llama-3.3-70b-versatile` | Groq style model. |
 | `OPENROUTER_STYLE_MODEL` | `qwen/qwen3-vl-8b-instruct` | OpenRouter style fallback. |
 | `STYLE_MAX_TOKENS` | `140` | Token budget for one styled caption. |
 | `EVIDENCE_LOCK_ENABLED` | `0` | Optional candidate/repair mode that rejects visually thin captions during A/B runs. |
 | `STYLE_CANDIDATES` | `2` | Candidate count when evidence-lock mode is enabled. |
 | `STYLE_REPAIR_ENABLED` | `1` | Enables model and deterministic repair for evidence-lock captions. |
-| `JUDGE_PROVIDER_ORDER` | `fireworks,openrouter,groq` | Provider priority for local LLM-judge proxy. |
-| `GROQ_JUDGE_MODEL` | `meta-llama/llama-4-scout-17b-16e-instruct` | Groq judge fallback. |
+| `JUDGE_PROVIDER_ORDER` | `fireworks,openrouter` | Provider priority for local LLM-judge proxy. |
 | `OPENROUTER_JUDGE_MODEL` | `qwen/qwen3-vl-8b-instruct` | OpenRouter judge fallback. |
-| `AUDIO_TRANSCRIBE_ENABLED` | `1` | Uses Groq Whisper when `GROQ_API_KEY` is set. |
-| `WHISPER_MODEL` | `whisper-large-v3-turbo` | Groq transcription model. |
+| `AUDIO_TRANSCRIBE_ENABLED` | `0` | Disabled in the OpenRouter + Fireworks submission image. |
 | `NUM_FRAMES` | `8` | Target frames sent to the VLM. |
 | `FRAME_MAX_EDGE` | `720` | Max frame edge before upload. |
 | `SCENE_DETECT_ENABLED` | `1` | Enable scene-change sampling before uniform fill. |
@@ -179,7 +174,7 @@ python finetune/train_gemma_lora.py --dataset finetune/dataset_v2.jsonl --dry-ru
 Run the provider-agnostic local judge when at least one judge key is available:
 
 ```bash
-JUDGE_PROVIDER_ORDER=openrouter,groq,fireworks \
+JUDGE_PROVIDER_ORDER=openrouter,fireworks \
 python eval/local_judge.py \
   --results out/demo_quality_results.json \
   --clips eval/clips.json \

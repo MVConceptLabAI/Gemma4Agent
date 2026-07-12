@@ -49,7 +49,7 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 GROQ_BASE_URL = os.environ.get("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
 OPENROUTER_BASE_URL = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-JUDGE_PROVIDER_ORDER = os.environ.get("JUDGE_PROVIDER_ORDER", "fireworks,openrouter,groq")
+JUDGE_PROVIDER_ORDER = os.environ.get("JUDGE_PROVIDER_ORDER", "fireworks,openrouter")
 GROQ_JUDGE_MODEL = os.environ.get(
     "GROQ_JUDGE_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct"
 )

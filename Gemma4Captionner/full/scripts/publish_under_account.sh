@@ -10,7 +10,7 @@
 #
 # What it does (all under YOUR account, nothing under devopsm3):
 #   1. creates a PUBLIC repo <user>/gemma4-captioner (code, so no keys in it)
-#   2. sets OPENROUTER/GROQ/FIREWORKS as CI secrets (read from local .env)
+#   2. sets OPENROUTER/FIREWORKS as CI secrets (read from local .env)
 #   3. pushes this code + the publish workflow
 #   4. runs the workflow -> builds linux/amd64 and pushes
 #        ghcr.io/<user>/gemma4-captioner:latest
@@ -33,17 +33,16 @@ fi
 
 # --- load key VALUES from .env (never echoed) ---
 get_env() { grep -E "^$1=" .env | head -1 | cut -d= -f2- | tr -d '"'\' ; }
-OR="$(get_env OPENROUTER_API_KEY)"; GK="$(get_env GROQ_API_KEY)"; FW="$(get_env FIREWORKS_API_KEY)"
+OR="$(get_env OPENROUTER_API_KEY)"; FW="$(get_env FIREWORKS_API_KEY)"
 
 # --- 1. create the public repo (idempotent) ---
 if ! gh repo view "$USER_ACCT/$REPO" >/dev/null 2>&1; then
   gh repo create "$USER_ACCT/$REPO" --public \
-    --description "AMD Track 2 video-captioning agent (ensemble + hardened Groq floor)"
+    --description "AMD Track 2 video-captioning agent (OpenRouter + Fireworks fallback)"
 fi
 
 # --- 2. CI secrets (so the image bakes working keys; repo code stays keyless) ---
 [[ -n "$OR" ]] && printf '%s' "$OR" | gh secret set OPENROUTER_API_KEY --repo "$USER_ACCT/$REPO"
-[[ -n "$GK" ]] && printf '%s' "$GK" | gh secret set GROQ_API_KEY      --repo "$USER_ACCT/$REPO"
 [[ -n "$FW" ]] && printf '%s' "$FW" | gh secret set FIREWORKS_API_KEY --repo "$USER_ACCT/$REPO"
 
 # --- 3. push code (new remote, keeps origin=devopsm3 intact) ---
@@ -70,6 +69,7 @@ NEXT (your 1 click), once the workflow shows 'completed success':
   Then verify anonymously:
     python scripts/../verify (I'll run: python /tmp/verify_public.py after editing the image name)
 
-  SECURITY: rotate the Groq key after judging (it's baked in the public image).
+  SECURITY: rotate the OpenRouter and Fireworks keys after judging
+  (they are baked in the public submission image).
 ============================================================
 EOF
