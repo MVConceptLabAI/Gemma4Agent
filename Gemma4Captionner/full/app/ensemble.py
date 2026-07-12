@@ -136,6 +136,13 @@ _CREATIVE_DISCIPLINE_RULE = (
     "solely by the pre-existing formal rules."
 )
 
+_TECH_PUNCHLINE_RULE = (
+    "\n\nHUMOROUS_TECH QUALITY BAR: First describe the visible action plainly, then add "
+    "ONE compact technology analogy with a real light punchline. A bare pile of words such "
+    "as 'pipeline', 'latency', or 'runtime' is not a joke. Do not stack jargon, invent code "
+    "work, or turn the subject into an engineer. Keep the analogy tied to one visible fact."
+)
+
 OBSERVE_SYSTEM = (
     "You are a meticulous visual analyst. You see frames sampled in order from ONE short "
     "video clip. Each frame carries a small overlay banner (frame number, timestamp, "
@@ -158,7 +165,8 @@ WRITE_SYSTEM = (
     "by 2+ models is high-confidence - use those freely. A detail from only ONE model is "
     "UNRELIABLE: include it ONLY if it is generic and safe; DROP any single-model SPECIFIC "
     "claim (an exact color, a brand/logo, a count, sign/text, or a left/right or foreground/"
-    "background placement) unless another model agrees. When two models conflict, omit the "
+    "background placement) unless another model agrees. NEVER reproduce exact letters, a brand, "
+    "or a sign from a single observer, even if it seems readable. When two models conflict, omit the "
     "point. A wrong detail costs far more than a missing one - when in doubt, leave it out. "
     "NEVER add anything no model reported. Write four captions of the SAME "
     "scene, one per style, richly detailed and vivid; do not state race/skin/eye color, do not "
@@ -191,6 +199,7 @@ def _style_writer_system(style: str, base_system: str) -> str:
         raise ValueError(f"unsupported writer style: {style}")
     return (
         base_system
+        + (_TECH_PUNCHLINE_RULE if style == "humorous_tech" else "")
         + "\n\nSTYLE-SPECIFIC OUTPUT OVERRIDE: For this call, produce only the "
         + f'"{style}" caption while applying every factual and style rule above. '
         + "Return STRICT JSON only: {\"caption\":\"...\"}"
@@ -218,7 +227,9 @@ def _frames_content(frames: list[Path]) -> list[dict]:
     return content
 
 
-def _parse_list(text: str) -> list[str]:
+def _parse_list(text: str | None) -> list[str]:
+    if not isinstance(text, str) or not text.strip():
+        return []
     s = text[text.find("["): text.rfind("]") + 1]
     try:
         return [str(x).strip() for x in json.loads(s) if str(x).strip()]
@@ -226,7 +237,9 @@ def _parse_list(text: str) -> list[str]:
         return [ln.strip("-* \t") for ln in text.splitlines() if ln.strip()]
 
 
-def _parse_obj(text: str) -> dict:
+def _parse_obj(text: str | None) -> dict:
+    if not isinstance(text, str):
+        raise ValueError("model returned no text content")
     return json.loads(text[text.find("{"): text.rfind("}") + 1])
 
 

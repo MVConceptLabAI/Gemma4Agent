@@ -36,8 +36,8 @@ _CONTROLLED_ENV = {
     "VIDEO_OBSERVER": "",
     "OPENROUTER_API_KEY": "w4-offline-test-secret",
 }
-_V38_DOCKER_WRITER_SHA256 = (
-    "863a76829b72e10b8d842c3fe0c38edae1f63fecb7f0149a2528b4885ad825b6"
+_V8_DOCKER_WRITER_SHA256 = (
+    "bdb2501c938f6a0d9368e8bad25e3a37907432f2f4587ad7b33333708066bf92"
 )
 
 
@@ -77,7 +77,7 @@ def test_default_off_preserves_the_v38_common_writer() -> None:
         assert ensemble.W4_STYLE_SPLIT is False
         base_system = ensemble._writer_system()
         assert hashlib.sha256(base_system.encode("utf-8")).hexdigest() == (
-            _V38_DOCKER_WRITER_SHA256
+            _V8_DOCKER_WRITER_SHA256
         )
         calls: list[dict] = []
 
@@ -110,12 +110,18 @@ def test_default_off_preserves_the_v38_common_writer() -> None:
         assert result == {style: f"legacy {style}" for style in _STYLES}
 
 
+def test_empty_observer_content_is_skipped() -> None:
+    with _loaded_ensemble(None) as ensemble:
+        assert ensemble._parse_list(None) == []
+        assert ensemble._parse_list("") == []
+
+
 def test_on_runs_four_style_writers_concurrently_with_one_observation_spine() -> None:
     with _loaded_ensemble("1") as ensemble:
         assert ensemble.W4_STYLE_SPLIT is True
         base_system = ensemble._writer_system()
         assert hashlib.sha256(base_system.encode("utf-8")).hexdigest() == (
-            _V38_DOCKER_WRITER_SHA256
+            _V8_DOCKER_WRITER_SHA256
         )
 
         observer_calls = 0
@@ -270,6 +276,7 @@ def test_flag_is_strict_and_off_unless_explicitly_enabled() -> None:
 
 
 def main() -> None:
+    test_empty_observer_content_is_skipped()
     test_default_off_preserves_the_v38_common_writer()
     test_on_runs_four_style_writers_concurrently_with_one_observation_spine()
     test_each_style_keeps_the_existing_single_retry_contract()
