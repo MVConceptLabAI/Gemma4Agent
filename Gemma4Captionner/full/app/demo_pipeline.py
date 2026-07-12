@@ -10,7 +10,9 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import logging
 import os
+import subprocess
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -20,11 +22,16 @@ import httpx
 from app import pipeline as P
 
 MODEL = os.environ.get("DEMO_GEMMA_MODEL", "google/gemma-4-31b-it")
+VIDEO_MODEL = os.environ.get("DEMO_VIDEO_MODEL", "google/gemma-4-26b-a4b-it")
 API_KEY = "".join(os.environ.get("OPENROUTER_API_KEY", "").split())
 API_URL = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 FRAME_COUNT = int(os.environ.get("NUM_FRAMES", "24"))
 FRAME_EDGE = int(os.environ.get("FRAME_MAX_EDGE", "640"))
 OBSERVATION_CONCURRENCY = int(os.environ.get("DEMO_OBSERVATION_CONCURRENCY", "3"))
+VIDEO_CONTEXT_MAX_SECONDS = int(os.environ.get("VIDEO_CONTEXT_MAX_SECONDS", "60"))
+VIDEO_CONTEXT_MAX_BYTES = int(os.environ.get("VIDEO_CONTEXT_MAX_BYTES", "12000000"))
+
+log = logging.getLogger("track2.gemma_video")
 
 _semaphore: asyncio.Semaphore | None = None
 _semaphore_loop: asyncio.AbstractEventLoop | None = None
@@ -61,7 +68,11 @@ def _facts(text: str) -> list[str]:
 
 
 async def _ask(
-    client: httpx.AsyncClient, content: Any, max_tokens: int, temperature: float = 0.25
+    client: httpx.AsyncClient,
+    content: Any,
+    max_tokens: int,
+    temperature: float = 0.25,
+    model: str = MODEL,
 ) -> str:
     if not API_KEY:
         raise RuntimeError("OPENROUTER_API_KEY is required for the Gemma 4 demo flow")
@@ -69,7 +80,7 @@ async def _ask(
         f"{API_URL}/chat/completions",
         headers={"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"},
         json={
-            "model": MODEL,
+            "model": model,
             "messages": [{"role": "user", "content": content}],
             "temperature": temperature,
             "max_tokens": max_tokens,
@@ -80,6 +91,126 @@ async def _ask(
     if not isinstance(answer, str) or not answer.strip():
         raise ValueError("Gemma returned no text content")
     return answer
+
+
+def _video_duration(video: Path) -> float:
+    result = subprocess.run(
+        [
+            "ffprobe", "-v", "error", "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1", str(video),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    return max(0.0, float(result.stdout.strip()))
+
+
+def _compress_video_segments(
+    video: Path, workdir: Path
+) -> list[tuple[int, float, str]]:
+    """Create one or two bounded MP4 segments covering up to two minutes."""
+    try:
+        duration = _video_duration(video)
+        starts = [0.0]
+        if duration > VIDEO_CONTEXT_MAX_SECONDS:
+            # Hackathon clips are capped at two minutes. For a slightly longer
+            # development clip, anchor the second part to the end rather than
+            # silently discarding the final seconds.
+            starts.append(max(0.0, duration - VIDEO_CONTEXT_MAX_SECONDS))
+        segments: list[tuple[int, float, str]] = []
+        for index, start in enumerate(starts, start=1):
+            output = workdir / f"gemma4_video_context_{index}.mp4"
+            remaining = max(1.0, duration - start) if duration else float(VIDEO_CONTEXT_MAX_SECONDS)
+            segment_seconds = min(float(VIDEO_CONTEXT_MAX_SECONDS), remaining)
+            subprocess.run(
+                [
+                    "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+                    "-ss", f"{start:.3f}", "-i", str(video), "-t", f"{segment_seconds:.3f}",
+                    "-vf", "fps=1,scale=512:-2", "-c:v", "libx264",
+                    "-preset", "veryfast", "-crf", "34", "-c:a", "aac",
+                    "-b:a", "32k", "-movflags", "+faststart", str(output),
+                ],
+                check=True,
+                timeout=120,
+            )
+            raw = output.read_bytes()
+            if not raw or len(raw) > VIDEO_CONTEXT_MAX_BYTES:
+                log.warning(
+                    "direct video segment %d unavailable or too large (%d bytes)",
+                    index,
+                    len(raw),
+                )
+                continue
+            segments.append((index, start, base64.b64encode(raw).decode("ascii")))
+        log.info("prepared %d direct video segment(s) for %.1fs clip", len(segments), duration)
+        return segments
+    except (OSError, ValueError, subprocess.SubprocessError) as exc:
+        log.warning("direct video compression failed: %s", exc)
+        return []
+
+
+def _video_facts(text: str) -> list[str]:
+    start, end = text.find("["), text.rfind("]")
+    try:
+        value = json.loads(text[start : end + 1]) if start >= 0 and end > start else []
+    except json.JSONDecodeError:
+        value = []
+    if not isinstance(value, list):
+        return []
+    return [str(item).strip()[:180] for item in value if str(item).strip()][:8]
+
+
+async def _direct_video_evidence(
+    client: httpx.AsyncClient,
+    video_b64: str,
+    frame_record: str,
+    segment_index: int,
+    segment_start: float,
+    segment_count: int,
+) -> list[str]:
+    """Use Gemma 4 native video only after the frame evidence is established."""
+    if not video_b64 or not VIDEO_MODEL:
+        return []
+    prompt = (
+        "The verified frame observations below span one video. Use them as the factual anchor, "
+        f"then inspect MP4 part {segment_index} of {segment_count}, beginning around "
+        f"{segment_start:.0f} seconds, to identify only additional temporal actions, transitions, "
+        "or clearly audible information that is directly confirmed and consistent with those "
+        "observations. Never infer speech, sound, identity, intent, location, or an unseen event. "
+        "If audio is absent, unclear, or unsupported, do not mention it. Return ONLY a JSON array "
+        "of at most eight short facts. Return [] when the video adds no reliable information.\n\n"
+        "VERIFIED FRAME EVIDENCE:\n" + frame_record
+    )
+    content = [
+        {"type": "text", "text": prompt},
+        {
+            "type": "video_url",
+            "video_url": {"url": f"data:video/mp4;base64,{video_b64}"},
+        },
+    ]
+    try:
+        raw = await _ask(
+            client,
+            content,
+            500,
+            temperature=0.0,
+            model=VIDEO_MODEL,
+        )
+        facts = _video_facts(raw)
+        if facts:
+            log.info(
+                "direct Gemma 4 video part %d added %d fact(s)",
+                segment_index,
+                len(facts),
+            )
+        else:
+            log.warning("direct Gemma 4 video observer returned no usable facts")
+        return facts
+    except (httpx.HTTPError, ValueError) as exc:
+        log.warning("direct Gemma 4 video observer failed; retaining frame evidence: %s", exc)
+        return []
 
 
 def _image_content(frame: Path) -> list[dict[str, Any]]:
@@ -186,6 +317,10 @@ async def caption_demo(video_url: str, styles: list[str]) -> dict[str, str]:
         video = await P._download(video_url, workdir / "clip.mp4")
         frames = P._extract_keyframes(video, workdir, FRAME_COUNT, FRAME_EDGE)
         async with httpx.AsyncClient(timeout=httpx.Timeout(150.0)) as client:
+            video_segments_task = asyncio.create_task(
+                asyncio.to_thread(_compress_video_segments, video, workdir)
+            )
+
             async def observe(frame: Path) -> list[str]:
                 for attempt in range(2):
                     try:
@@ -203,13 +338,38 @@ async def caption_demo(video_url: str, styles: list[str]) -> dict[str, str]:
             record = _evidence(observations)
             if not record:
                 raise RuntimeError("Gemma returned no grounded frame observations")
-            captions = await _write(client, record, styles)
+            video_segments = await video_segments_task
+            segment_results = await asyncio.gather(
+                *(
+                    _direct_video_evidence(
+                        client,
+                        video_b64,
+                        record,
+                        segment_index,
+                        segment_start,
+                        len(video_segments),
+                    )
+                    for segment_index, segment_start, video_b64 in video_segments
+                )
+            ) if video_segments else []
+            video_facts: list[str] = []
+            for facts in segment_results:
+                for fact in facts:
+                    if fact not in video_facts:
+                        video_facts.append(fact)
+            grounded_record = record
+            if video_facts:
+                grounded_record += (
+                    "\n\nDIRECT GEMMA 4 VIDEO EVIDENCE (use only when consistent with the frames):\n- "
+                    + "\n- ".join(video_facts)
+                )
+            captions = await _write(client, grounded_record, styles)
             rewrites = await asyncio.gather(
-                _rewrite_humour(client, record, captions["humorous_tech"], "humorous_tech"),
-                _rewrite_humour(client, record, captions["humorous_non_tech"], "humorous_non_tech"),
+                _rewrite_humour(client, grounded_record, captions["humorous_tech"], "humorous_tech"),
+                _rewrite_humour(client, grounded_record, captions["humorous_non_tech"], "humorous_non_tech"),
                 return_exceptions=True,
             )
             for style, rewrite in zip(("humorous_tech", "humorous_non_tech"), rewrites):
                 if isinstance(rewrite, str) and rewrite:
                     captions[style] = rewrite
-            return await _verify(client, record, captions, styles)
+            return await _verify(client, grounded_record, captions, styles)

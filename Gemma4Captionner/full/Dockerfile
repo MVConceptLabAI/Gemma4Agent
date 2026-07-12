@@ -32,17 +32,21 @@ COPY app/ ./app/
 # so the submission profile is pinned here. Non-secret config is plain ENV.
 # Submission engine = the public Gemma 4 HTML5 demo flow: independent frame
 # observations, evidence consolidation, humour polish, and final grounding.
-# Every inference request goes to the same Gemma 4 model through OpenRouter.
+# Every inference request stays inside the Gemma 4 family through OpenRouter.
+# Gemma 4 31B handles frames and captions; Gemma 4 26B A4B inspects the MP4.
 ENV PYTHONPATH=/app \
     CAPTION_ENGINE=gemma_demo \
     DEMO_GEMMA_MODEL=google/gemma-4-31b-it \
+    DEMO_VIDEO_MODEL=google/gemma-4-26b-a4b-it \
     DEMO_OBSERVATION_CONCURRENCY=9 \
+    VIDEO_CONTEXT_MAX_SECONDS=60 \
+    VIDEO_CONTEXT_MAX_BYTES=12000000 \
     TRUST_GENERATED_HUMOROUS_TECH=1 \
     MAX_CAPTION_CHARS=1600 \
     NUM_FRAMES=24 \
     FRAME_MAX_EDGE=640 \
     MAX_CONCURRENCY=3 \
-    PER_TASK_TIMEOUT_S=160 \
+    PER_TASK_TIMEOUT_S=220 \
     GLOBAL_BUDGET_S=540
 # Judging VM = 2 vCPU / 4 GB RAM (Participant Guide p.5). Scene-detection
 # decodes the ENTIRE UHD clip per video and three parallel ffmpeg passes
