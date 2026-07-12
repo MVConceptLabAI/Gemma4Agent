@@ -6,7 +6,7 @@
   <meta name="description" content="Browser-only Gemma 4 video caption demo">
   <title>Gemma 4 SceneGate — local video caption demo</title>
   <style>
-    :root{color-scheme:dark;--bg:#071119;--card:#0e202b;--card2:#0a1821;--line:#234151;--ink:#edf4f8;--muted:#aebdca;--mint:#57e0c2;--blue:#82aaff;--danger:#ff9292;--warning:#f4ca72}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 90% 0,#163846,transparent 30%),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,sans-serif}.wrap{max-width:1080px;margin:auto;padding:48px 24px 80px}.tag{color:var(--mint);font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase}h1{font-size:clamp(40px,8vw,74px);letter-spacing:-2px;line-height:.96;margin:14px 0 18px}h2{font-size:20px;margin:0 0 12px}h3{font-size:14px;margin:0}p{color:var(--muted);line-height:1.55}.lead{max-width:760px;font-size:19px}.card{background:color-mix(in srgb,var(--card) 94%,transparent);border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:22px;box-shadow:0 18px 55px #0003}label{display:block;color:var(--muted);font-size:13px;font-weight:700;margin-top:14px}input,button{font:inherit;border-radius:10px;width:100%;margin-top:7px;padding:13px}input{background:#071119;border:1px solid #355363;color:var(--ink)}button{border:0;background:var(--mint);color:#071119;font-weight:850;cursor:pointer}button.secondary{background:transparent;color:var(--ink);border:1px solid #355363}button:disabled{opacity:.55;cursor:wait}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.settings summary{cursor:pointer;color:var(--blue);font-weight:750}.settings[open] summary{margin-bottom:12px}.privacy{font-size:13px}.check{display:flex;gap:9px;align-items:center;margin-top:15px;color:var(--muted);font-size:13px}.check input{width:auto;margin:0}.preview{display:none;width:100%;max-height:390px;border-radius:13px;background:#000;margin-top:16px}.video-meta{margin-top:10px;color:var(--muted);font-size:13px}.status{min-height:23px;margin:18px 0 0}.error{color:var(--danger)}.warning{color:var(--warning)}.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}.result{border-left:3px solid var(--mint);padding:15px;background:var(--card2);border-radius:0 11px 11px 0;line-height:1.5}.style{color:var(--blue);text-transform:uppercase;font-size:11px;font-weight:850;letter-spacing:1.1px;margin-bottom:8px}.facts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.facts img{width:104px;height:72px;object-fit:cover;border:1px solid var(--line);border-radius:7px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.actions button{width:auto;margin:0}.history{display:grid;gap:10px;margin-top:14px}.history-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);background:var(--card2);border-radius:10px}.history-item span{color:var(--muted);font-size:13px}.history-item button{width:auto;margin:0;padding:8px 11px}.hidden{display:none}@media(max-width:720px){.grid,.result-grid{grid-template-columns:1fr}.wrap{padding:34px 16px 60px}.history-item{align-items:flex-start;flex-direction:column}}
+    :root{color-scheme:dark;--bg:#071119;--card:#0e202b;--card2:#0a1821;--line:#234151;--ink:#edf4f8;--muted:#aebdca;--mint:#57e0c2;--blue:#82aaff;--danger:#ff9292;--warning:#f4ca72}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 90% 0,#163846,transparent 30%),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,sans-serif}.wrap{max-width:1080px;margin:auto;padding:48px 24px 80px}.tag{color:var(--mint);font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase}h1{font-size:clamp(40px,8vw,74px);letter-spacing:-2px;line-height:.96;margin:14px 0 18px}h2{font-size:20px;margin:0 0 12px}h3{font-size:14px;margin:0}p{color:var(--muted);line-height:1.55}.lead{max-width:760px;font-size:19px}.card{background:color-mix(in srgb,var(--card) 94%,transparent);border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:22px;box-shadow:0 18px 55px #0003}label{display:block;color:var(--muted);font-size:13px;font-weight:700;margin-top:14px}input,select,button{font:inherit;border-radius:10px;width:100%;margin-top:7px;padding:13px}input,select{background:#071119;border:1px solid #355363;color:var(--ink)}button{border:0;background:var(--mint);color:#071119;font-weight:850;cursor:pointer}button.secondary{background:transparent;color:var(--ink);border:1px solid #355363}button:disabled{opacity:.55;cursor:wait}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.settings summary{cursor:pointer;color:var(--blue);font-weight:750}.settings[open] summary{margin-bottom:12px}.privacy{font-size:13px}.version-note{padding:12px 14px;border-left:3px solid var(--blue);background:var(--card2);border-radius:0 9px 9px 0}.check{display:flex;gap:9px;align-items:center;margin-top:15px;color:var(--muted);font-size:13px}.check input{width:auto;margin:0}.preview{display:none;width:100%;max-height:390px;border-radius:13px;background:#000;margin-top:16px}.video-meta{margin-top:10px;color:var(--muted);font-size:13px}.status{min-height:23px;margin:18px 0 0}.error{color:var(--danger)}.warning{color:var(--warning)}.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}.result{border-left:3px solid var(--mint);padding:15px;background:var(--card2);border-radius:0 11px 11px 0;line-height:1.5}.style{color:var(--blue);text-transform:uppercase;font-size:11px;font-weight:850;letter-spacing:1.1px;margin-bottom:8px}.facts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.facts img{width:104px;height:72px;object-fit:cover;border:1px solid var(--line);border-radius:7px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.actions button{width:auto;margin:0}.history{display:grid;gap:10px;margin-top:14px}.history-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);background:var(--card2);border-radius:10px}.history-item span{color:var(--muted);font-size:13px}.history-item button{width:auto;margin:0;padding:8px 11px}.hidden{display:none}@media(max-width:720px){.grid,.result-grid{grid-template-columns:1fr}.wrap{padding:34px 16px 60px}.history-item{align-items:flex-start;flex-direction:column}}
     .contract{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:11px;background:var(--card2)}
     .contract pre{margin:12px 0 0;padding:14px;max-height:360px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#050d12;border-radius:8px;color:#d9f7ee}
   </style>
@@ -21,12 +21,15 @@
       <details open>
         <summary>Local inference settings</summary>
         <div class="grid">
+          <label>Pipeline version<select id="pipelineVersion"><option value="v17">V17 · 24 grounded frames</option><option value="v18">V18 · frames + direct video</option></select></label>
           <label>OpenRouter API key<input id="apiKey" type="password" autocomplete="off" placeholder="sk-or-v1-…"></label>
           <label>Vision model<input id="model" type="text" value="google/gemma-4-31b-it" autocomplete="off"></label>
+          <label id="videoModelRow" class="hidden">Direct-video model<input id="videoModel" type="text" value="google/gemma-4-26b-a4b-it" autocomplete="off"></label>
           <label>Jury preview task ID<input id="taskId" type="text" value="demo-v1" autocomplete="off"></label>
         </div>
+        <p id="versionNote" class="privacy version-note"></p>
         <label class="check"><input id="rememberKey" type="checkbox"> Remember this API key on this device</label>
-        <p class="privacy">The selected video never uploads to this site. The browser extracts twenty-four 640×360-or-smaller frames locally and sends one frame per OpenRouter request, in small parallel groups. Settings and caption history are stored in this browser’s localStorage. Your OpenRouter key can be removed at any time.</p>
+        <p id="privacyNote" class="privacy"></p>
         <div class="actions"><button id="forget" class="secondary" type="button">Forget local settings</button><button id="clearHistory" class="secondary" type="button">Clear caption history</button></div>
       </details>
     </section>
@@ -68,8 +71,12 @@
     const FACTS_PER_FRAME = 2;
     const FACT_MAX_CHARS = 96;
     const CAPTION_MAX_TOKENS = 800;
+    const DIRECT_VIDEO_MAX_SECONDS = 60;
+    const DIRECT_VIDEO_MAX_BYTES = 20 * 1024 * 1024;
     const $ = id => document.getElementById(id);
-    const apiKey = $('apiKey'), model = $('model'), taskId = $('taskId'), rememberKey = $('rememberKey');
+    const pipelineVersion = $('pipelineVersion'), apiKey = $('apiKey'), model = $('model'), videoModel = $('videoModel');
+    const videoModelRow = $('videoModelRow'), versionNote = $('versionNote'), privacyNote = $('privacyNote');
+    const taskId = $('taskId'), rememberKey = $('rememberKey');
     const videoFile = $('videoFile'), preview = $('preview'), frames = $('frames');
     const status = $('status'), results = $('results'), caption = $('caption');
     const videoMeta = $('videoMeta'), resultActions = $('resultActions'), history = $('history');
@@ -80,7 +87,9 @@
     function readJson(key, fallback) { try { return JSON.parse(localStorage.getItem(key) || ''); } catch { return fallback; } }
     function saveSettings() {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        pipelineVersion: pipelineVersion.value,
         model: model.value.trim(),
+        videoModel: videoModel.value.trim(),
         taskId: taskId.value.trim(),
         rememberKey: rememberKey.checked,
         apiKey: rememberKey.checked ? apiKey.value.trim() : ''
@@ -88,10 +97,24 @@
     }
     function restoreSettings() {
       const saved = readJson(SETTINGS_KEY, {});
+      pipelineVersion.value = saved.pipelineVersion === 'v18' ? 'v18' : 'v17';
       model.value = saved.model || model.value;
+      videoModel.value = saved.videoModel || videoModel.value;
       taskId.value = saved.taskId || taskId.value;
       rememberKey.checked = Boolean(saved.rememberKey);
       apiKey.value = saved.rememberKey ? (saved.apiKey || '') : '';
+      updateVersionUi();
+    }
+    function updateVersionUi() {
+      const isV18 = pipelineVersion.value === 'v18';
+      videoModelRow.classList.toggle('hidden', !isV18);
+      versionNote.textContent = isV18
+        ? 'V18 first grounds the scene with 24 frames, then asks Gemma 4 to inspect the original video for confirmed motion and audio facts. Browser direct-video testing is limited to 60 seconds and 20 MB.'
+        : 'V17 reproduces the stable frames-only pipeline: 24 independent visual observations, caption writing, humour refinement and final grounding verification.';
+      privacyNote.textContent = isV18
+        ? 'The page itself stores no upload. Twenty-four frames and, for videos up to 60 seconds and 20 MB, the selected video are sent directly from this browser to OpenRouter. Longer or larger files automatically keep the V17 frames-only evidence path. The submitted V18 Docker image uses FFmpeg to split videos up to 120 seconds into two 60-second parts.'
+        : 'The selected video never uploads to this site. The browser extracts twenty-four 640×360-or-smaller frames locally and sends one frame per OpenRouter request, in small parallel groups. Settings and caption history are stored in this browser’s localStorage.';
+      caption.textContent = `2. Create four captions with Gemma 4 ${isV18 ? 'V18' : 'V17'}`;
     }
     function setStatus(message, kind = '') { status.textContent = message; status.className = `status ${kind}`; }
     function formatDate(value) { return new Date(value).toLocaleString(); }
@@ -224,7 +247,7 @@
     }
     function saveHistory(file, captions) {
       const rows = readJson(HISTORY_KEY, []);
-      rows.unshift({ createdAt: new Date().toISOString(), fileName: file.name, duration: preview.duration, model: model.value.trim(), captions });
+      rows.unshift({ createdAt: new Date().toISOString(), fileName: file.name, duration: preview.duration, pipelineVersion: pipelineVersion.value, model: model.value.trim(), captions });
       localStorage.setItem(HISTORY_KEY, JSON.stringify(rows.slice(0, 8)));
       renderHistory();
     }
@@ -236,7 +259,7 @@
         const item = document.createElement('div'), detail = document.createElement('div'), load = document.createElement('button');
         item.className = 'history-item'; detail.innerHTML = `<strong></strong><span></span>`;
         detail.querySelector('strong').textContent = row.fileName || 'Untitled video';
-        detail.querySelector('span').textContent = `${formatDate(row.createdAt)} · ${row.model || 'Gemma 4'}`;
+        detail.querySelector('span').textContent = `${formatDate(row.createdAt)} · ${(row.pipelineVersion || 'v17').toUpperCase()} · ${row.model || 'Gemma 4'}`;
         load.type = 'button'; load.textContent = 'Show captions';
         load.addEventListener('click', () => { currentCaptions = validateCaptions(row.captions); renderCaptions(currentCaptions); setStatus('Loaded local caption history.'); });
         item.append(detail, load); history.append(item);
@@ -253,16 +276,25 @@
       const match = String(message || '').match(/can only afford\s+(\d+)\s+tokens?/i);
       return match ? Number(match[1]) : 0;
     }
-    async function askGemma(content, maxTokens) {
-      let requestedTokens = maxTokens, retriedForBudget = false;
+    async function askGemma(content, maxTokens, modelSlug = model.value.trim()) {
+      let requestedTokens = maxTokens, retriedForBudget = false, emptyRetries = 0;
       while (true) {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${apiKey.value.trim()}`, 'Content-Type': 'application/json', 'HTTP-Referer': location.origin, 'X-Title': 'Gemma 4 SceneGate local demo' },
-          body: JSON.stringify({ model: model.value.trim(), messages: [{ role: 'user', content }], temperature: 0.25, max_tokens: requestedTokens })
+          body: JSON.stringify({ model: modelSlug, messages: [{ role: 'user', content }], temperature: 0.25, max_tokens: requestedTokens })
         });
         const payload = await response.json();
-        if (response.ok) return payload.choices?.[0]?.message?.content;
+        if (response.ok) {
+          const answer = payload.choices?.[0]?.message?.content;
+          if (typeof answer === 'string' && answer.trim()) return answer;
+          if (emptyRetries < 1) {
+            emptyRetries += 1;
+            setStatus(`${modelSlug} returned an empty response; retrying once…`, 'warning');
+            continue;
+          }
+          throw new Error(`${modelSlug} returned no text after retry.`);
+        }
         const message = payload.error?.message || `OpenRouter request failed (${response.status})`;
         const available = availableCompletionTokens(message);
         if (!retriedForBudget && available >= 100 && available < requestedTokens) {
@@ -298,6 +330,32 @@
       }
       return text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '').trim().slice(0, FACT_MAX_CHARS)).filter(Boolean).slice(0, FACTS_PER_FRAME);
     }
+    function cleanDirectVideoFacts(value) {
+      const text = String(value || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+      const start = text.indexOf('['), end = text.lastIndexOf(']');
+      if (start >= 0 && end > start) {
+        try {
+          const facts = JSON.parse(text.slice(start, end + 1));
+          if (Array.isArray(facts)) return [...new Set(facts.map(item => String(item).trim().slice(0, 140)).filter(Boolean))].slice(0, 8);
+        } catch { /* fall through to conservative line recovery */ }
+      }
+      return [...new Set(text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '').trim().slice(0, 140)).filter(Boolean))].slice(0, 8);
+    }
+    function fileDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.addEventListener('load', () => resolve(String(reader.result || '')), { once: true });
+        reader.addEventListener('error', () => reject(new Error('The browser could not prepare the video for V18.')), { once: true });
+        reader.readAsDataURL(file);
+      });
+    }
+    async function observeDirectVideo(file, frameEvidence) {
+      setStatus('V18 is checking the original video for confirmed motion and audio facts…');
+      const dataUrl = await fileDataUrl(file);
+      const prompt = `You are the second-pass Gemma 4 video observer. The verified frame evidence below is your source of truth. Inspect the attached video and return ONLY a JSON array of at most EIGHT short facts that add useful temporal or audible information. Add a fact only when it is directly visible or clearly audible and consistent with the frame evidence. Never infer speech content, identity, intent, music, sound, causality, brands, unreadable text or off-screen events. If audio is absent or uncertain, do not mention audio. Do not repeat facts unless they clarify sequence or motion.\n\nVERIFIED FRAME EVIDENCE:\n${frameEvidence}`;
+      const content = [{ type: 'text', text: prompt }, { type: 'video_url', video_url: { url: dataUrl } }];
+      return cleanDirectVideoFacts(await askGemma(content, 450, videoModel.value.trim()));
+    }
     async function observeFrame(sample) {
       const prompt = `You are a precise visual analyst. This is ONE frame from a video. Return ONLY a JSON array of at most TWO very short, clearly visible facts: subjects, actions, objects, setting, motion or lighting. Do not infer identity, intent, speech, brands, unreadable text, exact counts, chronology, or off-screen events.`;
       const content = [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: sample } }];
@@ -318,8 +376,10 @@
       if (firstError) throw firstError;
       return results;
     }
-    function evidenceFrom(frameFacts) {
-      return frameFacts.map((facts, index) => `FRAME ${index + 1} OF ${FRAME_COUNT}:\n- ${facts.slice(0, FACTS_PER_FRAME).map(fact => String(fact).slice(0, FACT_MAX_CHARS)).join('\n- ')}`).join('\n\n');
+    function evidenceFrom(frameFacts, videoFacts = []) {
+      const framesEvidence = frameFacts.map((facts, index) => `FRAME ${index + 1} OF ${FRAME_COUNT}:\n- ${facts.slice(0, FACTS_PER_FRAME).map(fact => String(fact).slice(0, FACT_MAX_CHARS)).join('\n- ')}`).join('\n\n');
+      if (!videoFacts.length) return framesEvidence;
+      return `${framesEvidence}\n\nDIRECT VIDEO FACTS CONFIRMED AGAINST THE FRAMES:\n- ${videoFacts.join('\n- ')}`;
     }
     function isPromptLimitError(error) {
       return Boolean(error?.isPromptLimit) || /prompt tokens limit exceeded/i.test(String(error?.message || ''));
@@ -393,8 +453,31 @@
       if (!file) throw new Error('Choose a video first.');
       if (!apiKey.value.trim()) throw new Error('Enter an OpenRouter key in Local inference settings.');
       if (!model.value.trim()) throw new Error('Enter a vision-capable model slug.');
+      if (pipelineVersion.value === 'v18' && !videoModel.value.trim()) throw new Error('Enter a direct-video model slug for V18.');
       const { observations, box } = await observeAllFrames(preview);
-      const evidence = evidenceFrom(observations);
+      let evidence = evidenceFrom(observations), directVideoUsed = false, directVideoNote = '';
+      if (pipelineVersion.value === 'v18') {
+        if (preview.duration > DIRECT_VIDEO_MAX_SECONDS) {
+          directVideoNote = `Browser V18 kept frame evidence because this clip is longer than ${DIRECT_VIDEO_MAX_SECONDS} seconds; the Docker submission splits it into two parts.`;
+          setStatus(directVideoNote, 'warning');
+        } else if (file.size > DIRECT_VIDEO_MAX_BYTES) {
+          directVideoNote = 'Browser V18 kept frame evidence because this file exceeds the 20 MB direct-upload safety limit.';
+          setStatus(directVideoNote, 'warning');
+        } else {
+          try {
+            const directFacts = await observeDirectVideo(file, evidence);
+            if (directFacts.length) {
+              evidence = evidenceFrom(observations, directFacts);
+              directVideoUsed = true;
+            } else {
+              directVideoNote = 'Gemma returned no additional verified video facts; V18 safely kept the frame evidence.';
+            }
+          } catch (error) {
+            directVideoNote = `Direct-video observation was unavailable (${error instanceof Error ? error.message : 'unknown error'}); V18 safely kept the frame evidence.`;
+            setStatus(directVideoNote, 'warning');
+          }
+        }
+      }
       currentCaptions = await writeCaptions(evidence);
       const rewrites = await Promise.allSettled([
         rewriteHumorousTech(evidence, currentCaptions.humorous_tech),
@@ -406,11 +489,14 @@
       try { currentCaptions = await verifyGrounding(evidence, currentCaptions); }
       catch (error) { setStatus('Grounding verification was unavailable; keeping the evidence-based captions.', 'warning'); }
       renderCaptions(currentCaptions); saveHistory(file, currentCaptions);
-      setStatus(`Done — all ${FRAME_COUNT} frames were used at up to ${box.width}×${box.height}, and the original video stayed in this browser.`);
+      const mode = pipelineVersion.value.toUpperCase();
+      const videoSummary = directVideoUsed ? ' Direct-video evidence was added.' : (directVideoNote ? ` ${directVideoNote}` : '');
+      setStatus(`Done with ${mode} — all ${FRAME_COUNT} frames were used at up to ${box.width}×${box.height}.${videoSummary}`);
     }
 
     restoreSettings(); renderHistory();
-    model.addEventListener('change', saveSettings); rememberKey.addEventListener('change', saveSettings);
+    pipelineVersion.addEventListener('change', () => { updateVersionUi(); saveSettings(); });
+    model.addEventListener('change', saveSettings); videoModel.addEventListener('change', saveSettings); rememberKey.addEventListener('change', saveSettings);
     taskId.addEventListener('change', () => { saveSettings(); if (currentCaptions) renderJuryJson(currentCaptions); });
     videoFile.addEventListener('change', async () => {
       results.replaceChildren(); frames.replaceChildren(); resultActions.classList.add('hidden'); contractPreview.classList.add('hidden');
@@ -423,7 +509,7 @@
     });
     caption.addEventListener('click', async () => { caption.disabled = true; try { await run(); } catch (error) { setStatus(error instanceof Error ? error.message : 'Captioning failed.', 'error'); } finally { caption.disabled = false; } });
     $('download').addEventListener('click', downloadCaptions);
-    $('forget').addEventListener('click', () => { localStorage.removeItem(SETTINGS_KEY); apiKey.value = ''; model.value = 'google/gemma-4-31b-it'; taskId.value = 'demo-v1'; rememberKey.checked = false; setStatus('Local settings removed.'); });
+    $('forget').addEventListener('click', () => { localStorage.removeItem(SETTINGS_KEY); pipelineVersion.value = 'v17'; apiKey.value = ''; model.value = 'google/gemma-4-31b-it'; videoModel.value = 'google/gemma-4-26b-a4b-it'; taskId.value = 'demo-v1'; rememberKey.checked = false; updateVersionUi(); setStatus('Local settings removed.'); });
     $('clearHistory').addEventListener('click', () => { localStorage.removeItem(HISTORY_KEY); renderHistory(); setStatus('Local caption history cleared.'); });
   </script>
 </body>
