@@ -29,6 +29,10 @@ jobs:
           context: Gemma4Captionner/full
           platforms: linux/amd64
           push: true
+          # Keep one plain amd64 manifest. Some hackathon pullers reject
+          # BuildKit's auxiliary unknown/unknown attestation manifest.
+          provenance: false
+          sbom: false
           tags: |
             ghcr.io/mvconceptlabai/gemma4-captioner:${{ github.ref_name }}
             ghcr.io/mvconceptlabai/gemma4-captioner:latest
