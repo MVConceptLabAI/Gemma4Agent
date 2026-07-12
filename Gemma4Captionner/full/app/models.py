@@ -8,6 +8,10 @@ from typing import Any
 # Hard length cap for a caption. 300 suits the concise pipeline; the ensemble
 # engine writes long richly-detailed captions, so it raises this via env.
 MAX_CAPTION_CHARS = int(os.environ.get("MAX_CAPTION_CHARS", "300"))
+TRUST_GENERATED_HUMOROUS_TECH = (
+    os.environ.get("TRUST_GENERATED_HUMOROUS_TECH", "0").strip().lower()
+    in {"1", "true", "yes", "on"}
+)
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 
@@ -412,7 +416,11 @@ def style_filter_reason(style: str, caption: str) -> str:
         return "low_taste_term"
     if style == "humorous_non_tech" and _has_tech_jargon(caption):
         return "tech_jargon_banned"
-    if style == "humorous_tech" and not _has_tech_reference(caption):
+    if (
+        style == "humorous_tech"
+        and not TRUST_GENERATED_HUMOROUS_TECH
+        and not _has_tech_reference(caption)
+    ):
         return "missing_tech_term"
     if style in {"formal", "sarcastic"} and "!" in caption:
         return "exclamation"
@@ -433,7 +441,10 @@ def caption_passes_style_filter(style: str, caption: str) -> bool:
     if style == "humorous_non_tech":
         return not _has_tech_jargon(caption)
     if style == "humorous_tech":
-        return _has_tech_reference(caption)
+        # The Gemma demo pipeline has a dedicated tech-humour rewrite and a
+        # grounded verifier. Trust that stage instead of maintaining an
+        # inevitably incomplete vocabulary that discards valid analogies.
+        return TRUST_GENERATED_HUMOROUS_TECH or _has_tech_reference(caption)
     if style == "formal":
         return "!" not in caption and not _has_first_second_person(caption)
     if style == "sarcastic":
