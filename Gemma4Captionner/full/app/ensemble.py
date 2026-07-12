@@ -308,6 +308,16 @@ def _parse_obj(text: str | None) -> dict:
     return json.loads(text[text.find("{"): text.rfind("}") + 1])
 
 
+def _caption_from_style_response(text: str | None, style: str) -> str:
+    """Accept both the requested {caption: ...} shape and a model's style-key shape."""
+    parsed = _parse_obj(text)
+    for key in ("caption", style):
+        value = parsed.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
+
+
 def _word_count(text: str) -> int:
     return len([word for word in text.split() if word])
 
@@ -445,7 +455,9 @@ async def caption_ensemble_frames(
                             per_style_tokens,
                             temperature=WRITER_TEMP,
                         )
-                        caption = str(_parse_obj(raw).get("caption", ""))
+                        caption = _caption_from_style_response(raw, style)
+                        if not caption:
+                            raise ValueError(f"writer {style} returned no caption")
                         break
                     except (
                         httpx.HTTPStatusError,
@@ -477,7 +489,7 @@ async def caption_ensemble_frames(
                             per_style_tokens,
                             temperature=WRITER_TEMP,
                         )
-                        repaired = str(_parse_obj(repaired_raw).get("caption", ""))
+                        repaired = _caption_from_style_response(repaired_raw, style)
                         if caption_passes_style_filter(style, repaired):
                             caption = repaired
                         else:
@@ -509,7 +521,7 @@ async def caption_ensemble_frames(
                             ),
                             timeout=GROUNDING_REVIEW_TIMEOUT_S,
                         )
-                        reviewed = str(_parse_obj(reviewed_raw).get("caption", ""))
+                        reviewed = _caption_from_style_response(reviewed_raw, style)
                         if reviewed and caption_passes_style_filter(style, reviewed):
                             if (
                                 style == "humorous_non_tech"
