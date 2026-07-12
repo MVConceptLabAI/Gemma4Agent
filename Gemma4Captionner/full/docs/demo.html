@@ -475,9 +475,15 @@
       }
       return row[b.length];
     }
-    function hasLexicalCorruption(value) {
+    function hasLexicalCorruption(value, evidence = '') {
       const text = String(value || '');
-      if (/\b(?:[a-z]+[A-Z][A-Za-z]*|[A-Z]{4,}|totalest)\b/.test(text)) return true;
+      const verified = String(evidence || '');
+      const suspiciousTokens = text.match(/\b(?:[a-z]+[A-Z][A-Za-z]*|[A-Z]{4,}|totalest)\b/g) || [];
+      for (const token of suspiciousTokens) {
+        if (token.toLowerCase() === 'totalest') return true;
+        const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (!new RegExp(`(^|[^A-Za-z0-9])${escaped}($|[^A-Za-z0-9])`, 'i').test(verified)) return true;
+      }
       if (/\b([A-Za-z]{3,})\b(?:\s+\1\b)+/i.test(text)) return true;
       const words = (text.match(/[A-Za-z]+/g) || []).map(word => word.toLowerCase());
       for (let index = 1; index < words.length; index += 1) {
@@ -500,7 +506,7 @@
       return !/\b(?:stationary|motionless|remains? still|does not move|no movement|unchanged)\b/i.test(String(evidence || ''));
     }
     function hasCaptionQualityRisk(evidence, value) {
-      return hasLexicalCorruption(value) || hasUnsupportedAbsolute(evidence, value);
+      return hasLexicalCorruption(value, evidence) || hasUnsupportedAbsolute(evidence, value);
     }
     async function repairCaptionQualityV18(evidence, captions) {
       let affected = REQUIRED_STYLES.filter(style => hasCaptionQualityRisk(evidence, captions[style]));
