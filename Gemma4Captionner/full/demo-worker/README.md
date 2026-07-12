@@ -1,9 +1,13 @@
 # Gemma 4 SceneGate public demo
 
-The Cloudflare Worker serves the public page and proxies small JSON job requests
-to the GPU-only Flask API. It never exposes JupyterLab, its token, or provider
-keys. Captioning is asynchronous: the Worker creates a job and polls it, which
-avoids keeping an edge request open during GPU inference.
+The Cloudflare Worker serves the public page and proxies job requests to the
+GPU-only Flask API. It never exposes JupyterLab, its token, or provider keys.
+Captioning is asynchronous: the Worker creates a job and polls it, which avoids
+keeping an edge request open during GPU inference.
+
+Demo users can either paste a public HTTPS video URL or upload one MP4, MOV,
+WebM, or MKV file up to 80 MB. Uploads stream through the Worker instead of
+being buffered there and are removed from the GPU after captioning completes.
 
 ## 1. Start the GPU API
 
@@ -38,6 +42,6 @@ wrangler deploy
 - `GPU_ORIGIN_TOKEN`: exactly matches `DEMO_ORIGIN_TOKEN` on the GPU.
 - `DEMO_ACCESS_TOKEN`: a separate access code entered by approved demo users.
 
-The deployed `workers.dev` URL is the public demo address. The Worker accepts
-only an HTTPS video URL; uploads are intentionally excluded to avoid edge body
-limits and uncontrolled transfer cost.
+The deployed `workers.dev` URL is the public interactive demo address. Set
+`DEMO_UPLOAD_MAX_BYTES` on the GPU only when a lower upload limit is required;
+it must stay at or below the Cloudflare account request-body allowance.

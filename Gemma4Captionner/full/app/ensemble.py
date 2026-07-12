@@ -16,6 +16,7 @@ import base64
 import json
 import logging
 import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -347,7 +348,6 @@ async def caption_ensemble_frames(
 
 
 async def caption_ensemble(video_url: str, styles: list[str]) -> dict[str, str]:
-    import tempfile
     with tempfile.TemporaryDirectory() as tmp:
         wd = Path(tmp)
         vp = await P._download(video_url, wd / "clip.mp4")
@@ -355,4 +355,17 @@ async def caption_ensemble(video_url: str, styles: list[str]) -> dict[str, str]:
         video_b64 = None
         if VIDEO_OBSERVER:
             video_b64 = await asyncio.to_thread(_compress_for_video_observer, vp, wd)
+        return await caption_ensemble_frames(frames, styles, video_b64)
+
+
+async def caption_ensemble_file(video_path: Path, styles: list[str]) -> dict[str, str]:
+    """Caption an already-uploaded video without exposing it through a public URL."""
+    if not video_path.is_file():
+        raise ValueError("uploaded video is no longer available")
+    with tempfile.TemporaryDirectory() as tmp:
+        wd = Path(tmp)
+        frames = P._extract_keyframes(video_path, wd, P.NUM_FRAMES, P.FRAME_MAX_EDGE)
+        video_b64 = None
+        if VIDEO_OBSERVER:
+            video_b64 = await asyncio.to_thread(_compress_for_video_observer, video_path, wd)
         return await caption_ensemble_frames(frames, styles, video_b64)

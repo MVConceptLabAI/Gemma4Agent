@@ -10,16 +10,19 @@ import hmac
 import ipaddress
 import os
 import socket
+import shutil
+import tempfile
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 from urllib.parse import urlparse
 
 from flask import Flask, Response, jsonify, request
 
-from app.ensemble import caption_ensemble
+from app.ensemble import caption_ensemble, caption_ensemble_file
 from app.models import REQUIRED_STYLES, normalize_captions
 
 Status = Literal["queued", "running", "complete", "failed"]
@@ -31,7 +34,9 @@ if not _token:
     raise RuntimeError("DEMO_ORIGIN_TOKEN must be set before starting the public demo API")
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 12 * 1024
+_UPLOAD_MAX_BYTES = int(os.environ.get("DEMO_UPLOAD_MAX_BYTES", str(80 * 1024 * 1024)))
+_ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".mov", ".webm", ".mkv"}
+app.config["MAX_CONTENT_LENGTH"] = _UPLOAD_MAX_BYTES
 _jobs_lock = threading.Lock()
 _jobs: dict[str, "CaptionJob"] = {}
 _executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="gemma4-caption")
@@ -42,6 +47,7 @@ class CaptionJob:
     created_at: float
     status: Status = "queued"
     captions: dict[str, str] | None = None
+    upload_dir: str | None = None
 
 
 def _authorized() -> bool:
@@ -71,20 +77,29 @@ def _public_https_url(value: object) -> str:
 def _trim_old_jobs(now: float) -> None:
     expired = [job_id for job_id, job in _jobs.items() if now - job.created_at > _JOB_RETENTION_S]
     for job_id in expired:
-        _jobs.pop(job_id, None)
+        _cleanup_job(_jobs.pop(job_id, None))
     while len(_jobs) >= _MAX_JOBS:
         oldest = min(_jobs, key=lambda key: _jobs[key].created_at)
-        _jobs.pop(oldest, None)
+        _cleanup_job(_jobs.pop(oldest, None))
 
 
-def _run_caption(job_id: str, video_url: str) -> None:
+def _cleanup_job(job: CaptionJob | None) -> None:
+    if job and job.upload_dir:
+        shutil.rmtree(job.upload_dir, ignore_errors=True)
+        job.upload_dir = None
+
+
+def _run_caption(job_id: str, video_url: str | None = None, video_path: str | None = None) -> None:
     with _jobs_lock:
         job = _jobs.get(job_id)
         if job is None:
             return
         job.status = "running"
     try:
-        captions = asyncio.run(caption_ensemble(video_url, list(REQUIRED_STYLES)))
+        if video_path:
+            captions = asyncio.run(caption_ensemble_file(Path(video_path), list(REQUIRED_STYLES)))
+        else:
+            captions = asyncio.run(caption_ensemble(video_url or "", list(REQUIRED_STYLES)))
         result = normalize_captions(captions, list(REQUIRED_STYLES))
         with _jobs_lock:
             job = _jobs.get(job_id)
@@ -97,6 +112,9 @@ def _run_caption(job_id: str, video_url: str) -> None:
             job = _jobs.get(job_id)
             if job is not None:
                 job.status = "failed"
+    finally:
+        with _jobs_lock:
+            _cleanup_job(_jobs.get(job_id))
 
 
 @app.before_request
@@ -126,6 +144,39 @@ def create_job() -> Response:
         _jobs[job_id] = CaptionJob(created_at=now)
     _executor.submit(_run_caption, job_id, video_url)
     return jsonify({"job_id": job_id, "status": "queued"}), 202
+
+
+@app.post("/uploads")
+def create_upload_job() -> Response:
+    video = request.files.get("video")
+    if video is None or not video.filename:
+        return jsonify({"error": "choose a video file"}), 400
+    extension = Path(video.filename).suffix.lower()
+    if extension not in _ALLOWED_VIDEO_EXTENSIONS:
+        return jsonify({"error": "use an MP4, MOV, WebM, or MKV video"}), 400
+
+    upload_dir = Path(tempfile.mkdtemp(prefix="gemma4-demo-"))
+    video_path = upload_dir / f"upload{extension}"
+    try:
+        video.save(video_path)
+        if video_path.stat().st_size == 0:
+            raise ValueError("uploaded video is empty")
+    except Exception as exc:  # noqa: BLE001
+        shutil.rmtree(upload_dir, ignore_errors=True)
+        return jsonify({"error": str(exc)}), 400
+
+    job_id = os.urandom(18).hex()
+    now = time.time()
+    with _jobs_lock:
+        _trim_old_jobs(now)
+        _jobs[job_id] = CaptionJob(created_at=now, upload_dir=str(upload_dir))
+    _executor.submit(_run_caption, job_id, None, str(video_path))
+    return jsonify({"job_id": job_id, "status": "queued"}), 202
+
+
+@app.errorhandler(413)
+def uploaded_file_too_large(_: object) -> Response:
+    return jsonify({"error": f"video exceeds the {_UPLOAD_MAX_BYTES // (1024 * 1024)} MB demo limit"}), 413
 
 
 @app.get("/jobs/<job_id>")
