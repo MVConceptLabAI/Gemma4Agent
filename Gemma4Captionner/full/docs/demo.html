@@ -191,11 +191,20 @@
       const content = [{ type: 'text', text: prompt }, ...sampled.map(url => ({ type: 'image_url', image_url: { url } }))];
       return cleanFactList(await askGemma(content, 400));
     }
-    async function writeCaptions(batchFacts) {
+    function evidenceFrom(batchFacts) {
+      return batchFacts.map((facts, index) => `FRAMES ${index * 3 + 1}-${index * 3 + 3}:\n- ${facts.join('\n- ')}`).join('\n\n');
+    }
+    async function writeCaptions(evidence) {
       setStatus('Reconciling all twelve frames into four captions…');
-      const evidence = batchFacts.map((facts, index) => `FRAMES ${index * 3 + 1}-${index * 3 + 3}:\n- ${facts.join('\n- ')}`).join('\n\n');
-      const prompt = `You are a careful video-captioning writer. Four visual analyses describe consecutive parts of ONE video. Cross-check them. Keep only facts supported by the records; omit conflicts and do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. formal is objective and factual. sarcastic is dry and lightly mocking with no technology jargon. humorous_tech uses one natural technology analogy tied to visible facts. humorous_non_tech uses warm everyday humour with no technology jargon.\n\n${evidence}`;
+      const prompt = `You are a careful video-captioning writer. Four visual analyses describe consecutive parts of ONE video. Cross-check them. The clip may be a montage: when scenes differ, describe their sequence instead of pretending they happen in one physical scene. Keep only facts supported by the records; omit conflicts and do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. formal is objective and factual. sarcastic is dry and lightly mocking with no technology jargon. humorous_tech uses one natural technology analogy tied to visible facts. humorous_non_tech uses warm everyday humour with no technology jargon.\n\n${evidence}`;
       return validateCaptions(cleanJson(await askGemma([{ type: 'text', text: prompt }], 1200)));
+    }
+    async function rewriteHumorousTech(evidence, candidate) {
+      setStatus('Giving the humorous-tech caption a real punchline…');
+      const prompt = `You are editing ONE humorous_tech video caption. The video may be a montage, so preserve the visible sequence when relevant. Rewrite the candidate using only the verified evidence below. It must be genuinely lightly funny: one natural tech analogy plus a small playful payoff tied to a visible contrast, action or transition. A bare jargon contrast is not a joke. Do not invent code, speech, identities, brands or unseen events. Return ONLY JSON: {"caption":"..."}.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCURRENT CANDIDATE:\n${candidate}`;
+      const result = cleanJson(await askGemma([{ type: 'text', text: prompt }], 300));
+      const caption = String(result.caption || '').trim();
+      return caption || candidate;
     }
     async function run() {
       const file = videoFile.files[0];
@@ -208,7 +217,10 @@
       const batches = [sampled.slice(0, 3), sampled.slice(3, 6), sampled.slice(6, 9), sampled.slice(9, 12)];
       const observations = [];
       for (const [index, batch] of batches.entries()) observations.push(await observeBatch(batch, `batch ${index + 1} of 4`));
-      currentCaptions = await writeCaptions(observations);
+      const evidence = evidenceFrom(observations);
+      currentCaptions = await writeCaptions(evidence);
+      try { currentCaptions.humorous_tech = await rewriteHumorousTech(evidence, currentCaptions.humorous_tech); }
+      catch (error) { setStatus('Tech caption rewrite was unavailable; keeping the grounded first draft.', 'warning'); }
       renderCaptions(currentCaptions); saveHistory(file, currentCaptions);
       setStatus('Done — all twelve frames were used and the original video stayed in this browser.');
     }
