@@ -24,6 +24,7 @@ from typing import Any
 import httpx
 
 from app import pipeline as P
+from app.models import caption_passes_style_filter
 
 log = logging.getLogger("track2.ensemble")
 
@@ -141,6 +142,19 @@ _TECH_PUNCHLINE_RULE = (
     "ONE compact technology analogy with a real light punchline. A bare pile of words such "
     "as 'pipeline', 'latency', or 'runtime' is not a joke. Do not stack jargon, invent code "
     "work, or turn the subject into an engineer. Keep the analogy tied to one visible fact."
+)
+
+# The outer normalizer has a safe generic fallback when a caption misses the
+# humorous_tech marker. That kept the JSON contract intact, but v8 showed that
+# it can throw away an otherwise grounded, scene-specific caption. Give the
+# same Gemma writer one compact, evidence-preserving repair pass first.
+_TECH_STYLE_REPAIR_RULE = (
+    "\n\nFINAL HUMOROUS_TECH COMPLIANCE PASS: Return a replacement caption grounded "
+    "only in the same observation record. State the visible action or subject, then make "
+    "one natural, lightly funny technology comparison. It MUST use one clear technology "
+    "term such as API, latency, cache, runtime, server, pipeline, or scheduler as part of "
+    "that comparison. Do not invent code, speech, intent, or unseen details. Return only "
+    "the required JSON object."
 )
 
 OBSERVE_SYSTEM = (
@@ -356,6 +370,34 @@ async def caption_ensemble_frames(
                             "writer %s attempt 1 failed (%s), retrying once", style, e
                         )
                         await asyncio.sleep(2)
+
+                # Do not let the outer normalizer replace a detailed, grounded
+                # candidate with its generic template solely because the writer
+                # omitted a tech marker. This call has the identical evidence
+                # record and is attempted only for that narrowly-defined miss.
+                if (
+                    style == "humorous_tech"
+                    and caption
+                    and not caption_passes_style_filter(style, caption)
+                ):
+                    try:
+                        repaired_raw = await _call(
+                            client,
+                            WRITER,
+                            style_system + _TECH_STYLE_REPAIR_RULE,
+                            write_content,
+                            per_style_tokens,
+                            temperature=WRITER_TEMP,
+                        )
+                        repaired = str(_parse_obj(repaired_raw).get("caption", ""))
+                        if caption_passes_style_filter(style, repaired):
+                            caption = repaired
+                        else:
+                            log.warning(
+                                "humorous_tech repair still missed style filter; keeping initial draft"
+                            )
+                    except (httpx.HTTPStatusError, httpx.TransportError, ValueError) as e:
+                        log.warning("humorous_tech repair failed (%s); keeping initial draft", e)
                 return style, caption
 
             caps = dict(

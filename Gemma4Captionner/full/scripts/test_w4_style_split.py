@@ -72,6 +72,13 @@ def _run_with_frame(ensemble) -> dict[str, str]:
         return asyncio.run(ensemble.caption_ensemble_frames([frame], list(_STYLES)))
 
 
+def _writer_caption(prefix: str, style: str) -> str:
+    """Produce a valid synthetic caption for each split-writer test."""
+    if style == "humorous_tech":
+        return f"{prefix} humorous_tech runtime"
+    return f"{prefix} {style}"
+
+
 def test_default_off_preserves_the_v38_common_writer() -> None:
     with _loaded_ensemble(None) as ensemble:
         assert ensemble.W4_STYLE_SPLIT is False
@@ -158,7 +165,7 @@ def test_on_runs_four_style_writers_concurrently_with_one_observation_spine() ->
                 all_started.set()
             await asyncio.wait_for(all_started.wait(), timeout=1.0)
             active -= 1
-            return json.dumps({"caption": f"split {style}"})
+            return json.dumps({"caption": _writer_caption("split", style)})
 
         ensemble._call = fake_call
         result = _run_with_frame(ensemble)
@@ -177,9 +184,10 @@ def test_on_runs_four_style_writers_concurrently_with_one_observation_spine() ->
             "Independent observation lists from several vision models for ONE clip. "
             "Cross-reference and write the four captions.\n\n"
         )
-        assert result == {style: f"split {style}" for style in _STYLES}
+        expected = {style: _writer_caption("split", style) for style in _STYLES}
+        assert result == expected
         validated = validate_results([{"task_id": "w4", "captions": result}])
-        assert validated[0]["captions"] == result
+        assert validated[0]["captions"] == expected
 
 
 def test_each_style_keeps_the_existing_single_retry_contract() -> None:
@@ -201,7 +209,7 @@ def test_each_style_keeps_the_existing_single_retry_contract() -> None:
             attempts[style] += 1
             if style == "formal" and attempts[style] == 1:
                 raise httpx.TransportError("synthetic transient writer failure")
-            return json.dumps({"caption": f"retry-safe {style}"})
+            return json.dumps({"caption": _writer_caption("retry-safe", style)})
 
         ensemble.asyncio.sleep = no_sleep
         ensemble._call = fake_call
@@ -217,7 +225,9 @@ def test_each_style_keeps_the_existing_single_retry_contract() -> None:
             "humorous_non_tech": 1,
         }
         assert list(result) == list(_STYLES)
-        assert all(result[style] == f"retry-safe {style}" for style in _STYLES)
+        assert result == {
+            style: _writer_caption("retry-safe", style) for style in _STYLES
+        }
 
 
 def test_each_style_retries_malformed_writer_json() -> None:
@@ -239,7 +249,7 @@ def test_each_style_retries_malformed_writer_json() -> None:
             attempts[style] += 1
             if style == "formal" and attempts[style] == 1:
                 return "not-json"
-            return json.dumps({"caption": f"parse-safe {style}"})
+            return json.dumps({"caption": _writer_caption("parse-safe", style)})
 
         ensemble.asyncio.sleep = no_sleep
         ensemble._call = fake_call
@@ -254,7 +264,45 @@ def test_each_style_retries_malformed_writer_json() -> None:
             "humorous_tech": 1,
             "humorous_non_tech": 1,
         }
-        assert result == {style: f"parse-safe {style}" for style in _STYLES}
+        assert result == {
+            style: _writer_caption("parse-safe", style) for style in _STYLES
+        }
+
+
+def test_humorous_tech_gets_one_grounded_repair_before_outer_fallback() -> None:
+    """A missing tech marker must not immediately lose the detailed candidate."""
+    with _loaded_ensemble("1") as ensemble:
+        base_system = ensemble._writer_system()
+        tech_calls = 0
+
+        async def fake_call(
+            client, model, system, content, max_tokens, temperature=0.5
+        ) -> str:
+            nonlocal tech_calls
+            if system == ensemble.OBSERVE_SYSTEM:
+                return '["An orange kitten walks through green foliage."]'
+            suffix = system[len(base_system):]
+            style = next(style for style in _STYLES if f'"{style}"' in suffix)
+            if style != "humorous_tech":
+                return json.dumps({"caption": _writer_caption("valid", style)})
+            tech_calls += 1
+            if system.endswith(ensemble._TECH_STYLE_REPAIR_RULE):
+                return json.dumps({
+                    "caption": "An orange kitten threads through green foliage like a cache "
+                    "finally serving the right page."
+                })
+            return json.dumps({
+                "caption": "An orange kitten walks through green foliage, apparently very busy."
+            })
+
+        ensemble._call = fake_call
+        result = _run_with_frame(ensemble)
+
+        assert tech_calls == 2
+        assert result["humorous_tech"] == (
+            "An orange kitten threads through green foliage like a cache finally serving "
+            "the right page."
+        )
 
 
 def test_flag_is_strict_and_off_unless_explicitly_enabled() -> None:
@@ -281,6 +329,7 @@ def main() -> None:
     test_on_runs_four_style_writers_concurrently_with_one_observation_spine()
     test_each_style_keeps_the_existing_single_retry_contract()
     test_each_style_retries_malformed_writer_json()
+    test_humorous_tech_gets_one_grounded_repair_before_outer_fallback()
     test_flag_is_strict_and_off_unless_explicitly_enabled()
     print("w4_style_split_ok")
 
