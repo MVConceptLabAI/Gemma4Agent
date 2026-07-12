@@ -37,7 +37,7 @@ log = logging.getLogger("track2.qwen_direct")
 FIREWORKS_BASE_URL = os.environ.get(
     "FIREWORKS_BASE_URL", "https://api.fireworks.ai/inference/v1"
 )
-FIREWORKS_API_KEY = os.environ.get("FIREWORKS_API_KEY", "").strip()
+FIREWORKS_API_KEY = "".join(os.environ.get("FIREWORKS_API_KEY", "").split())
 MODEL = os.environ.get(
     "QWEN_DIRECT_MODEL", "accounts/fireworks/models/qwen3p7-plus"
 )
