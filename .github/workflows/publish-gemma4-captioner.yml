@@ -41,6 +41,5 @@ jobs:
           # image; never commit literal values to this repository.
           build-args: |
             OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
-            FIREWORKS_API_KEY=${{ secrets.FIREWORKS_API_KEY }}
       - name: Verify published manifest
         run: docker buildx imagetools inspect ghcr.io/mvconceptlabai/gemma4-captioner:${{ github.ref_name }}

@@ -324,6 +324,7 @@ TECH_DETECT_EXTRA = {
     "production", "prod",
     "cache", "code", "compile", "deploy", "deploys", "pipeline", "python", "staging",
     "deployment", "deployments", "telemetry", "downtime", "server", "servers",
+    "fiber", "optical", "network", "networking", "system", "processor", "render", "rendering",
 }
 
 

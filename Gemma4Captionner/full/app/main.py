@@ -129,6 +129,16 @@ async def _run_one(sem: asyncio.Semaphore, task: dict[str, Any]) -> dict[str, An
                         caption_one_video(video_url=video_url, styles=styles),
                         timeout=min(PER_TASK_TIMEOUT_S, _remaining_budget()),
                     )
+            elif CAPTION_ENGINE == "gemma_demo":
+                # Exact evidence-first sequence used by the public HTML5 demo:
+                # one Gemma 4 observation per sampled frame, then write,
+                # humour rewrites, and grounded verification with Gemma only.
+                from app.demo_pipeline import caption_demo
+
+                captions = await asyncio.wait_for(
+                    caption_demo(video_url=video_url, styles=styles),
+                    timeout=task_timeout,
+                )
             elif CAPTION_ENGINE == "qwen_direct":
                 # Opt-in experimental path. Lazy import keeps the default and
                 # legacy v36 paths unchanged unless explicitly selected.
