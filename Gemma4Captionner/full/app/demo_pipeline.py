@@ -12,6 +12,7 @@ import base64
 import json
 import logging
 import os
+import re
 import subprocess
 import tempfile
 from pathlib import Path
@@ -377,6 +378,101 @@ async def _verify(client: httpx.AsyncClient, evidence: str, captions: dict[str, 
     return reviewed
 
 
+def _edit_distance(left: str, right: str) -> int:
+    a, b = left.lower(), right.lower()
+    row = list(range(len(b) + 1))
+    for index_a, char_a in enumerate(a, 1):
+        diagonal = row[0]
+        row[0] = index_a
+        for index_b, char_b in enumerate(b, 1):
+            previous = row[index_b]
+            row[index_b] = min(
+                row[index_b] + 1,
+                row[index_b - 1] + 1,
+                diagonal + (char_a != char_b),
+            )
+            diagonal = previous
+    return row[-1]
+
+
+def _has_lexical_corruption(value: str) -> bool:
+    if re.search(r"\b(?:[a-z]+[A-Z][A-Za-z]*|[A-Z]{4,}|totalest)\b", value):
+        return True
+    if re.search(r"\b([A-Za-z]{3,})\b(?:\s+\1\b)+", value, re.IGNORECASE):
+        return True
+    words = [word.lower() for word in re.findall(r"[A-Za-z]+", value)]
+    for left, right in zip(words, words[1:]):
+        if min(len(left), len(right)) >= 5 and left != right and _edit_distance(left, right) <= 2:
+            return True
+    bigrams: dict[str, int] = {}
+    for index, (left, right) in enumerate(zip(words, words[1:])):
+        if len(left) < 4 or len(right) < 4:
+            continue
+        key = f"{left} {right}"
+        if key in bigrams and index - bigrams[key] <= 20:
+            return True
+        bigrams[key] = index
+    return False
+
+
+def _safe_caption(style: str) -> str:
+    return {
+        "formal": "The video presents a sequence of visible subjects, actions, and settings.",
+        "sarcastic": "The visible sequence gives its ordinary events a remarkably serious presentation, ensuring that no modest moment escapes the full documentary treatment.",
+        "humorous_tech": "The visible sequence unfolds like a carefully queued system update, giving each grounded scene its own turn before the final result.",
+        "humorous_non_tech": "The visible sequence arrives like a family photo album passed around the table, giving each grounded moment its own little entrance.",
+    }[style]
+
+
+async def _repair_lexical_corruption(
+    client: httpx.AsyncClient,
+    evidence: str,
+    captions: dict[str, str],
+    styles: list[str],
+) -> dict[str, str]:
+    affected = [style for style in styles if _has_lexical_corruption(captions[style])]
+    if not affected:
+        return captions
+    log.warning("detected lexical corruption in styles: %s", ", ".join(affected))
+    prompt = (
+        "You are a strict copy editor repairing surface corruption in grounded video captions. Return ONLY "
+        "valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. "
+        "Preserve each caption's supported facts, sequence, style, comparison, and intended joke. Change only "
+        "malformed words, accidental letter runs, duplicated words or phrases, broken suffixes, and grammar "
+        "caused by text corruption. Do not add, remove, or reinterpret factual claims. Do not add commentary."
+        "\n\nVERIFIED EVIDENCE:\n" + evidence + "\n\nCORRUPTED CAPTIONS:\n" + json.dumps(captions)
+    )
+    try:
+        captions = _captions(
+            _json_object(await _ask(client, [{"type": "text", "text": prompt}], 800)), styles
+        )
+    except (httpx.HTTPError, ValueError, KeyError):
+        log.warning("combined lexical repair unavailable; retrying affected styles")
+    affected = [style for style in styles if _has_lexical_corruption(captions[style])]
+
+    async def repair_one(style: str) -> str:
+        prompt = (
+            f"Repair ONLY the surface text corruption in this {style} video caption. Preserve every "
+            "supported fact, the style, and the joke. Remove malformed words, letter runs, and duplicated "
+            "fragments. Do not add facts. Return ONLY JSON: {\"caption\":\"...\"}."
+            "\n\nEVIDENCE:\n" + evidence + "\n\nCAPTION:\n" + captions[style]
+        )
+        result = _json_object(await _ask(client, [{"type": "text", "text": prompt}], 320))
+        caption = result.get("caption")
+        return caption.strip() if isinstance(caption, str) and caption.strip() else captions[style]
+
+    if affected:
+        retries = await asyncio.gather(*(repair_one(style) for style in affected), return_exceptions=True)
+        for style, repaired in zip(affected, retries):
+            if isinstance(repaired, str):
+                captions[style] = repaired
+    for style in styles:
+        if _has_lexical_corruption(captions[style]):
+            log.error("lexical corruption persisted for %s; using safe complete fallback", style)
+            captions[style] = _safe_caption(style)
+    return _captions(captions, styles)
+
+
 async def caption_demo(video_url: str, styles: list[str]) -> dict[str, str]:
     """Run the same Gemma 4 evidence/write/rewrite/verify flow as docs/demo.html."""
     with tempfile.TemporaryDirectory() as tmp:
@@ -444,4 +540,5 @@ async def caption_demo(video_url: str, styles: list[str]) -> dict[str, str]:
                 captions.update(await _polish_humour(client, grounded_record, captions))
             except (httpx.HTTPError, ValueError, KeyError):
                 log.warning("V18 humour quality pass unavailable; keeping grounded rewrites")
-            return await _verify(client, grounded_record, captions, styles)
+            captions = await _verify(client, grounded_record, captions, styles)
+            return await _repair_lexical_corruption(client, grounded_record, captions, styles)
