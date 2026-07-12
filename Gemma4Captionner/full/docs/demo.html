@@ -23,7 +23,7 @@
           <label>Vision model<input id="model" type="text" value="google/gemma-4-31b-it" autocomplete="off"></label>
         </div>
         <label class="check"><input id="rememberKey" type="checkbox"> Remember this API key on this device</label>
-        <p class="privacy">The selected video never uploads to this site. The browser extracts twenty-four 640×360-or-smaller frames locally and sends them one at a time directly to OpenRouter. Settings and caption history are stored in this browser’s localStorage. Your OpenRouter key can be removed at any time.</p>
+        <p class="privacy">The selected video never uploads to this site. The browser extracts twenty-four 640×360-or-smaller frames locally and sends one frame per OpenRouter request, in small parallel groups. Settings and caption history are stored in this browser’s localStorage. Your OpenRouter key can be removed at any time.</p>
         <div class="actions"><button id="forget" class="secondary" type="button">Forget local settings</button><button id="clearHistory" class="secondary" type="button">Clear caption history</button></div>
       </details>
     </section>
@@ -56,6 +56,7 @@
     const MAX_PROMPT_TOKEN_TARGET = 3000;
     const FRAME_COUNT = 24;
     const FRAME_BOX_STEPS = [{ width: 640, height: 360 }, { width: 512, height: 288 }, { width: 384, height: 216 }];
+    const OBSERVATION_CONCURRENCY = 3;
     const FACTS_PER_FRAME = 2;
     const FACT_MAX_CHARS = 96;
     const $ = id => document.getElementById(id);
@@ -194,11 +195,25 @@
       }
       return text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '').trim().slice(0, FACT_MAX_CHARS)).filter(Boolean).slice(0, FACTS_PER_FRAME);
     }
-    async function observeFrame(sample, index) {
-      setStatus(`Analysing frame ${index} of ${FRAME_COUNT} with ${model.value.trim()}…`);
+    async function observeFrame(sample) {
       const prompt = `You are a precise visual analyst. This is ONE frame from a video. Return ONLY a JSON array of at most TWO very short, clearly visible facts: subjects, actions, objects, setting, motion or lighting. Do not infer identity, intent, speech, brands, unreadable text, exact counts, chronology, or off-screen events.`;
       const content = [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: sample } }];
       return cleanFactList(await askGemma(content, 180));
+    }
+    async function mapWithConcurrency(values, concurrency, task) {
+      const results = new Array(values.length);
+      let nextIndex = 0, stopped = false, firstError = null;
+      async function worker() {
+        while (!stopped) {
+          const index = nextIndex++;
+          if (index >= values.length) return;
+          try { results[index] = await task(values[index], index); }
+          catch (error) { stopped = true; firstError ||= error; }
+        }
+      }
+      await Promise.all(Array.from({ length: Math.min(concurrency, values.length) }, worker));
+      if (firstError) throw firstError;
+      return results;
     }
     function evidenceFrom(frameFacts) {
       return frameFacts.map((facts, index) => `FRAME ${index + 1} OF ${FRAME_COUNT}:\n- ${facts.slice(0, FACTS_PER_FRAME).map(fact => String(fact).slice(0, FACT_MAX_CHARS)).join('\n- ')}`).join('\n\n');
@@ -211,9 +226,15 @@
       for (const [attempt, box] of FRAME_BOX_STEPS.entries()) {
         setStatus(`Sampling ${FRAME_COUNT} local frames at up to ${box.width}×${box.height}; one frame per request under the ${MAX_PROMPT_TOKEN_TARGET}-token budget…`);
         const sampled = await sampleFrames(video, box);
-        const observations = [];
         try {
-          for (const [index, frame] of sampled.entries()) observations.push(await observeFrame(frame, index + 1));
+          let completed = 0;
+          setStatus(`Analysing 0/${FRAME_COUNT} frames — ${OBSERVATION_CONCURRENCY} independent requests in parallel…`);
+          const observations = await mapWithConcurrency(sampled, OBSERVATION_CONCURRENCY, async frame => {
+            const facts = await observeFrame(frame);
+            completed += 1;
+            setStatus(`Analysing ${completed}/${FRAME_COUNT} frames — ${OBSERVATION_CONCURRENCY} independent requests in parallel…`);
+            return facts;
+          });
           return { observations, box };
         } catch (error) {
           lastError = error;
