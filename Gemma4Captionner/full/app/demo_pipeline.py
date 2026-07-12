@@ -395,9 +395,16 @@ def _edit_distance(left: str, right: str) -> int:
     return row[-1]
 
 
-def _has_lexical_corruption(value: str) -> bool:
-    if re.search(r"\b(?:[a-z]+[A-Z][A-Za-z]*|[A-Z]{4,}|totalest)\b", value):
-        return True
+def _has_lexical_corruption(value: str, evidence: str = "") -> bool:
+    # Uppercase and mixed-case tokens can be legitimate OCR (for example the
+    # literal ERROR shown on a display). Only reject such a token when it is
+    # absent from the verified evidence; generated letter runs remain caught.
+    for match in re.finditer(r"\b(?:[a-z]+[A-Z][A-Za-z]*|[A-Z]{4,}|totalest)\b", value):
+        token = match.group(0)
+        if token.lower() == "totalest":
+            return True
+        if not re.search(rf"(?<![A-Za-z0-9]){re.escape(token)}(?![A-Za-z0-9])", evidence, re.IGNORECASE):
+            return True
     if re.search(r"\b([A-Za-z]{3,})\b(?:\s+\1\b)+", value, re.IGNORECASE):
         return True
     words = [word.lower() for word in re.findall(r"[A-Za-z]+", value)]
@@ -432,7 +439,7 @@ def _has_unsupported_absolute(evidence: str, value: str) -> bool:
 
 
 def _has_caption_quality_risk(evidence: str, value: str) -> bool:
-    return _has_lexical_corruption(value) or _has_unsupported_absolute(evidence, value)
+    return _has_lexical_corruption(value, evidence) or _has_unsupported_absolute(evidence, value)
 
 
 def _safe_caption(style: str) -> str:
