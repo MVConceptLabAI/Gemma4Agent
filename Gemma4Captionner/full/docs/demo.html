@@ -414,6 +414,13 @@
       const raw = await askGemma([{ type: 'text', text: prompt }], CAPTION_MAX_TOKENS);
       return validateCaptions(await parseGemmaJson(raw, REQUIRED_STYLES, groundedEmergencyCaptions(evidence)));
     }
+    async function rewriteSarcasticV18(evidence, candidate) {
+      setStatus('V18 is sharpening the sarcastic caption…');
+      const prompt = `You are editing ONE sarcastic video caption. Rewrite it using only the verified evidence below. Produce dry, intelligent, lightly mocking irony—not loud comedy. Start with one precise verified subject, action, contrast or montage transition, then use understated praise or restrained overstatement, and finish with a short sting tied to that same evidence. The sting must expose a verified mismatch, abrupt juxtaposition or disproportion; generic praise alone is not sarcasm. For a montage, target the contrast between its verified scenes instead of merely listing them. For a simple scene, contrast the ordinary visible action with the grand importance assigned to it. The sentence must still work as an accurate caption when the irony is removed. Never use technology jargon. Never use the stale openings “thrilling footage”, “thrilling tour”, “exhilarating experience”, “we are treated to”, “apparently”, or “because apparently”. Do not mention frames, sampling, prompts, models, analysis or processing. Do not invent absence, stillness, failure, identity, intent, speech, brands, an audience, backstory or unseen events. Preserve exact sequence and subject-action-object-location relationships. Use one sentence of 22–38 words. Return ONLY JSON: {"caption":"..."}.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCURRENT CANDIDATE:\n${candidate}`;
+      const raw = await askGemma([{ type: 'text', text: prompt }], 320);
+      const result = await parseGemmaJson(raw, ['caption'], { caption: candidate });
+      return String(result.caption || candidate).trim();
+    }
     async function rewriteHumorousTech(evidence, candidate) {
       setStatus('Giving the humorous-tech caption a real punchline…');
       const v18Rules = pipelineVersion.value === 'v18' ? ` V18 QUALITY BAR: one precise verified subject-action setup is enough; never force an unrelated second detail into the joke. The technology comparison must explain that visible action, pace, contrast or transition and the final clause must add a distinct, clearly figurative comic consequence—not merely restate the comparison. Reject generic templates such as “X feels like Y, except…”, “the only thing…”, or a list of technical words. Never claim that something is motionless, absent, loading or malfunctioning unless the evidence explicitly proves it. Preserve exact subject-action-location relationships; do not relocate an action onto another visible object or surface.` : '';
@@ -496,11 +503,13 @@
       }
       currentCaptions = await writeCaptions(evidence);
       const rewrites = await Promise.allSettled([
+        pipelineVersion.value === 'v18' ? rewriteSarcasticV18(evidence, currentCaptions.sarcastic) : Promise.resolve(currentCaptions.sarcastic),
         rewriteHumorousTech(evidence, currentCaptions.humorous_tech),
         rewriteHumorousNonTech(evidence, currentCaptions.humorous_non_tech)
       ]);
-      if (rewrites[0].status === 'fulfilled') currentCaptions.humorous_tech = rewrites[0].value;
-      if (rewrites[1].status === 'fulfilled') currentCaptions.humorous_non_tech = rewrites[1].value;
+      if (rewrites[0].status === 'fulfilled') currentCaptions.sarcastic = rewrites[0].value;
+      if (rewrites[1].status === 'fulfilled') currentCaptions.humorous_tech = rewrites[1].value;
+      if (rewrites[2].status === 'fulfilled') currentCaptions.humorous_non_tech = rewrites[2].value;
       if (rewrites.some(result => result.status === 'rejected')) setStatus('One humour rewrite was unavailable; keeping its grounded first draft.', 'warning');
       if (pipelineVersion.value === 'v18') {
         try { Object.assign(currentCaptions, await polishV18Humour(evidence, currentCaptions)); }
