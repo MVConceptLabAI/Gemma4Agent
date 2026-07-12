@@ -163,7 +163,8 @@ _TECH_PUNCHLINE_RULE = (
     "as 'pipeline', 'latency', or 'runtime' is not a joke. Do not stack jargon, invent code "
     "work, or turn the subject into an engineer. Keep the analogy tied to one visible fact. "
     "Avoid stale phrases such as 'too many tabs', 'glitchy cache', or calling a visible "
-    "subject random."
+    "subject random. Never use 'zero latency', 'zero-downtime', or 'all systems nominal'; "
+    "end with a small visible-scene-tied playful payoff instead."
 )
 
 _NONTECH_PUNCHLINE_RULE = (
