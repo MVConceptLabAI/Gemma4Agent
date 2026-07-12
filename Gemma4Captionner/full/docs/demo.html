@@ -92,7 +92,7 @@
     function frameData(video) {
       // Keep the direct browser request below common OpenRouter per-key token
       // ceilings while preserving a spread across the full clip.
-      const maxEdge = 384;
+      const maxEdge = 256;
       const scale = Math.min(1, maxEdge / Math.max(video.videoWidth, video.videoHeight));
       const canvas = document.createElement('canvas');
       canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
@@ -181,19 +181,20 @@
       const start = text.indexOf('['), end = text.lastIndexOf(']');
       if (start >= 0 && end > start) {
         const list = JSON.parse(text.slice(start, end + 1));
-        if (Array.isArray(list)) return list.map(item => String(item).trim()).filter(Boolean).slice(0, 24);
+        if (Array.isArray(list)) return list.map(item => String(item).trim()).filter(Boolean).slice(0, 10);
       }
-      return text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '').trim()).filter(Boolean).slice(0, 24);
+      return text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '').trim()).filter(Boolean).slice(0, 10);
     }
     async function observeBatch(sampled, label) {
-      setStatus(`Analysing ${label} six frames with ${model.value.trim()}…`);
-      const prompt = `You are a precise visual analyst. These SIX images are sequential frames from ONE video. Return ONLY a JSON array of short facts clearly visible in this batch: subjects, actions, objects, setting, motion and lighting. Do not infer identity, intent, speech, brands, unreadable text, exact counts, or off-screen events.`;
+      setStatus(`Analysing ${label} three frames with ${model.value.trim()}…`);
+      const prompt = `You are a precise visual analyst. These THREE images are sequential frames from ONE video. Return ONLY a JSON array of at most 10 short facts clearly visible in this batch: subjects, actions, objects, setting, motion and lighting. Do not infer identity, intent, speech, brands, unreadable text, exact counts, or off-screen events.`;
       const content = [{ type: 'text', text: prompt }, ...sampled.map(url => ({ type: 'image_url', image_url: { url } }))];
-      return cleanFactList(await askGemma(content, 700));
+      return cleanFactList(await askGemma(content, 400));
     }
-    async function writeCaptions(firstFacts, secondFacts) {
+    async function writeCaptions(batchFacts) {
       setStatus('Reconciling all twelve frames into four captions…');
-      const prompt = `You are a careful video-captioning writer. Two visual analyses describe the first and second halves of ONE video. Cross-check them. Keep only facts supported by the records; omit conflicts and do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. formal is objective and factual. sarcastic is dry and lightly mocking with no technology jargon. humorous_tech uses one natural technology analogy tied to visible facts. humorous_non_tech uses warm everyday humour with no technology jargon.\n\nFIRST SIX FRAMES:\n- ${firstFacts.join('\n- ')}\n\nSECOND SIX FRAMES:\n- ${secondFacts.join('\n- ')}`;
+      const evidence = batchFacts.map((facts, index) => `FRAMES ${index * 3 + 1}-${index * 3 + 3}:\n- ${facts.join('\n- ')}`).join('\n\n');
+      const prompt = `You are a careful video-captioning writer. Four visual analyses describe consecutive parts of ONE video. Cross-check them. Keep only facts supported by the records; omit conflicts and do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. formal is objective and factual. sarcastic is dry and lightly mocking with no technology jargon. humorous_tech uses one natural technology analogy tied to visible facts. humorous_non_tech uses warm everyday humour with no technology jargon.\n\n${evidence}`;
       return validateCaptions(cleanJson(await askGemma([{ type: 'text', text: prompt }], 1200)));
     }
     async function run() {
@@ -204,9 +205,10 @@
       if (!model.value.trim()) throw new Error('Enter a vision-capable model slug.');
       setStatus('Sampling twelve compact frames locally in your browser…');
       const sampled = await sampleFrames(preview);
-      const firstFacts = await observeBatch(sampled.slice(0, 6), 'the first');
-      const secondFacts = await observeBatch(sampled.slice(6, 12), 'the second');
-      currentCaptions = await writeCaptions(firstFacts, secondFacts);
+      const batches = [sampled.slice(0, 3), sampled.slice(3, 6), sampled.slice(6, 9), sampled.slice(9, 12)];
+      const observations = [];
+      for (const [index, batch] of batches.entries()) observations.push(await observeBatch(batch, `batch ${index + 1} of 4`));
+      currentCaptions = await writeCaptions(observations);
       renderCaptions(currentCaptions); saveHistory(file, currentCaptions);
       setStatus('Done — all twelve frames were used and the original video stayed in this browser.');
     }
