@@ -32,7 +32,7 @@ SceneGate samples 24 representative video moments, analyses each frame independe
 
 Public Docker reference verified as a linux/amd64 manifest:
 ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v17
-Digest: sha256:bf66e38e1f834cea9597e1994013b1ab2850070d2838342c4687919735f12468
+Digest: sha256:b4ce622c117fb77e8773be4dd0d1f21695a51e6dbcb5121b16150fc61a16b798
 
 Live browser demo: https://mvconceptlabai.github.io/Gemma4Agent/demo.html
 ```
