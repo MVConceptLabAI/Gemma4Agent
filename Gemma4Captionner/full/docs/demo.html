@@ -51,6 +51,11 @@
     const SETTINGS_KEY = 'gemma4-scene-gate-demo-settings-v2';
     const HISTORY_KEY = 'gemma4-scene-gate-demo-history-v2';
     const REQUIRED_STYLES = ['formal', 'sarcastic', 'humorous_tech', 'humorous_non_tech'];
+    // The browser cannot change an OpenRouter key's server-side ceiling, so the
+    // visual request is deliberately kept below this conservative input target.
+    const MAX_PROMPT_TOKEN_TARGET = 3600;
+    const FRAME_EDGE_STEPS = [192, 160, 128];
+    const FACTS_PER_BATCH = 6;
     const $ = id => document.getElementById(id);
     const apiKey = $('apiKey'), model = $('model'), rememberKey = $('rememberKey');
     const videoFile = $('videoFile'), preview = $('preview'), frames = $('frames');
@@ -89,10 +94,9 @@
       video.currentTime = Math.max(0, Math.min(seconds, Math.max(0, video.duration - 0.01)));
       await done;
     }
-    function frameData(video) {
+    function frameData(video, maxEdge) {
       // Keep the direct browser request below common OpenRouter per-key token
       // ceilings while preserving a spread across the full clip.
-      const maxEdge = 256;
       const scale = Math.min(1, maxEdge / Math.max(video.videoWidth, video.videoHeight));
       const canvas = document.createElement('canvas');
       canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
@@ -100,12 +104,12 @@
       canvas.getContext('2d', { alpha: false }).drawImage(video, 0, 0, canvas.width, canvas.height);
       return canvas.toDataURL('image/jpeg', 0.78);
     }
-    async function sampleFrames(video) {
+    async function sampleFrames(video, maxEdge) {
       const count = 12, samples = [];
       frames.replaceChildren();
       for (let index = 1; index <= count; index += 1) {
         await seek(video, video.duration * index / (count + 1));
-        const data = frameData(video);
+        const data = frameData(video, maxEdge);
         samples.push(data);
         const image = new Image();
         image.src = data;
@@ -173,7 +177,11 @@
         body: JSON.stringify({ model: model.value.trim(), messages: [{ role: 'user', content }], temperature: 0.25, max_tokens: maxTokens })
       });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error?.message || `OpenRouter request failed (${response.status})`);
+      if (!response.ok) {
+        const error = new Error(payload.error?.message || `OpenRouter request failed (${response.status})`);
+        error.isPromptLimit = /prompt tokens limit exceeded/i.test(error.message);
+        throw error;
+      }
       return payload.choices?.[0]?.message?.content;
     }
     function cleanFactList(value) {
@@ -181,18 +189,39 @@
       const start = text.indexOf('['), end = text.lastIndexOf(']');
       if (start >= 0 && end > start) {
         const list = JSON.parse(text.slice(start, end + 1));
-        if (Array.isArray(list)) return list.map(item => String(item).trim()).filter(Boolean).slice(0, 10);
+        if (Array.isArray(list)) return list.map(item => String(item).trim().slice(0, 180)).filter(Boolean).slice(0, FACTS_PER_BATCH);
       }
-      return text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '').trim()).filter(Boolean).slice(0, 10);
+      return text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '').trim().slice(0, 180)).filter(Boolean).slice(0, FACTS_PER_BATCH);
     }
     async function observeBatch(sampled, label) {
       setStatus(`Analysing ${label} three frames with ${model.value.trim()}…`);
-      const prompt = `You are a precise visual analyst. These THREE images are sequential frames from ONE video. Return ONLY a JSON array of at most 10 short facts clearly visible in this batch: subjects, actions, objects, setting, motion and lighting. Do not infer identity, intent, speech, brands, unreadable text, exact counts, or off-screen events.`;
+      const prompt = `You are a precise visual analyst. These THREE images are sequential frames from ONE video. Return ONLY a JSON array of at most SIX short facts clearly visible in this batch: subjects, actions, objects, setting, motion and lighting. Do not infer identity, intent, speech, brands, unreadable text, exact counts, or off-screen events.`;
       const content = [{ type: 'text', text: prompt }, ...sampled.map(url => ({ type: 'image_url', image_url: { url } }))];
-      return cleanFactList(await askGemma(content, 400));
+      return cleanFactList(await askGemma(content, 300));
     }
     function evidenceFrom(batchFacts) {
-      return batchFacts.map((facts, index) => `FRAMES ${index * 3 + 1}-${index * 3 + 3}:\n- ${facts.join('\n- ')}`).join('\n\n');
+      return batchFacts.map((facts, index) => `FRAMES ${index * 3 + 1}-${index * 3 + 3}:\n- ${facts.slice(0, FACTS_PER_BATCH).map(fact => String(fact).slice(0, 180)).join('\n- ')}`).join('\n\n');
+    }
+    function isPromptLimitError(error) {
+      return Boolean(error?.isPromptLimit) || /prompt tokens limit exceeded/i.test(String(error?.message || ''));
+    }
+    async function observeAllBatches(video) {
+      let lastError;
+      for (const [attempt, maxEdge] of FRAME_EDGE_STEPS.entries()) {
+        setStatus(`Sampling all twelve frames locally at ${maxEdge}px for the ${MAX_PROMPT_TOKEN_TARGET}-token budgetâ€¦`);
+        const sampled = await sampleFrames(video, maxEdge);
+        const batches = [sampled.slice(0, 3), sampled.slice(3, 6), sampled.slice(6, 9), sampled.slice(9, 12)];
+        const observations = [];
+        try {
+          for (const [index, batch] of batches.entries()) observations.push(await observeBatch(batch, `batch ${index + 1} of 4`));
+          return { observations, maxEdge };
+        } catch (error) {
+          lastError = error;
+          if (!isPromptLimitError(error) || attempt === FRAME_EDGE_STEPS.length - 1) throw error;
+          setStatus(`This key reached its prompt limit; retrying all twelve frames at ${FRAME_EDGE_STEPS[attempt + 1]}pxâ€¦`, 'warning');
+        }
+      }
+      throw lastError;
     }
     async function writeCaptions(evidence) {
       setStatus('Reconciling all twelve frames into four captions…');
@@ -212,17 +241,13 @@
       if (!file) throw new Error('Choose a video first.');
       if (!apiKey.value.trim()) throw new Error('Enter an OpenRouter key in Local inference settings.');
       if (!model.value.trim()) throw new Error('Enter a vision-capable model slug.');
-      setStatus('Sampling twelve compact frames locally in your browser…');
-      const sampled = await sampleFrames(preview);
-      const batches = [sampled.slice(0, 3), sampled.slice(3, 6), sampled.slice(6, 9), sampled.slice(9, 12)];
-      const observations = [];
-      for (const [index, batch] of batches.entries()) observations.push(await observeBatch(batch, `batch ${index + 1} of 4`));
+      const { observations, maxEdge } = await observeAllBatches(preview);
       const evidence = evidenceFrom(observations);
       currentCaptions = await writeCaptions(evidence);
       try { currentCaptions.humorous_tech = await rewriteHumorousTech(evidence, currentCaptions.humorous_tech); }
       catch (error) { setStatus('Tech caption rewrite was unavailable; keeping the grounded first draft.', 'warning'); }
       renderCaptions(currentCaptions); saveHistory(file, currentCaptions);
-      setStatus('Done — all twelve frames were used and the original video stayed in this browser.');
+      setStatus(`Done — all twelve frames were used at ${maxEdge}px and the original video stayed in this browser.`);
     }
 
     restoreSettings(); renderHistory();
