@@ -18,7 +18,7 @@ The pipeline treats humour as a framing layer, not a source of new facts. Its hu
 
 | Field | Value |
 | --- | --- |
-| GitHub Repository | `https://github.com/MVConceptLabAI/Gemma4Agent/tree/agent/add-gemma4-captioner-variants/Gemma4Captionner/full` |
+| GitHub Repository | `https://github.com/MVConceptLabAI/Gemma4Agent/tree/gemma4-submission-v14/Gemma4Captionner/full` |
 | Demo Application Platform | `Other` |
 | Demo Application URL | `https://mvconceptlabai.github.io/Gemma4Agent/demo.html` |
 | Docker Image | `ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v14` |
@@ -39,6 +39,7 @@ Live browser demo: https://mvconceptlabai.github.io/Gemma4Agent/demo.html
 
 ## Before saving
 
-1. Paste the Docker **tag** exactly as shown, without `https://` and without the digest.
-2. Use the GitHub Pages URL for the demo; a `raw.githubusercontent.com` URL displays source code and is not an executable demo.
-3. Keep the repository and package public. The Docker manifest above was resolved anonymously as `linux/amd64`.
+1. The GitHub link and Docker tag both point to `gemma4-submission-v14`; keep these two references paired.
+2. Paste the Docker **tag** exactly as shown, without `https://` and without the digest.
+3. Use the GitHub Pages URL for the demo; a `raw.githubusercontent.com` URL displays source code and is not an executable demo.
+4. Keep the repository and package public. The Docker manifest above was resolved anonymously as `linux/amd64`.
