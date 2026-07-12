@@ -16,6 +16,7 @@ import base64
 import json
 import logging
 import os
+import re
 import subprocess
 import tempfile
 from pathlib import Path
@@ -88,6 +89,8 @@ CREATIVE_DISCIPLINE = _strict_env_bool("CREATIVE_DISCIPLINE")
 # four independent writer calls focus on one requested style each. Off by
 # default so the v38 common-writer path remains unchanged unless selected.
 W4_STYLE_SPLIT = _strict_env_bool("W4_STYLE_SPLIT")
+W4_GROUNDING_VERIFIER = _strict_env_bool("W4_GROUNDING_VERIFIER")
+GROUNDING_REVIEW_TIMEOUT_S = float(os.environ.get("GROUNDING_REVIEW_TIMEOUT_S", "12"))
 _WRITER_TOTAL_MAX_TOKENS = 3000
 _STYLE_WRITER_STYLES = (
     "formal",
@@ -158,7 +161,30 @@ _TECH_PUNCHLINE_RULE = (
     "\n\nHUMOROUS_TECH QUALITY BAR: First describe the visible action plainly, then add "
     "ONE compact technology analogy with a real light punchline. A bare pile of words such "
     "as 'pipeline', 'latency', or 'runtime' is not a joke. Do not stack jargon, invent code "
-    "work, or turn the subject into an engineer. Keep the analogy tied to one visible fact."
+    "work, or turn the subject into an engineer. Keep the analogy tied to one visible fact. "
+    "Avoid stale phrases such as 'too many tabs', 'glitchy cache', or calling a visible "
+    "subject random."
+)
+
+_NONTECH_PUNCHLINE_RULE = (
+    "\n\nHUMOROUS_NON_TECH QUALITY BAR: Start from one visible setup, use one fresh everyday "
+    "comparison, then land a small warm payoff tied to a visible subject, action, or contrast. "
+    "Do not invent a school, event, profession, intent, audience, backstory, speech, or unseen "
+    "setting. Avoid the cliches 'mixed bag', 'scrapbook', 'watching paint dry', 'watching grass "
+    "grow', 'nothing happens', and 'the only thing of interest'."
+)
+
+_GROUNDING_VERIFIER_RULE = (
+    "\n\nFINAL GROUNDED CAPTION REVIEW: Compare the candidate with the same evidence record. "
+    "If every literal claim is supported, return the candidate VERBATIM. Otherwise change ONLY "
+    "the smallest unsupported clause while preserving all other supported nouns, actions, scene "
+    "sequence, style, humour, and at least 70% of its words. Never summarize a detailed caption "
+    "into a generic one. Remove any mention of frame counts, thumbnails, sampling, prompts, "
+    "models, analysis, or processing. Do not claim a static camera, unchanged perspective, motion, "
+    "time-lapse, readable text, a brand, identity, intent, speech, audience, or off-screen event "
+    "unless the evidence explicitly supports it. A technology or everyday comparison may remain "
+    "only as a clearly figurative joke anchored to a visible fact. Return only the required JSON "
+    "object."
 )
 
 # The outer normalizer has a safe generic fallback when a caption misses the
@@ -231,6 +257,7 @@ def _style_writer_system(style: str, base_system: str) -> str:
     return (
         base_system
         + (_TECH_PUNCHLINE_RULE if style == "humorous_tech" else "")
+        + (_NONTECH_PUNCHLINE_RULE if style == "humorous_non_tech" else "")
         + "\n\nSTYLE-SPECIFIC OUTPUT OVERRIDE: For this call, produce only the "
         + f'"{style}" caption while applying every factual and style rule above. '
         + "Return STRICT JSON only: {\"caption\":\"...\"}"
@@ -272,6 +299,29 @@ def _parse_obj(text: str | None) -> dict:
     if not isinstance(text, str):
         raise ValueError("model returned no text content")
     return json.loads(text[text.find("{"): text.rfind("}") + 1])
+
+
+def _word_count(text: str) -> int:
+    return len([word for word in text.split() if word])
+
+
+def _has_pipeline_leak(text: str) -> bool:
+    return bool(re.search(
+        r"\b(?:\d+\s+frames?|frames?|thumbnails?|sampling|prompts?|models?|analysis|processing)\b",
+        text,
+        flags=re.IGNORECASE,
+    ))
+
+
+def _preserve_caption_detail(candidate: str, reviewed: str) -> str:
+    """Reject a reviewer summary unless the source itself leaks pipeline internals."""
+    if (
+        _word_count(candidate) >= 20
+        and _word_count(reviewed) < _word_count(candidate) * 0.7
+        and not _has_pipeline_leak(candidate)
+    ):
+        return candidate
+    return reviewed
 
 
 def _compress_for_video_observer(video: Path, workdir: Path) -> str | None:
@@ -422,6 +472,39 @@ async def caption_ensemble_frames(
                             )
                     except (httpx.HTTPStatusError, httpx.TransportError, ValueError) as e:
                         log.warning("humorous_tech repair failed (%s); keeping initial draft", e)
+
+                # A short final review catches pipeline leaks and unsupported literal
+                # claims without letting a conservative rewrite erase useful detail.
+                # Each style task performs this independently, so the four reviews
+                # run concurrently and a timeout keeps the original caption.
+                if W4_GROUNDING_VERIFIER and caption:
+                    try:
+                        review_content = (
+                            write_content
+                            + "\n\nCANDIDATE CAPTION TO REVIEW:\n"
+                            + caption
+                        )
+                        reviewed_raw = await asyncio.wait_for(
+                            _call(
+                                client,
+                                WRITER,
+                                style_system + _GROUNDING_VERIFIER_RULE,
+                                review_content,
+                                per_style_tokens,
+                                temperature=0.0,
+                            ),
+                            timeout=GROUNDING_REVIEW_TIMEOUT_S,
+                        )
+                        reviewed = str(_parse_obj(reviewed_raw).get("caption", ""))
+                        if reviewed and caption_passes_style_filter(style, reviewed):
+                            caption = _preserve_caption_detail(caption, reviewed)
+                    except (
+                        asyncio.TimeoutError,
+                        httpx.HTTPStatusError,
+                        httpx.TransportError,
+                        ValueError,
+                    ) as e:
+                        log.warning("%s grounding review failed (%s); keeping initial draft", style, e)
                 return style, caption
 
             caps = dict(

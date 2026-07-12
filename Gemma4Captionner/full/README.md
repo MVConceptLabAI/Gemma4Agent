@@ -7,16 +7,16 @@ generates four styled English captions per clip, and writes
 ## Run it in 60 seconds (judges start here)
 
 ```bash
-docker pull ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v2
+docker pull ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v15
 docker run --rm \
   -v /path/to/input:/input \
   -v /path/to/output:/output \
-  ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v2
+  ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v15
 ```
 
 Public linux/amd64 image. `/input/tasks.json` in, `/output/results.json` out,
 with all four requested styles present and validated. The public submission
-reference is `ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v2`.
+reference is `ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v15`.
 
 ## Caption YOUR own video (beyond the sample clips)
 
@@ -128,7 +128,7 @@ Uncertain details are kept out of final captions unless they are visually clear.
 Publish and verify a public image:
 
 ```bash
-export PUBLIC_IMAGE=ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v2
+export PUBLIC_IMAGE=ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v15
 make publish
 make verify-public
 ```

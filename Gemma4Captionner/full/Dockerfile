@@ -3,7 +3,7 @@
 # Base slim + FFmpeg. Build for linux/amd64 explicitly (judging VM runs amd64).
 #
 #   docker buildx build --platform linux/amd64 \
-#     --tag ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v2 --push .
+#     --tag ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v15 --push .
 # =============================================================================
 FROM python:3.11-slim-bookworm
 
@@ -40,8 +40,11 @@ ENV PYTHONPATH=/app \
     ENSEMBLE_WRITER=google/gemma-4-31b-it \
     STYLE_EXEMPLARS=1 \
     STRICT_GROUNDING=0 \
+    CREATIVE_DISCIPLINE=1 \
     WRITER_TEMP=0.5 \
     W4_STYLE_SPLIT=1 \
+    W4_GROUNDING_VERIFIER=1 \
+    GROUNDING_REVIEW_TIMEOUT_S=12 \
     TIMESTAMP_FRAMES=0 \
     MAX_CAPTION_CHARS=1600 \
     OPENROUTER_VLM_MODEL=qwen/qwen3-vl-235b-a22b-instruct \
