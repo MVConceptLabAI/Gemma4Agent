@@ -91,7 +91,8 @@ CREATIVE_DISCIPLINE = _strict_env_bool("CREATIVE_DISCIPLINE")
 W4_STYLE_SPLIT = _strict_env_bool("W4_STYLE_SPLIT")
 W4_GROUNDING_VERIFIER = _strict_env_bool("W4_GROUNDING_VERIFIER")
 GROUNDING_REVIEW_TIMEOUT_S = float(os.environ.get("GROUNDING_REVIEW_TIMEOUT_S", "12"))
-_WRITER_TOTAL_MAX_TOKENS = 3000
+_OBSERVE_MAX_TOKENS = int(os.environ.get("ENSEMBLE_OBSERVE_MAX_TOKENS", "4000"))
+_WRITER_TOTAL_MAX_TOKENS = int(os.environ.get("ENSEMBLE_TOTAL_WRITER_TOKENS", "3000"))
 _STYLE_WRITER_STYLES = (
     "formal",
     "sarcastic",
@@ -397,7 +398,7 @@ async def caption_ensemble_frames(
             for attempt in range(OBSERVER_RETRIES + 1):
                 try:
                     async with _shared_observer_semaphore():
-                        raw = await _call(client, model, OBSERVE_SYSTEM, content, 4000)
+                        raw = await _call(client, model, OBSERVE_SYSTEM, content, _OBSERVE_MAX_TOKENS)
                     return model, _parse_list(raw)
                 except Exception as e:  # noqa: BLE001
                     if attempt < OBSERVER_RETRIES:

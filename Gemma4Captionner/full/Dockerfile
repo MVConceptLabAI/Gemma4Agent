@@ -3,7 +3,7 @@
 # Base slim + FFmpeg. Build for linux/amd64 explicitly (judging VM runs amd64).
 #
 #   docker buildx build --platform linux/amd64 \
-#     --tag ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v15 --push .
+#     --tag ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v17 --push .
 # =============================================================================
 FROM python:3.11-slim-bookworm
 
@@ -36,15 +36,17 @@ COPY app/ ./app/
 # writes. To fall back to the single-model pipeline, set CAPTION_ENGINE=pipeline.
 ENV PYTHONPATH=/app \
     CAPTION_ENGINE=ensemble \
-    ENSEMBLE_OBSERVERS=openai/gpt-5.5,google/gemini-3.1-pro-preview,anthropic/claude-opus-4.5,qwen/qwen3-vl-235b-a22b-instruct \
+    ENSEMBLE_OBSERVERS=google/gemini-3.1-pro-preview,qwen/qwen3-vl-235b-a22b-instruct \
     ENSEMBLE_WRITER=google/gemma-4-31b-it \
     STYLE_EXEMPLARS=1 \
+    ENSEMBLE_CONCISE=1 \
     STRICT_GROUNDING=0 \
     CREATIVE_DISCIPLINE=1 \
     WRITER_TEMP=0.5 \
     W4_STYLE_SPLIT=1 \
-    W4_GROUNDING_VERIFIER=1 \
-    GROUNDING_REVIEW_TIMEOUT_S=12 \
+    W4_GROUNDING_VERIFIER=0 \
+    ENSEMBLE_OBSERVE_MAX_TOKENS=900 \
+    ENSEMBLE_TOTAL_WRITER_TOKENS=1800 \
     TIMESTAMP_FRAMES=0 \
     MAX_CAPTION_CHARS=1600 \
     OPENROUTER_VLM_MODEL=qwen/qwen3-vl-235b-a22b-instruct \
@@ -55,21 +57,20 @@ ENV PYTHONPATH=/app \
     STYLE_REASONING_EFFORT=low \
     STYLE_MAX_TOKENS=1400 \
     DETERMINISTIC_FORMAL=1 \
-    NUM_FRAMES=16 \
-    FRAME_MAX_EDGE=896 \
-    VIDEO_CONTEXT_OBSERVER=google/gemma-4-31b-it \
-    VIDEO_CONTEXT_MAX_BYTES=14000000 \
-    ENSEMBLE_MAX_OBSERVER_CONCURRENCY=8 \
-    ENSEMBLE_OBSERVER_RETRIES=1 \
+    NUM_FRAMES=12 \
+    FRAME_MAX_EDGE=640 \
+    VIDEO_CONTEXT_OBSERVER="" \
+    ENSEMBLE_MAX_OBSERVER_CONCURRENCY=6 \
+    ENSEMBLE_OBSERVER_RETRIES=0 \
     HTTP_429_RETRIES=5 \
     HTTP_429_MAX_WAIT_S=45 \
     RETRY_AFTER_GIVEUP_S=60 \
     DESCRIBE_MAX_TOKENS=1300 \
     SCENE_DETECT_ENABLED=0 \
     MAX_CONCURRENCY=3 \
-    PER_TASK_TIMEOUT_S=130 \
-    GLOBAL_BUDGET_S=540 \
-    ENSEMBLE_TIMEOUT_RECOVERY_S=70
+    PER_TASK_TIMEOUT_S=85 \
+    GLOBAL_BUDGET_S=500 \
+    ENSEMBLE_TIMEOUT_RECOVERY_S=20
 # Judging VM = 2 vCPU / 4 GB RAM (Participant Guide p.5). Scene-detection
 # decodes the ENTIRE UHD clip per video and three parallel ffmpeg passes
 # thrash 2 cores into the 10-minute wall - uniform -ss seeks are near-free.
