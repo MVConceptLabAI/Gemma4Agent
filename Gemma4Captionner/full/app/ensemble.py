@@ -188,6 +188,11 @@ _GROUNDING_VERIFIER_RULE = (
     "object."
 )
 
+_UNSEEN_NONTECH_SCENARIO = re.compile(
+    r"\b(?:airport|waiting\s+room|classroom|school\s+presentation|wedding|party|concert|courtroom|hospital)\b",
+    re.IGNORECASE,
+)
+
 # The outer normalizer has a safe generic fallback when a caption misses the
 # humorous_tech marker. That kept the JSON contract intact, but v8 showed that
 # it can throw away an otherwise grounded, scene-specific caption. Give the
@@ -323,6 +328,13 @@ def _preserve_caption_detail(candidate: str, reviewed: str) -> str:
     ):
         return candidate
     return reviewed
+
+
+def _review_introduces_unseen_nontech_scenario(candidate: str, reviewed: str) -> bool:
+    """Do not let a style review invent a named setting for an everyday joke."""
+    return bool(_UNSEEN_NONTECH_SCENARIO.search(reviewed)) and not bool(
+        _UNSEEN_NONTECH_SCENARIO.search(candidate)
+    )
 
 
 def _compress_for_video_observer(video: Path, workdir: Path) -> str | None:
@@ -498,7 +510,13 @@ async def caption_ensemble_frames(
                         )
                         reviewed = str(_parse_obj(reviewed_raw).get("caption", ""))
                         if reviewed and caption_passes_style_filter(style, reviewed):
-                            caption = _preserve_caption_detail(caption, reviewed)
+                            if (
+                                style == "humorous_non_tech"
+                                and _review_introduces_unseen_nontech_scenario(caption, reviewed)
+                            ):
+                                log.warning("humorous_non_tech review introduced an unseen setting; keeping initial draft")
+                            else:
+                                caption = _preserve_caption_detail(caption, reviewed)
                     except (
                         asyncio.TimeoutError,
                         httpx.HTTPStatusError,
