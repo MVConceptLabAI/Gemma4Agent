@@ -415,6 +415,26 @@ def _has_lexical_corruption(value: str) -> bool:
     return False
 
 
+def _has_unsupported_absolute(evidence: str, value: str) -> bool:
+    if re.search(
+        r"\b(?:permanent(?:ly)?|never moves?|refuses? to move|does not move|no movement|nothing changes?)\b",
+        value,
+        re.IGNORECASE,
+    ):
+        return True
+    if not re.search(r"\b(?:stationary|motionless|frozen|freezes?|unchanged)\b", value, re.IGNORECASE):
+        return False
+    return not re.search(
+        r"\b(?:stationary|motionless|remains? still|does not move|no movement|unchanged)\b",
+        evidence,
+        re.IGNORECASE,
+    )
+
+
+def _has_caption_quality_risk(evidence: str, value: str) -> bool:
+    return _has_lexical_corruption(value) or _has_unsupported_absolute(evidence, value)
+
+
 def _safe_caption(style: str) -> str:
     return {
         "formal": "The video presents a sequence of visible subjects, actions, and settings.",
@@ -424,23 +444,26 @@ def _safe_caption(style: str) -> str:
     }[style]
 
 
-async def _repair_lexical_corruption(
+async def _repair_caption_quality(
     client: httpx.AsyncClient,
     evidence: str,
     captions: dict[str, str],
     styles: list[str],
 ) -> dict[str, str]:
-    affected = [style for style in styles if _has_lexical_corruption(captions[style])]
+    affected = [style for style in styles if _has_caption_quality_risk(evidence, captions[style])]
     if not affected:
         return captions
-    log.warning("detected lexical corruption in styles: %s", ", ".join(affected))
+    log.warning("detected caption wording or grounding risk in styles: %s", ", ".join(affected))
     prompt = (
-        "You are a strict copy editor repairing surface corruption in grounded video captions. Return ONLY "
+        "You are a strict copy editor repairing quality defects in grounded video captions. Return ONLY "
         "valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. "
         "Preserve each caption's supported facts, sequence, style, comparison, and intended joke. Change only "
-        "malformed words, accidental letter runs, duplicated words or phrases, broken suffixes, and grammar "
-        "caused by text corruption. Do not add, remove, or reinterpret factual claims. Do not add commentary."
-        "\n\nVERIFIED EVIDENCE:\n" + evidence + "\n\nCORRUPTED CAPTIONS:\n" + json.dumps(captions)
+        "malformed words, accidental letter runs, duplicated fragments, and broken grammar. Also remove or "
+        "replace absolute claims such as stationary, frozen, permanent, never moving, or unchanged when the "
+        "verified evidence does not explicitly support them. If the evidence contains motion, the repaired joke "
+        "must use the visible motion or pace rather than a freeze or stillness metaphor. Do not add, remove, or "
+        "reinterpret factual claims. Do not add commentary.\n\nVERIFIED EVIDENCE:\n" + evidence
+        + "\n\nCAPTIONS TO CHECK:\n" + json.dumps(captions)
     )
     try:
         captions = _captions(
@@ -448,13 +471,14 @@ async def _repair_lexical_corruption(
         )
     except (httpx.HTTPError, ValueError, KeyError):
         log.warning("combined lexical repair unavailable; retrying affected styles")
-    affected = [style for style in styles if _has_lexical_corruption(captions[style])]
+    affected = [style for style in styles if _has_caption_quality_risk(evidence, captions[style])]
 
     async def repair_one(style: str) -> str:
         prompt = (
-            f"Repair ONLY the surface text corruption in this {style} video caption. Preserve every "
-            "supported fact, the style, and the joke. Remove malformed words, letter runs, and duplicated "
-            "fragments. Do not add facts. Return ONLY JSON: {\"caption\":\"...\"}."
+            f"Repair ONLY the quality defect in this {style} video caption. Preserve every supported fact, "
+            "the style, and the joke. Remove malformed text and any claim of stillness, freezing, permanence, "
+            "no movement, or no change that is unsupported by the evidence. When motion is verified, anchor the "
+            "repaired joke in that motion or its pace. Do not add facts. Return ONLY JSON: {\"caption\":\"...\"}."
             "\n\nEVIDENCE:\n" + evidence + "\n\nCAPTION:\n" + captions[style]
         )
         result = _json_object(await _ask(client, [{"type": "text", "text": prompt}], 320))
@@ -467,8 +491,8 @@ async def _repair_lexical_corruption(
             if isinstance(repaired, str):
                 captions[style] = repaired
     for style in styles:
-        if _has_lexical_corruption(captions[style]):
-            log.error("lexical corruption persisted for %s; using safe complete fallback", style)
+        if _has_caption_quality_risk(evidence, captions[style]):
+            log.error("caption quality risk persisted for %s; using safe complete fallback", style)
             captions[style] = _safe_caption(style)
     return _captions(captions, styles)
 
@@ -541,4 +565,4 @@ async def caption_demo(video_url: str, styles: list[str]) -> dict[str, str]:
             except (httpx.HTTPError, ValueError, KeyError):
                 log.warning("V18 humour quality pass unavailable; keeping grounded rewrites")
             captions = await _verify(client, grounded_record, captions, styles)
-            return await _repair_lexical_corruption(client, grounded_record, captions, styles)
+            return await _repair_caption_quality(client, grounded_record, captions, styles)
