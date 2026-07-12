@@ -83,6 +83,9 @@ CREATIVE_DISCIPLINE = _strict_env_bool("CREATIVE_DISCIPLINE")
 # four independent writer calls focus on one requested style each. Off by
 # default so the v38 common-writer path remains unchanged unless selected.
 W4_STYLE_SPLIT = _strict_env_bool("W4_STYLE_SPLIT")
+# V10: only the historically weaker humorous_tech path receives a second
+# candidate and a grounded editor choice. Kept opt-in for causal A/B testing.
+HTECH_CANDIDATE_SELECTION = _strict_env_bool("HTECH_CANDIDATE_SELECTION")
 _WRITER_TOTAL_MAX_TOKENS = 3000
 _STYLE_WRITER_STYLES = (
     "formal",
@@ -155,6 +158,24 @@ _TECH_STYLE_REPAIR_RULE = (
     "term such as API, latency, cache, runtime, server, pipeline, or scheduler as part of "
     "that comparison. Do not invent code, speech, intent, or unseen details. Return only "
     "the required JSON object."
+)
+
+_TECH_ALTERNATE_CANDIDATE_RULE = (
+    "\n\nWRITE A DISTINCT SECOND CANDIDATE: Keep the verified scene facts, but use a "
+    "different light joke with exactly one natural technology comparison. Prefer a small "
+    "visible cause-and-effect or contrast over a list of jargon. Do not reuse the first "
+    "candidate's phrasing, invent software work, speech, intent, or unseen details. Return "
+    "only the required JSON object."
+)
+
+_TECH_SELECTOR_SYSTEM = (
+    "You are a strict editor for one humorous_tech video caption. You receive a factual "
+    "scene record and two candidate captions. Choose the candidate most likely to score "
+    "highly for BOTH factual accuracy and genuinely light tech humor. It must retain visible "
+    "scene detail, use one natural technology analogy, and have a real punchline or playful "
+    "twist. Reject generic jargon lists, clichés, unsupported claims, or a joke that turns a "
+    "person into a programmer. Return STRICT JSON only: {\"winner\":\"A\"} or "
+    "{\"winner\":\"B\"}."
 )
 
 OBSERVE_SYSTEM = (
@@ -370,6 +391,56 @@ async def caption_ensemble_frames(
                             "writer %s attempt 1 failed (%s), retrying once", style, e
                         )
                         await asyncio.sleep(2)
+
+                # The style validator only distinguishes the presence of tech
+                # language. A valid-but-cliché caption still loses style points,
+                # so let Gemma choose between two independently worded grounded
+                # candidates before resorting to a repair.
+                if style == "humorous_tech" and HTECH_CANDIDATE_SELECTION:
+                    try:
+                        alternate_raw = await _call(
+                            client,
+                            WRITER,
+                            style_system + _TECH_ALTERNATE_CANDIDATE_RULE,
+                            write_content,
+                            per_style_tokens,
+                            temperature=min(0.8, WRITER_TEMP + 0.15),
+                        )
+                        alternate = str(_parse_obj(alternate_raw).get("caption", ""))
+                        candidates = {
+                            "A": caption,
+                            "B": alternate,
+                        }
+                        eligible = {
+                            label: candidate for label, candidate in candidates.items()
+                            if candidate and caption_passes_style_filter(style, candidate)
+                        }
+                        if len(eligible) == 1:
+                            caption = next(iter(eligible.values()))
+                        elif len(eligible) == 2:
+                            selector_content = (
+                                "FACTUAL SCENE RECORD:\n"
+                                + write_content
+                                + "\n\nCANDIDATE A:\n"
+                                + caption
+                                + "\n\nCANDIDATE B:\n"
+                                + alternate
+                            )
+                            selected_raw = await _call(
+                                client,
+                                WRITER,
+                                _TECH_SELECTOR_SYSTEM,
+                                selector_content,
+                                120,
+                                temperature=0.0,
+                            )
+                            winner = str(_parse_obj(selected_raw).get("winner", "")).upper()
+                            if winner in eligible:
+                                caption = eligible[winner]
+                            else:
+                                log.warning("humorous_tech selector returned invalid winner=%r", winner)
+                    except (httpx.HTTPStatusError, httpx.TransportError, ValueError) as e:
+                        log.warning("humorous_tech candidate selection failed (%s); keeping initial draft", e)
 
                 # Do not let the outer normalizer replace a detailed, grounded
                 # candidate with its generic template solely because the writer

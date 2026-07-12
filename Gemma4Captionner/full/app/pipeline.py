@@ -81,6 +81,9 @@ OPENROUTER_STYLE_MODEL = os.environ.get("OPENROUTER_STYLE_MODEL", "qwen/qwen3-vl
 
 NUM_FRAMES = int(os.environ.get("NUM_FRAMES", "8"))
 FRAME_MAX_EDGE = int(os.environ.get("FRAME_MAX_EDGE", "720"))
+# Adds near-start and near-end temporal anchors without full-video scene
+# detection, which is too expensive on the judge's small CPU instance.
+TEMPORAL_ANCHORS = os.environ.get("TEMPORAL_ANCHORS", "0") != "0"
 FRAME_PROFILES = {
     "describex_oci_hypothesis": tuple(
         0.05 + index * (0.90 / 8) for index in range(8)
@@ -462,14 +465,13 @@ def _extract_uniform_frames(
     duration: float,
     prefix: str,
 ) -> list[Path]:
-    step = max(duration / (n + 1), 0.1)
+    timestamps = _sample_frame_timestamps(duration, n, TEMPORAL_ANCHORS)
     out_paths: list[Path] = []
     # Burn frame#/timestamp/duration into each frame (TIMESTAMP_FRAMES=1):
     # observers gain temporal grounding ("at 0:15 the bus enters") - the
     # leaderboard leader's single biggest measured lever.
     stamp = os.environ.get("TIMESTAMP_FRAMES", "0") != "0"
-    for i in range(1, n + 1):
-        t = round(i * step, 3)
+    for i, t in enumerate(timestamps, start=1):
         out = workdir / f"{prefix}{i:02d}.jpg"
         vf = f"scale='min({max_edge},iw)':-2"
         if stamp:
@@ -491,6 +493,30 @@ def _extract_uniform_frames(
         if out.exists():
             out_paths.append(out)
     return out_paths
+
+
+def _sample_frame_timestamps(duration: float, n: int, anchored: bool) -> list[float]:
+    """Return deterministic coverage timestamps without decoding the full video.
+
+    Uniform interior samples are cheap but can miss a short opening or closing
+    action. Anchors preserve the same interior coverage while reserving two
+    samples near both ends. This deliberately avoids scene detection, which
+    scans every UHD frame and risks the 10-minute submission limit.
+    """
+    if n <= 0:
+        return []
+    safe_duration = max(duration, 0.1)
+    if not anchored or n < 3:
+        return [round(i * safe_duration / (n + 1), 3) for i in range(1, n + 1)]
+
+    edge = min(0.5, safe_duration * 0.04)
+    interior_count = n - 2
+    interior_span = max(safe_duration - (2 * edge), 0.001)
+    interior = [
+        edge + interior_span * i / (interior_count + 1)
+        for i in range(1, interior_count + 1)
+    ]
+    return [round(edge, 3), *(round(t, 3) for t in interior), round(safe_duration - edge, 3)]
 
 
 def _ffprobe_duration(video: Path) -> float:

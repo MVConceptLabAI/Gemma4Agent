@@ -23,6 +23,7 @@ from app.models import validate_results
 
 
 _FLAG = "W4_STYLE_SPLIT"
+_TECH_SELECTION_FLAG = "HTECH_CANDIDATE_SELECTION"
 _STYLES = ("formal", "sarcastic", "humorous_tech", "humorous_non_tech")
 _CONTROLLED_ENV = {
     "ENSEMBLE_OBSERVERS": "test/observer",
@@ -33,6 +34,7 @@ _CONTROLLED_ENV = {
     "CREATIVE_DISCIPLINE": "0",
     "WRITER_LENGTH_HINT": "",
     "WRITER_TEMP": "0.5",
+    "HTECH_CANDIDATE_SELECTION": "0",
     "VIDEO_OBSERVER": "",
     "OPENROUTER_API_KEY": "w4-offline-test-secret",
 }
@@ -42,7 +44,9 @@ _V8_DOCKER_WRITER_SHA256 = (
 
 
 @contextmanager
-def _loaded_ensemble(flag: str | None) -> Iterator[object]:
+def _loaded_ensemble(
+    flag: str | None, tech_candidate_selection: str = "0"
+) -> Iterator[object]:
     names = (*_CONTROLLED_ENV, _FLAG)
     before = {name: os.environ.get(name) for name in names}
     existed = {name: name in os.environ for name in names}
@@ -52,6 +56,7 @@ def _loaded_ensemble(flag: str | None) -> Iterator[object]:
             os.environ.pop(_FLAG, None)
         else:
             os.environ[_FLAG] = flag
+        os.environ[_TECH_SELECTION_FLAG] = tech_candidate_selection
 
         from app import ensemble
 
@@ -305,6 +310,50 @@ def test_humorous_tech_gets_one_grounded_repair_before_outer_fallback() -> None:
         )
 
 
+def test_humorous_tech_selector_keeps_the_best_grounded_candidate() -> None:
+    with _loaded_ensemble("1", "1") as ensemble:
+        base_system = ensemble._writer_system()
+        tech_writer_calls = 0
+        selector_calls = 0
+
+        async def fake_call(
+            client, model, system, content, max_tokens, temperature=0.5
+        ) -> str:
+            nonlocal tech_writer_calls, selector_calls
+            if system == ensemble.OBSERVE_SYSTEM:
+                return '["An orange kitten walks through green foliage toward the camera."]'
+            if system == ensemble._TECH_SELECTOR_SYSTEM:
+                selector_calls += 1
+                assert "CANDIDATE A:" in content
+                assert "CANDIDATE B:" in content
+                return '{"winner":"B"}'
+
+            suffix = system[len(base_system):]
+            style = next(style for style in _STYLES if f'"{style}"' in suffix)
+            if style != "humorous_tech":
+                return json.dumps({"caption": _writer_caption("valid", style)})
+            tech_writer_calls += 1
+            if system.endswith(ensemble._TECH_ALTERNATE_CANDIDATE_RULE):
+                return json.dumps({
+                    "caption": "An orange kitten walks toward the camera through green foliage, "
+                    "its tail acting like a runtime meter finally reaching full strength."
+                })
+            return json.dumps({
+                "caption": "An orange kitten walks through green foliage toward the camera like "
+                "a server doing its job."
+            })
+
+        ensemble._call = fake_call
+        result = _run_with_frame(ensemble)
+
+        assert tech_writer_calls == 2
+        assert selector_calls == 1
+        assert result["humorous_tech"] == (
+            "An orange kitten walks toward the camera through green foliage, its tail acting "
+            "like a runtime meter finally reaching full strength."
+        )
+
+
 def test_flag_is_strict_and_off_unless_explicitly_enabled() -> None:
     for value in (None, "", "0", "false", "False", "off", "no", " 0 "):
         with _loaded_ensemble(value) as ensemble:
@@ -330,6 +379,7 @@ def main() -> None:
     test_each_style_keeps_the_existing_single_retry_contract()
     test_each_style_retries_malformed_writer_json()
     test_humorous_tech_gets_one_grounded_repair_before_outer_fallback()
+    test_humorous_tech_selector_keeps_the_best_grounded_candidate()
     test_flag_is_strict_and_off_unless_explicitly_enabled()
     print("w4_style_split_ok")
 
