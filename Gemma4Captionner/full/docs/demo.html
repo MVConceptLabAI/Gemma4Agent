@@ -261,12 +261,19 @@
     }
     async function writeCaptions(evidence) {
       setStatus(`Reconciling ${FRAME_COUNT} grounded observations into four captions…`);
-      const prompt = `You are a careful video-captioning writer. ${FRAME_COUNT} single-frame observations describe consecutive parts of ONE video. Cross-check them. The clip may be a montage: when scenes differ, describe their sequence instead of pretending they happen in one physical scene. Keep only facts supported by the records; omit conflicts and do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. formal is objective and factual in one or two sentences, 55–75 words when the evidence supports that detail. sarcastic is one dry, lightly mocking sentence of 24–42 words with no technology jargon. humorous_tech is one genuinely funny sentence of 24–42 words using one natural technology analogy tied to visible facts. humorous_non_tech is one warm everyday joke of 24–42 words with no technology jargon.\n\n${evidence}`;
+      const prompt = `You are a careful video-captioning writer. ${FRAME_COUNT} single-frame observations describe consecutive parts of ONE video. Cross-check them. The clip may be a montage: when scenes differ, describe their sequence instead of pretending they happen in one physical scene. Keep only facts supported by the records; omit conflicts and do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. formal is objective and factual in one or two sentences, 55–75 words when the evidence supports that detail. sarcastic is one dry, lightly mocking sentence of 24–42 words with no technology jargon. humorous_tech is one genuinely funny sentence of 24–42 words: use exactly one natural technology comparison and a concrete playful payoff, never a loose jargon list, “too many tabs”, “glitchy cache”, or “random” subject. humorous_non_tech is one warm everyday joke of 24–42 words with a concrete playful payoff; never invent a school, event, profession, intent, or unseen setting, and never call the clip a mixed bag or scrapbook.\n\n${evidence}`;
       return validateCaptions(cleanJson(await askGemma([{ type: 'text', text: prompt }], CAPTION_MAX_TOKENS)));
     }
     async function rewriteHumorousTech(evidence, candidate) {
       setStatus('Giving the humorous-tech caption a real punchline…');
-      const prompt = `You are editing ONE humorous_tech video caption. The video may be a montage, so preserve the visible sequence when relevant. Rewrite the candidate using only the verified evidence below. It must be genuinely lightly funny: one natural tech analogy plus a small playful payoff tied to a visible contrast, action or transition. A bare jargon contrast is not a joke. Do not invent code, speech, identities, brands or unseen events. Return ONLY JSON: {"caption":"..."}.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCURRENT CANDIDATE:\n${candidate}`;
+      const prompt = `You are editing ONE humorous_tech video caption. The video may be a montage, so preserve the visible sequence when relevant. Rewrite the candidate using only the verified evidence below. It must be genuinely lightly funny: begin with one visible setup, make exactly ONE natural technology comparison, then land a small playful payoff tied to a visible contrast, action or transition. A bare jargon contrast is not a joke. Never use the stale phrases “too many tabs”, “glitchy cache”, or “random” subject. Do not invent code, speech, identities, brands, intent or unseen events. Keep it to one sentence of 24–42 words. Return ONLY JSON: {"caption":"..."}.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCURRENT CANDIDATE:\n${candidate}`;
+      const result = cleanJson(await askGemma([{ type: 'text', text: prompt }], 300));
+      const caption = String(result.caption || '').trim();
+      return caption || candidate;
+    }
+    async function rewriteHumorousNonTech(evidence, candidate) {
+      setStatus('Giving the everyday-humour caption a grounded punchline…');
+      const prompt = `You are editing ONE humorous_non_tech video caption. Rewrite the candidate using only the verified evidence below. It must be genuinely warm and funny: begin with a visible setup, use an everyday comparison, then land a small playful payoff tied to something actually visible. Preserve montage order if relevant. Never invent a school, event, profession, intent, audience, backstory, speech or unseen setting. Never use technical vocabulary or the clichés “mixed bag” and “scrapbook”. Keep it to one sentence of 24–42 words. Return ONLY JSON: {"caption":"..."}.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCURRENT CANDIDATE:\n${candidate}`;
       const result = cleanJson(await askGemma([{ type: 'text', text: prompt }], 300));
       const caption = String(result.caption || '').trim();
       return caption || candidate;
@@ -280,8 +287,13 @@
       const { observations, box } = await observeAllFrames(preview);
       const evidence = evidenceFrom(observations);
       currentCaptions = await writeCaptions(evidence);
-      try { currentCaptions.humorous_tech = await rewriteHumorousTech(evidence, currentCaptions.humorous_tech); }
-      catch (error) { setStatus('Tech caption rewrite was unavailable; keeping the grounded first draft.', 'warning'); }
+      const rewrites = await Promise.allSettled([
+        rewriteHumorousTech(evidence, currentCaptions.humorous_tech),
+        rewriteHumorousNonTech(evidence, currentCaptions.humorous_non_tech)
+      ]);
+      if (rewrites[0].status === 'fulfilled') currentCaptions.humorous_tech = rewrites[0].value;
+      if (rewrites[1].status === 'fulfilled') currentCaptions.humorous_non_tech = rewrites[1].value;
+      if (rewrites.some(result => result.status === 'rejected')) setStatus('One humour rewrite was unavailable; keeping its grounded first draft.', 'warning');
       renderCaptions(currentCaptions); saveHistory(file, currentCaptions);
       setStatus(`Done — all ${FRAME_COUNT} frames were used at up to ${box.width}×${box.height}, and the original video stayed in this browser.`);
     }
