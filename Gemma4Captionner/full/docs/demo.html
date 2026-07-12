@@ -493,26 +493,35 @@
       }
       return false;
     }
-    async function repairLexicalCorruptionV18(evidence, captions) {
-      let affected = REQUIRED_STYLES.filter(style => hasLexicalCorruption(captions[style]));
+    function hasUnsupportedAbsolute(evidence, value) {
+      const text = String(value || '');
+      if (/\b(?:permanent(?:ly)?|never moves?|refuses? to move|does not move|no movement|nothing changes?)\b/i.test(text)) return true;
+      if (!/\b(?:stationary|motionless|frozen|freezes?|unchanged)\b/i.test(text)) return false;
+      return !/\b(?:stationary|motionless|remains? still|does not move|no movement|unchanged)\b/i.test(String(evidence || ''));
+    }
+    function hasCaptionQualityRisk(evidence, value) {
+      return hasLexicalCorruption(value) || hasUnsupportedAbsolute(evidence, value);
+    }
+    async function repairCaptionQualityV18(evidence, captions) {
+      let affected = REQUIRED_STYLES.filter(style => hasCaptionQualityRisk(evidence, captions[style]));
       if (!affected.length) return captions;
-      setStatus(`V18 detected corrupted wording in ${affected.join(', ')}; repairing text without repeating video analysis…`, 'warning');
-      const prompt = `You are a strict copy editor repairing surface corruption in four grounded video captions. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. Preserve each caption's supported facts, sequence, style, comparison and intended joke. Change only malformed words, accidental letter runs, duplicated words or phrases, broken suffixes and grammar caused by text corruption. Do not add, remove or reinterpret factual claims. Do not add commentary.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCORRUPTED CAPTIONS:\n${JSON.stringify(captions)}`;
+      setStatus(`V18 detected corrupted wording or an unsupported absolute in ${affected.join(', ')}; repairing captions without repeating video analysis…`, 'warning');
+      const prompt = `You are a strict copy editor repairing quality defects in four grounded video captions. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. Preserve each caption's supported facts, sequence, style, comparison and intended joke. Repair malformed words, accidental letter runs, duplicated fragments and broken grammar. Also remove or replace absolute claims such as stationary, frozen, permanent, never moving or unchanged when the verified evidence does not explicitly support them. If the evidence contains motion, the repaired joke must use the visible motion or pace rather than a freeze or stillness metaphor. Do not add or reinterpret factual claims. Do not add commentary.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCAPTIONS TO CHECK:\n${JSON.stringify(captions)}`;
       try {
         const repaired = validateCaptions(await parseGemmaJson(await askGemma([{ type: 'text', text: prompt }], CAPTION_MAX_TOKENS), REQUIRED_STYLES, captions));
         captions = repaired;
       } catch { /* retry only the still-corrupted styles below */ }
-      affected = REQUIRED_STYLES.filter(style => hasLexicalCorruption(captions[style]));
+      affected = REQUIRED_STYLES.filter(style => hasCaptionQualityRisk(evidence, captions[style]));
       if (affected.length) {
         const retries = await Promise.allSettled(affected.map(async style => {
-          const prompt = `Repair ONLY the surface text corruption in this ${style} video caption. Preserve every supported fact, the style and the joke. Remove malformed words, letter runs and duplicated fragments. Do not add facts. Return ONLY JSON: {"caption":"..."}.\n\nEVIDENCE:\n${evidence}\n\nCAPTION:\n${captions[style]}`;
+          const prompt = `Repair ONLY the quality defect in this ${style} video caption. Preserve every supported fact, the style and the joke. Remove malformed text and any claim of stillness, freezing, permanence, no movement or no change that is unsupported by the evidence. When motion is verified, anchor the repaired joke in that motion or its pace. Do not add facts. Return ONLY JSON: {"caption":"..."}.\n\nEVIDENCE:\n${evidence}\n\nCAPTION:\n${captions[style]}`;
           const result = await parseGemmaJson(await askGemma([{ type: 'text', text: prompt }], 320), ['caption'], { caption: captions[style] });
           return String(result.caption || captions[style]).trim();
         }));
         affected.forEach((style, index) => { if (retries[index].status === 'fulfilled') captions[style] = retries[index].value; });
       }
       const safe = groundedEmergencyCaptions(evidence);
-      for (const style of REQUIRED_STYLES) if (hasLexicalCorruption(captions[style])) captions[style] = safe[style];
+      for (const style of REQUIRED_STYLES) if (hasCaptionQualityRisk(evidence, captions[style])) captions[style] = safe[style];
       return validateCaptions(captions);
     }
     async function verifyGrounding(evidence, captions) {
@@ -570,7 +579,7 @@
       }
       try { currentCaptions = await verifyGrounding(evidence, currentCaptions); }
       catch (error) { setStatus('Grounding verification was unavailable; keeping the evidence-based captions.', 'warning'); }
-      if (pipelineVersion.value === 'v18') currentCaptions = await repairLexicalCorruptionV18(evidence, currentCaptions);
+      if (pipelineVersion.value === 'v18') currentCaptions = await repairCaptionQualityV18(evidence, currentCaptions);
       renderCaptions(currentCaptions); saveHistory(file, currentCaptions);
       const mode = pipelineVersion.value.toUpperCase();
       const videoSummary = directVideoUsed ? ' Direct-video evidence was added.' : (directVideoNote ? ` ${directVideoNote}` : '');
