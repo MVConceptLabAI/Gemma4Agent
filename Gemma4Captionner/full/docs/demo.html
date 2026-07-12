@@ -7,6 +7,8 @@
   <title>Gemma 4 SceneGate — local video caption demo</title>
   <style>
     :root{color-scheme:dark;--bg:#071119;--card:#0e202b;--card2:#0a1821;--line:#234151;--ink:#edf4f8;--muted:#aebdca;--mint:#57e0c2;--blue:#82aaff;--danger:#ff9292;--warning:#f4ca72}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 90% 0,#163846,transparent 30%),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,sans-serif}.wrap{max-width:1080px;margin:auto;padding:48px 24px 80px}.tag{color:var(--mint);font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase}h1{font-size:clamp(40px,8vw,74px);letter-spacing:-2px;line-height:.96;margin:14px 0 18px}h2{font-size:20px;margin:0 0 12px}h3{font-size:14px;margin:0}p{color:var(--muted);line-height:1.55}.lead{max-width:760px;font-size:19px}.card{background:color-mix(in srgb,var(--card) 94%,transparent);border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:22px;box-shadow:0 18px 55px #0003}label{display:block;color:var(--muted);font-size:13px;font-weight:700;margin-top:14px}input,button{font:inherit;border-radius:10px;width:100%;margin-top:7px;padding:13px}input{background:#071119;border:1px solid #355363;color:var(--ink)}button{border:0;background:var(--mint);color:#071119;font-weight:850;cursor:pointer}button.secondary{background:transparent;color:var(--ink);border:1px solid #355363}button:disabled{opacity:.55;cursor:wait}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.settings summary{cursor:pointer;color:var(--blue);font-weight:750}.settings[open] summary{margin-bottom:12px}.privacy{font-size:13px}.check{display:flex;gap:9px;align-items:center;margin-top:15px;color:var(--muted);font-size:13px}.check input{width:auto;margin:0}.preview{display:none;width:100%;max-height:390px;border-radius:13px;background:#000;margin-top:16px}.video-meta{margin-top:10px;color:var(--muted);font-size:13px}.status{min-height:23px;margin:18px 0 0}.error{color:var(--danger)}.warning{color:var(--warning)}.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}.result{border-left:3px solid var(--mint);padding:15px;background:var(--card2);border-radius:0 11px 11px 0;line-height:1.5}.style{color:var(--blue);text-transform:uppercase;font-size:11px;font-weight:850;letter-spacing:1.1px;margin-bottom:8px}.facts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.facts img{width:104px;height:72px;object-fit:cover;border:1px solid var(--line);border-radius:7px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.actions button{width:auto;margin:0}.history{display:grid;gap:10px;margin-top:14px}.history-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);background:var(--card2);border-radius:10px}.history-item span{color:var(--muted);font-size:13px}.history-item button{width:auto;margin:0;padding:8px 11px}.hidden{display:none}@media(max-width:720px){.grid,.result-grid{grid-template-columns:1fr}.wrap{padding:34px 16px 60px}.history-item{align-items:flex-start;flex-direction:column}}
+    .contract{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:11px;background:var(--card2)}
+    .contract pre{margin:12px 0 0;padding:14px;max-height:360px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#050d12;border-radius:8px;color:#d9f7ee}
   </style>
 </head>
 <body>
@@ -21,6 +23,7 @@
         <div class="grid">
           <label>OpenRouter API key<input id="apiKey" type="password" autocomplete="off" placeholder="sk-or-v1-…"></label>
           <label>Vision model<input id="model" type="text" value="google/gemma-4-31b-it" autocomplete="off"></label>
+          <label>Jury preview task ID<input id="taskId" type="text" value="demo-v1" autocomplete="off"></label>
         </div>
         <label class="check"><input id="rememberKey" type="checkbox"> Remember this API key on this device</label>
         <p class="privacy">The selected video never uploads to this site. The browser extracts twenty-four 640×360-or-smaller frames locally and sends one frame per OpenRouter request, in small parallel groups. Settings and caption history are stored in this browser’s localStorage. Your OpenRouter key can be removed at any time.</p>
@@ -37,7 +40,12 @@
       <button id="caption" type="button">2. Create four captions with Gemma 4</button>
       <div id="status" class="status" aria-live="polite"></div>
       <div id="results" class="result-grid" aria-live="polite"></div>
-      <div id="resultActions" class="actions hidden"><button id="download" class="secondary" type="button">Download captions JSON</button></div>
+      <div id="resultActions" class="actions hidden"><button id="download" class="secondary" type="button">Download results.json</button></div>
+      <div id="contractPreview" class="contract hidden">
+        <h3>/output/results.json jury preview</h3>
+        <div id="contractStatus" class="video-meta"></div>
+        <pre id="juryJson" aria-label="Validated jury results JSON"></pre>
+      </div>
     </section>
 
     <section class="card">
@@ -61,10 +69,11 @@
     const FACT_MAX_CHARS = 96;
     const CAPTION_MAX_TOKENS = 800;
     const $ = id => document.getElementById(id);
-    const apiKey = $('apiKey'), model = $('model'), rememberKey = $('rememberKey');
+    const apiKey = $('apiKey'), model = $('model'), taskId = $('taskId'), rememberKey = $('rememberKey');
     const videoFile = $('videoFile'), preview = $('preview'), frames = $('frames');
     const status = $('status'), results = $('results'), caption = $('caption');
     const videoMeta = $('videoMeta'), resultActions = $('resultActions'), history = $('history');
+    const contractPreview = $('contractPreview'), contractStatus = $('contractStatus'), juryJson = $('juryJson');
     let objectUrl = null;
     let currentCaptions = null;
 
@@ -72,6 +81,7 @@
     function saveSettings() {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
         model: model.value.trim(),
+        taskId: taskId.value.trim(),
         rememberKey: rememberKey.checked,
         apiKey: rememberKey.checked ? apiKey.value.trim() : ''
       }));
@@ -79,6 +89,7 @@
     function restoreSettings() {
       const saved = readJson(SETTINGS_KEY, {});
       model.value = saved.model || model.value;
+      taskId.value = saved.taskId || taskId.value;
       rememberKey.checked = Boolean(saved.rememberKey);
       apiKey.value = saved.rememberKey ? (saved.apiKey || '') : '';
     }
@@ -127,6 +138,43 @@
       if (start < 0 || end <= start) throw new Error('The model did not return caption JSON.');
       return JSON.parse(text.slice(start, end + 1));
     }
+    function decodedQuotedValue(value) {
+      try { return JSON.parse(`"${value}"`); }
+      catch { return String(value || '').replace(/\\"/g, '"').replace(/\\n/g, ' ').replace(/\\\\/g, '\\'); }
+    }
+    function salvageJsonStrings(value, keys) {
+      const text = String(value || '');
+      const output = {};
+      for (const key of keys) {
+        const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const match = text.match(new RegExp(`["']?${escaped}["']?\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`, 'i'));
+        if (match) output[key] = decodedQuotedValue(match[1]).trim();
+      }
+      return output;
+    }
+    async function parseGemmaJson(value, keys, fallback = null) {
+      try { return cleanJson(value); }
+      catch (parseError) {
+        const salvaged = salvageJsonStrings(value, keys);
+        if (keys.every(key => String(salvaged[key] || '').trim())) {
+          setStatus('Gemma returned malformed JSON; recovered all fields locally without repeating the video analysis.', 'warning');
+          return salvaged;
+        }
+        setStatus('Gemma returned malformed JSON; repairing only the response without repeating the frame analysis...', 'warning');
+        const repairPrompt = `Repair the malformed response below. Preserve its meaning and wording. Return ONLY one valid JSON object with exactly these string keys: ${keys.join(', ')}. Do not add commentary.\n\nMALFORMED RESPONSE:\n${String(value || '').slice(0, 12000)}`;
+        try {
+          return cleanJson(await askGemma([{ type: 'text', text: repairPrompt }], Math.min(CAPTION_MAX_TOKENS, 800)));
+        } catch (repairError) {
+          if (fallback) {
+            setStatus('JSON repair was unavailable; continuing with the safe complete grounded fallback.', 'warning');
+            return fallback;
+          }
+          const error = new Error('Gemma returned malformed JSON twice. Retry will reuse the sampled video frames.');
+          error.cause = repairError || parseError;
+          throw error;
+        }
+      }
+    }
     function validateCaptions(data) {
       const output = {};
       for (const style of REQUIRED_STYLES) {
@@ -135,6 +183,31 @@
         output[style] = value;
       }
       return output;
+    }
+    function groundedEmergencyCaptions(evidence) {
+      const facts = String(evidence || '').split(/\n+/)
+        .filter(line => /^-\s+/.test(line)).map(line => line.replace(/^-\s+/, '').trim().replace(/[.!?]+$/, ''))
+        .filter(Boolean).slice(0, 3);
+      const scene = facts.length ? facts.join('; ') : 'visible subjects, movement, and surrounding scenery';
+      return {
+        formal: `The video shows ${scene}.`,
+        sarcastic: `The scene presents ${scene}, because apparently this moment required the full documentary treatment.`,
+        humorous_tech: `The visual sequence processes ${scene} like a careful system update, with every visible detail waiting for its turn.`,
+        humorous_non_tech: `The scene gives ${scene} a small spotlight, like an everyday moment arriving early and bringing extra confidence.`
+      };
+    }
+    function juryResultsPayload(captions) {
+      const id = taskId.value.trim() || 'demo-v1';
+      return [{ task_id: id, captions: validateCaptions(captions) }];
+    }
+    function renderJuryJson(captions) {
+      const json = JSON.stringify(juryResultsPayload(captions), null, 2);
+      const parsed = JSON.parse(json);
+      if (!Array.isArray(parsed) || parsed.length !== 1) throw new Error('Jury output must be a JSON array containing one task.');
+      validateCaptions(parsed[0].captions);
+      juryJson.textContent = json;
+      contractStatus.textContent = `Valid JSON | 1 task | ${REQUIRED_STYLES.length} required styles | ready for /output/results.json`;
+      contractPreview.classList.remove('hidden');
     }
     function renderCaptions(data) {
       results.replaceChildren();
@@ -147,6 +220,7 @@
         card.append(label, text); results.append(card);
       }
       resultActions.classList.remove('hidden');
+      renderJuryJson(data);
     }
     function saveHistory(file, captions) {
       const rows = readJson(HISTORY_KEY, []);
@@ -170,8 +244,10 @@
     }
     function downloadCaptions() {
       if (!currentCaptions) return;
-      const blob = new Blob([JSON.stringify({ captions: currentCaptions }, null, 2)], { type: 'application/json' });
-      const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'gemma4-captions.json'; link.click(); URL.revokeObjectURL(link.href);
+      const json = JSON.stringify(juryResultsPayload(currentCaptions), null, 2);
+      JSON.parse(json);
+      const blob = new Blob([json], { type: 'application/json' });
+      const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'results.json'; link.click(); URL.revokeObjectURL(link.href);
     }
     function availableCompletionTokens(message) {
       const match = String(message || '').match(/can only afford\s+(\d+)\s+tokens?/i);
@@ -204,8 +280,21 @@
       const text = String(value || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
       const start = text.indexOf('['), end = text.lastIndexOf(']');
       if (start >= 0 && end > start) {
-        const list = JSON.parse(text.slice(start, end + 1));
-        if (Array.isArray(list)) return list.map(item => String(item).trim().slice(0, FACT_MAX_CHARS)).filter(Boolean).slice(0, FACTS_PER_FRAME);
+        try {
+          const list = JSON.parse(text.slice(start, end + 1));
+          if (Array.isArray(list)) return list.map(item => String(item).trim().slice(0, FACT_MAX_CHARS)).filter(Boolean).slice(0, FACTS_PER_FRAME);
+        } catch {
+          const recovered = [];
+          for (const match of text.slice(start, end + 1).matchAll(/"((?:\\.|[^"\\])*)"/g)) {
+            const fact = decodedQuotedValue(match[1]).trim().slice(0, FACT_MAX_CHARS);
+            if (fact && !recovered.includes(fact)) recovered.push(fact);
+            if (recovered.length >= FACTS_PER_FRAME) break;
+          }
+          if (recovered.length) {
+            setStatus('Recovered a malformed frame observation locally; analysis is continuing...', 'warning');
+            return recovered;
+          }
+        }
       }
       return text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '').trim().slice(0, FACT_MAX_CHARS)).filter(Boolean).slice(0, FACTS_PER_FRAME);
     }
@@ -262,19 +351,22 @@
     async function writeCaptions(evidence) {
       setStatus(`Reconciling ${FRAME_COUNT} grounded observations into four captions…`);
       const prompt = `You are a careful video-captioning writer. ${FRAME_COUNT} single-frame observations describe consecutive parts of ONE video. Cross-check them. The clip may be a montage: when scenes differ, describe their sequence instead of pretending they happen in one physical scene. Keep only facts supported by the records; omit conflicts and do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. formal is objective and factual in one or two sentences, 55–75 words when the evidence supports that detail. sarcastic is one dry, lightly mocking sentence of 24–42 words with no technology jargon. humorous_tech is one genuinely funny sentence of 24–42 words: use exactly one natural technology comparison and a concrete playful payoff, never a loose jargon list, “too many tabs”, “glitchy cache”, or “random” subject. humorous_non_tech is one warm everyday joke of 24–42 words with a concrete playful payoff; never invent a school, event, profession, intent, or unseen setting, never call the clip a mixed bag or scrapbook, and never use “watching paint dry”, “watching grass grow”, “nothing happens”, or “the only thing of interest”.\n\n${evidence}`;
-      return validateCaptions(cleanJson(await askGemma([{ type: 'text', text: prompt }], CAPTION_MAX_TOKENS)));
+      const raw = await askGemma([{ type: 'text', text: prompt }], CAPTION_MAX_TOKENS);
+      return validateCaptions(await parseGemmaJson(raw, REQUIRED_STYLES, groundedEmergencyCaptions(evidence)));
     }
     async function rewriteHumorousTech(evidence, candidate) {
       setStatus('Giving the humorous-tech caption a real punchline…');
       const prompt = `You are editing ONE humorous_tech video caption. The video may be a montage, so preserve the visible sequence when relevant. Rewrite the candidate using only the verified evidence below. It must be genuinely lightly funny: begin with one visible setup, make exactly ONE natural technology comparison, then land a small playful payoff tied to a visible contrast, action or transition. A bare jargon contrast is not a joke. Never use the stale phrases “too many tabs”, “glitchy cache”, or “random” subject. Do not invent code, speech, identities, brands, intent or unseen events. Keep it to one sentence of 24–42 words. Return ONLY JSON: {"caption":"..."}.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCURRENT CANDIDATE:\n${candidate}`;
-      const result = cleanJson(await askGemma([{ type: 'text', text: prompt }], 300));
+      const raw = await askGemma([{ type: 'text', text: prompt }], 300);
+      const result = await parseGemmaJson(raw, ['caption'], { caption: candidate });
       const caption = String(result.caption || '').trim();
       return caption || candidate;
     }
     async function rewriteHumorousNonTech(evidence, candidate) {
       setStatus('Giving the everyday-humour caption a grounded punchline…');
       const prompt = `You are editing ONE humorous_non_tech video caption. Rewrite the candidate using only the verified evidence below. It must be genuinely warm and funny: begin with a visible setup, use a fresh everyday comparison, then land a small playful payoff tied to something actually visible. Preserve montage order if relevant. Never invent a school, event, profession, intent, audience, backstory, speech or unseen setting. Never use technical vocabulary or the clichés “mixed bag”, “scrapbook”, “watching paint dry”, “watching grass grow”, “nothing happens”, or “the only thing of interest”. Keep it to one sentence of 24–42 words. Return ONLY JSON: {"caption":"..."}.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCURRENT CANDIDATE:\n${candidate}`;
-      const result = cleanJson(await askGemma([{ type: 'text', text: prompt }], 300));
+      const raw = await askGemma([{ type: 'text', text: prompt }], 300);
+      const result = await parseGemmaJson(raw, ['caption'], { caption: candidate });
       const caption = String(result.caption || '').trim();
       return caption || candidate;
     }
@@ -291,12 +383,13 @@
     async function verifyGrounding(evidence, captions) {
       setStatus('Checking every caption against the visual evidence…');
       const prompt = `You are the final grounded-caption verifier. Compare the four candidate captions with the verified visual evidence for ONE video. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. First assess each caption independently. If every literal claim is supported, copy that candidate VERBATIM. If a claim is unsupported, change ONLY the smallest risky clause; preserve all other supported visual nouns, actions, sequence details, style, humour and approximate length. Never summarize, simplify, or turn a detailed caption into a generic one. A repaired caption should keep at least 70% of the candidate's words unless the candidate leaks an internal pipeline term. Remove claims about frame counts, thumbnails, sampling, prompts, models, analysis, or processing. Do not claim a static camera, unchanged perspective, motion, time-lapse, readable text, a brand, an identity, intent, speech, an audience, or an off-screen event unless it is explicitly supported by the evidence. A tech or everyday comparison may remain only as a clearly figurative joke anchored to a visible fact; it must not create new literal events.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCANDIDATE CAPTIONS:\n${JSON.stringify(captions)}`;
-      const verified = validateCaptions(cleanJson(await askGemma([{ type: 'text', text: prompt }], CAPTION_MAX_TOKENS)));
+      const raw = await askGemma([{ type: 'text', text: prompt }], CAPTION_MAX_TOKENS);
+      const verified = validateCaptions(await parseGemmaJson(raw, REQUIRED_STYLES, captions));
       return preserveVerifiedDetails(captions, verified);
     }
     async function run() {
       const file = videoFile.files[0];
-      saveSettings(); results.replaceChildren(); resultActions.classList.add('hidden');
+      saveSettings(); results.replaceChildren(); resultActions.classList.add('hidden'); contractPreview.classList.add('hidden');
       if (!file) throw new Error('Choose a video first.');
       if (!apiKey.value.trim()) throw new Error('Enter an OpenRouter key in Local inference settings.');
       if (!model.value.trim()) throw new Error('Enter a vision-capable model slug.');
@@ -318,8 +411,9 @@
 
     restoreSettings(); renderHistory();
     model.addEventListener('change', saveSettings); rememberKey.addEventListener('change', saveSettings);
+    taskId.addEventListener('change', () => { saveSettings(); if (currentCaptions) renderJuryJson(currentCaptions); });
     videoFile.addEventListener('change', async () => {
-      results.replaceChildren(); frames.replaceChildren(); resultActions.classList.add('hidden');
+      results.replaceChildren(); frames.replaceChildren(); resultActions.classList.add('hidden'); contractPreview.classList.add('hidden');
       const file = videoFile.files[0]; if (!file) return;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       objectUrl = URL.createObjectURL(file); preview.src = objectUrl; preview.style.display = 'block';
@@ -329,7 +423,7 @@
     });
     caption.addEventListener('click', async () => { caption.disabled = true; try { await run(); } catch (error) { setStatus(error instanceof Error ? error.message : 'Captioning failed.', 'error'); } finally { caption.disabled = false; } });
     $('download').addEventListener('click', downloadCaptions);
-    $('forget').addEventListener('click', () => { localStorage.removeItem(SETTINGS_KEY); apiKey.value = ''; model.value = 'google/gemma-4-31b-it'; rememberKey.checked = false; setStatus('Local settings removed.'); });
+    $('forget').addEventListener('click', () => { localStorage.removeItem(SETTINGS_KEY); apiKey.value = ''; model.value = 'google/gemma-4-31b-it'; taskId.value = 'demo-v1'; rememberKey.checked = false; setStatus('Local settings removed.'); });
     $('clearHistory').addEventListener('click', () => { localStorage.removeItem(HISTORY_KEY); renderHistory(); setStatus('Local caption history cleared.'); });
   </script>
 </body>
