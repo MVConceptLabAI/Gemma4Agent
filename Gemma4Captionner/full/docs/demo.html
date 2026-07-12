@@ -462,6 +462,59 @@
       }
       return output;
     }
+    function editDistance(left, right) {
+      const a = String(left || '').toLowerCase(), b = String(right || '').toLowerCase();
+      const row = Array.from({ length: b.length + 1 }, (_, index) => index);
+      for (let i = 1; i <= a.length; i += 1) {
+        let diagonal = row[0]; row[0] = i;
+        for (let j = 1; j <= b.length; j += 1) {
+          const previous = row[j];
+          row[j] = Math.min(row[j] + 1, row[j - 1] + 1, diagonal + (a[i - 1] === b[j - 1] ? 0 : 1));
+          diagonal = previous;
+        }
+      }
+      return row[b.length];
+    }
+    function hasLexicalCorruption(value) {
+      const text = String(value || '');
+      if (/\b(?:[a-z]+[A-Z][A-Za-z]*|[A-Z]{4,}|totalest)\b/.test(text)) return true;
+      if (/\b([A-Za-z]{3,})\b(?:\s+\1\b)+/i.test(text)) return true;
+      const words = (text.match(/[A-Za-z]+/g) || []).map(word => word.toLowerCase());
+      for (let index = 1; index < words.length; index += 1) {
+        const left = words[index - 1], right = words[index];
+        if (Math.min(left.length, right.length) >= 5 && left !== right && editDistance(left, right) <= 2) return true;
+      }
+      const bigrams = new Map();
+      for (let index = 0; index < words.length - 1; index += 1) {
+        if (words[index].length < 4 || words[index + 1].length < 4) continue;
+        const key = `${words[index]} ${words[index + 1]}`;
+        if (bigrams.has(key) && index - bigrams.get(key) <= 20) return true;
+        bigrams.set(key, index);
+      }
+      return false;
+    }
+    async function repairLexicalCorruptionV18(evidence, captions) {
+      let affected = REQUIRED_STYLES.filter(style => hasLexicalCorruption(captions[style]));
+      if (!affected.length) return captions;
+      setStatus(`V18 detected corrupted wording in ${affected.join(', ')}; repairing text without repeating video analysis…`, 'warning');
+      const prompt = `You are a strict copy editor repairing surface corruption in four grounded video captions. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. Preserve each caption's supported facts, sequence, style, comparison and intended joke. Change only malformed words, accidental letter runs, duplicated words or phrases, broken suffixes and grammar caused by text corruption. Do not add, remove or reinterpret factual claims. Do not add commentary.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCORRUPTED CAPTIONS:\n${JSON.stringify(captions)}`;
+      try {
+        const repaired = validateCaptions(await parseGemmaJson(await askGemma([{ type: 'text', text: prompt }], CAPTION_MAX_TOKENS), REQUIRED_STYLES, captions));
+        captions = repaired;
+      } catch { /* retry only the still-corrupted styles below */ }
+      affected = REQUIRED_STYLES.filter(style => hasLexicalCorruption(captions[style]));
+      if (affected.length) {
+        const retries = await Promise.allSettled(affected.map(async style => {
+          const prompt = `Repair ONLY the surface text corruption in this ${style} video caption. Preserve every supported fact, the style and the joke. Remove malformed words, letter runs and duplicated fragments. Do not add facts. Return ONLY JSON: {"caption":"..."}.\n\nEVIDENCE:\n${evidence}\n\nCAPTION:\n${captions[style]}`;
+          const result = await parseGemmaJson(await askGemma([{ type: 'text', text: prompt }], 320), ['caption'], { caption: captions[style] });
+          return String(result.caption || captions[style]).trim();
+        }));
+        affected.forEach((style, index) => { if (retries[index].status === 'fulfilled') captions[style] = retries[index].value; });
+      }
+      const safe = groundedEmergencyCaptions(evidence);
+      for (const style of REQUIRED_STYLES) if (hasLexicalCorruption(captions[style])) captions[style] = safe[style];
+      return validateCaptions(captions);
+    }
     async function verifyGrounding(evidence, captions) {
       setStatus('Checking every caption against the visual evidence…');
       const v18Rules = pipelineVersion.value === 'v18' ? ' For V18, preserve exact subject-action-object-location relationships. Facts listed separately are not interacting: remove any claim that one approaches, passes, touches or affects another unless the evidence explicitly states it. When uncertain, remove only the unsupported relationship and keep the joke.' : '';
@@ -517,6 +570,7 @@
       }
       try { currentCaptions = await verifyGrounding(evidence, currentCaptions); }
       catch (error) { setStatus('Grounding verification was unavailable; keeping the evidence-based captions.', 'warning'); }
+      if (pipelineVersion.value === 'v18') currentCaptions = await repairLexicalCorruptionV18(evidence, currentCaptions);
       renderCaptions(currentCaptions); saveHistory(file, currentCaptions);
       const mode = pipelineVersion.value.toUpperCase();
       const videoSummary = directVideoUsed ? ' Direct-video evidence was added.' : (directVideoNote ? ` ${directVideoNote}` : '');
