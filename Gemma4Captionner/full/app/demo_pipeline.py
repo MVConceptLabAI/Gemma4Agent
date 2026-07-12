@@ -76,21 +76,25 @@ async def _ask(
 ) -> str:
     if not API_KEY:
         raise RuntimeError("OPENROUTER_API_KEY is required for the Gemma 4 demo flow")
-    response = await client.post(
-        f"{API_URL}/chat/completions",
-        headers={"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"},
-        json={
-            "model": model,
-            "messages": [{"role": "user", "content": content}],
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-        },
-    )
-    response.raise_for_status()
-    answer = response.json().get("choices", [{}])[0].get("message", {}).get("content", "")
-    if not isinstance(answer, str) or not answer.strip():
-        raise ValueError("Gemma returned no text content")
-    return answer
+    for attempt in range(2):
+        response = await client.post(
+            f"{API_URL}/chat/completions",
+            headers={"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"},
+            json={
+                "model": model,
+                "messages": [{"role": "user", "content": content}],
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            },
+        )
+        response.raise_for_status()
+        answer = response.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+        if isinstance(answer, str) and answer.strip():
+            return answer
+        if attempt == 0:
+            log.warning("Gemma model %s returned empty content; retrying once", model)
+            await asyncio.sleep(1)
+    raise ValueError("Gemma returned no text content after retry")
 
 
 def _video_duration(video: Path) -> float:
@@ -201,9 +205,10 @@ async def _direct_video_evidence(
         facts = _video_facts(raw)
         if facts:
             log.info(
-                "direct Gemma 4 video part %d added %d fact(s)",
+                "direct Gemma 4 video part %d added %d fact(s): %s",
                 segment_index,
                 len(facts),
+                facts,
             )
         else:
             log.warning("direct Gemma 4 video observer returned no usable facts")
