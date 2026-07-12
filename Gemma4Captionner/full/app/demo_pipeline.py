@@ -291,6 +291,30 @@ async def _rewrite_humour(
     return caption.strip() if isinstance(caption, str) and caption.strip() else candidate
 
 
+async def _rewrite_sarcastic(
+    client: httpx.AsyncClient, evidence: str, candidate: str
+) -> str:
+    prompt = (
+        "You are editing ONE sarcastic video caption. Rewrite it using only the verified evidence below. "
+        "Produce dry, intelligent, lightly mocking irony, not loud comedy. Start with one precise verified "
+        "subject, action, contrast, or montage transition, then use understated praise or restrained "
+        "overstatement, and finish with a short sting tied to that same evidence. The sting must expose a "
+        "verified mismatch, abrupt juxtaposition, or disproportion; generic praise alone is not sarcasm. "
+        "For a montage, target the contrast between its verified scenes instead of merely listing them. For "
+        "a simple scene, contrast the ordinary visible action with the grand importance assigned to it. The "
+        "sentence must still work as an accurate caption when the irony is removed. Never use technology jargon. Never use the "
+        "stale openings 'thrilling footage', 'thrilling tour', 'exhilarating experience', 'we are treated to', "
+        "'apparently', or 'because apparently'. Do not mention frames, sampling, prompts, models, analysis, "
+        "or processing. Do not invent absence, stillness, failure, identity, intent, speech, brands, an "
+        "audience, backstory, or unseen events. Preserve exact sequence and subject-action-object-location "
+        "relationships. Use one sentence of 22-38 words. Return ONLY JSON: {\"caption\":\"...\"}."
+        "\n\nVERIFIED EVIDENCE:\n" + evidence + "\n\nCURRENT CANDIDATE:\n" + candidate
+    )
+    result = _json_object(await _ask(client, [{"type": "text", "text": prompt}], 320))
+    caption = result.get("caption")
+    return caption.strip() if isinstance(caption, str) and caption.strip() else candidate
+
+
 async def _polish_humour(
     client: httpx.AsyncClient, evidence: str, captions: dict[str, str]
 ) -> dict[str, str]:
@@ -408,11 +432,12 @@ async def caption_demo(video_url: str, styles: list[str]) -> dict[str, str]:
                 )
             captions = await _write(client, grounded_record, styles)
             rewrites = await asyncio.gather(
+                _rewrite_sarcastic(client, grounded_record, captions["sarcastic"]),
                 _rewrite_humour(client, grounded_record, captions["humorous_tech"], "humorous_tech"),
                 _rewrite_humour(client, grounded_record, captions["humorous_non_tech"], "humorous_non_tech"),
                 return_exceptions=True,
             )
-            for style, rewrite in zip(("humorous_tech", "humorous_non_tech"), rewrites):
+            for style, rewrite in zip(("sarcastic", "humorous_tech", "humorous_non_tech"), rewrites):
                 if isinstance(rewrite, str) and rewrite:
                     captions[style] = rewrite
             try:
