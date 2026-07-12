@@ -219,14 +219,14 @@ def main() -> int:
     groq_ok = _env_present("GROQ_API_KEY")
 
     if args.docker_build and docker_ok:
-        image = os.environ.get("IMAGE", "track2-captioner:dev")
+        image = os.environ.get("IMAGE", "gemma4-captioner:dev")
         ok &= _run("docker build linux/amd64", ["docker", "buildx", "build", "--platform", "linux/amd64", "--tag", image, "--load", "."])
         ok &= _inspect_image(image)
     elif args.docker_build:
         ok = False
 
     if args.docker_run and docker_ok:
-        image = os.environ.get("IMAGE", "track2-captioner:dev")
+        image = os.environ.get("IMAGE", "gemma4-captioner:dev")
         ok &= _inspect_image(image)
         ok &= _docker_contract_run(image)
     elif args.docker_run:

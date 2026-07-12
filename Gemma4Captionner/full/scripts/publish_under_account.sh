@@ -2,25 +2,25 @@
 # One-shot: publish a PUBLIC, jury-pullable image under an account YOU control.
 #
 # Prereq: you are authenticated as the target account:
-#   Option A (GHCR):  gh auth login   (as e.g. TheSkyGold, HTTPS, web browser)
+#   Option A (GHCR):  gh auth login   (as your GitHub account, HTTPS, web browser)
 #
 # Usage:
 #   bash scripts/publish_under_account.sh <github-username>
-#   e.g. bash scripts/publish_under_account.sh TheSkyGold
+#   e.g. bash scripts/publish_under_account.sh MVConceptLabAI
 #
 # What it does (all under YOUR account, nothing under devopsm3):
-#   1. creates a PUBLIC repo <user>/track2-captioner (code, so no keys in it)
+#   1. creates a PUBLIC repo <user>/gemma4-captioner (code, so no keys in it)
 #   2. sets OPENROUTER/GROQ/FIREWORKS as CI secrets (read from local .env)
 #   3. pushes this code + the publish workflow
 #   4. runs the workflow -> builds linux/amd64 and pushes
-#        ghcr.io/<user>/track2-captioner:latest  (keys baked from CI secrets)
+#        ghcr.io/<user>/gemma4-captioner:latest
 #   5. prints the exact "make package public" URL + the docker pull line
 #
 # After it finishes you do ONE click (make the package public), then submit.
 set -euo pipefail
 
 USER_ACCT="${1:?usage: publish_under_account.sh <github-username>}"
-REPO="track2-captioner"
+REPO="gemma4-captioner"
 here="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$here"
 
@@ -64,8 +64,8 @@ NEXT (your 1 click), once the workflow shows 'completed success':
     -> Danger Zone -> Change visibility -> Public -> confirm '$REPO'
 
   Jury pull line (for lablab):
-    docker pull ghcr.io/${USER_ACCT,,}/track2-captioner:latest
-    docker run --rm -v \$PWD/in:/input -v \$PWD/out:/output ghcr.io/${USER_ACCT,,}/track2-captioner:latest
+    docker pull ghcr.io/${USER_ACCT,,}/gemma4-captioner:latest
+    docker run --rm -v \$PWD/in:/input -v \$PWD/out:/output ghcr.io/${USER_ACCT,,}/gemma4-captioner:latest
 
   Then verify anonymously:
     python scripts/../verify (I'll run: python /tmp/verify_public.py after editing the image name)

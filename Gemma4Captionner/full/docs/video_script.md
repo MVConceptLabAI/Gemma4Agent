@@ -37,4 +37,4 @@ Format: screen recording + voiceover. Unlisted YouTube is fine. Keep it tight.
 4. `eval/BENCHMARK_LOG.md` table.
 5. The upload app at `:8799` — one live URL run.
 6. AMD JupyterLab terminal: `rocm-smi`, Qwen weights loading.
-7. `docker pull ghcr.io/theskygold/track2-captioner:latest` + a run writing results.json.
+7. `docker pull ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v2` + a run writing results.json.

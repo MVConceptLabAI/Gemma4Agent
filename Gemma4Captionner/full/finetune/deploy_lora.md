@@ -47,7 +47,7 @@ docker run --rm \
     -v $(pwd)/in:/input:ro -v $(pwd)/out:/output \
     -e FIREWORKS_API_KEY \
     -e STYLE_LORA=accounts/<your-account>/models/track2-gemma-styler \
-    track2-captioner:submit
+    gemma4-captioner:submit
 ```
 
 Now the 4 parallel style calls route to your fine-tuned model. Verify

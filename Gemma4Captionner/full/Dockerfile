@@ -3,7 +3,7 @@
 # Base slim + FFmpeg. Build for linux/amd64 explicitly (judging VM runs amd64).
 #
 #   docker buildx build --platform linux/amd64 \
-#     --tag ghcr.io/<you>/track2-captioner:latest --push .
+#     --tag ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v2 --push .
 # =============================================================================
 FROM python:3.11-slim-bookworm
 

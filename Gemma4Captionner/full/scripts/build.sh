@@ -3,7 +3,7 @@
 # The judging VM is linux/amd64 — any other arch will fail to pull and score 0.
 set -euo pipefail
 
-IMAGE="${IMAGE:-track2-captioner:dev}"
+IMAGE="${IMAGE:-gemma4-captioner:dev}"
 
 echo ">>> Building ${IMAGE} for linux/amd64"
 docker buildx build \

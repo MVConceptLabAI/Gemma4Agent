@@ -108,7 +108,7 @@ make submit-check
 Publish and verify the public image:
 
 ```bash
-export PUBLIC_IMAGE=ghcr.io/<user>/track2-captioner:final
+export PUBLIC_IMAGE=ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v2
 make publish
 make verify-public
 ```

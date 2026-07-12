@@ -2,7 +2,7 @@
 # Run the container locally on data/sample_tasks.json.
 set -euo pipefail
 
-IMAGE="${IMAGE:-track2-captioner:dev}"
+IMAGE="${IMAGE:-gemma4-captioner:dev}"
 
 if [[ -z "${FIREWORKS_API_KEY:-}" ]]; then
     echo "FIREWORKS_API_KEY is not set. Export it before running." >&2

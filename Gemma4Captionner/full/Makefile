@@ -3,9 +3,9 @@
 #
 # Env you probably want set:
 #   FIREWORKS_API_KEY   (required for real inference + teacher-mode dataset)
-#   IMAGE               (defaults to track2-captioner:dev)
+#   IMAGE               (defaults to gemma4-captioner:dev)
 
-IMAGE ?= track2-captioner:dev
+IMAGE ?= gemma4-captioner:dev
 PYTHON ?= python
 
 .DEFAULT_GOAL := help
