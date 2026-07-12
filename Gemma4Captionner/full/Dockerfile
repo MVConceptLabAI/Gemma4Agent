@@ -61,8 +61,8 @@ ENV PYTHONPATH=/app \
     RETRY_AFTER_GIVEUP_S=60 \
     DESCRIBE_MAX_TOKENS=1300 \
     SCENE_DETECT_ENABLED=0 \
-    MAX_CONCURRENCY=2 \
-    PER_TASK_TIMEOUT_S=150 \
+    MAX_CONCURRENCY=3 \
+    PER_TASK_TIMEOUT_S=130 \
     GLOBAL_BUDGET_S=540
 # Judging VM = 2 vCPU / 4 GB RAM (Participant Guide p.5). Scene-detection
 # decodes the ENTIRE UHD clip per video and three parallel ffmpeg passes

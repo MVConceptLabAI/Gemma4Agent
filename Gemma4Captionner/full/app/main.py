@@ -88,6 +88,13 @@ async def _run_one(sem: asyncio.Semaphore, task: dict[str, Any]) -> dict[str, An
                         caption_ensemble(video_url=video_url, styles=styles),
                         timeout=task_timeout,
                     )
+                except asyncio.TimeoutError:
+                    # Do not launch a second full pipeline after the ensemble
+                    # has already consumed this task's budget. On a 12-clip
+                    # evaluation that cascade starves later tasks and turns a
+                    # few slow clips into a run-wide fallback failure.
+                    log.warning("[%s] ensemble timed out; preserving global budget", task_id)
+                    captions = _empty_caption_set(styles)
                 except Exception as e:  # noqa: BLE001
                     # Ensemble needs paid frontier APIs; on any failure (e.g. 402
                     # out-of-credit) degrade to the single-model pipeline, which
