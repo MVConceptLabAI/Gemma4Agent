@@ -59,7 +59,7 @@
     const OBSERVATION_CONCURRENCY = 3;
     const FACTS_PER_FRAME = 2;
     const FACT_MAX_CHARS = 96;
-    const CAPTION_MAX_TOKENS = 380;
+    const CAPTION_MAX_TOKENS = 800;
     const $ = id => document.getElementById(id);
     const apiKey = $('apiKey'), model = $('model'), rememberKey = $('rememberKey');
     const videoFile = $('videoFile'), preview = $('preview'), frames = $('frames');
@@ -261,7 +261,7 @@
     }
     async function writeCaptions(evidence) {
       setStatus(`Reconciling ${FRAME_COUNT} grounded observations into four captions…`);
-      const prompt = `You are a careful video-captioning writer. ${FRAME_COUNT} single-frame observations describe consecutive parts of ONE video. Cross-check them. The clip may be a montage: when scenes differ, describe their sequence instead of pretending they happen in one physical scene. Keep only facts supported by the records; omit conflicts and do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. Each caption must be one sentence of at most 36 words. formal is objective and factual. sarcastic is dry and lightly mocking with no technology jargon. humorous_tech uses one natural technology analogy tied to visible facts. humorous_non_tech uses warm everyday humour with no technology jargon.\n\n${evidence}`;
+      const prompt = `You are a careful video-captioning writer. ${FRAME_COUNT} single-frame observations describe consecutive parts of ONE video. Cross-check them. The clip may be a montage: when scenes differ, describe their sequence instead of pretending they happen in one physical scene. Keep only facts supported by the records; omit conflicts and do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. formal is objective and factual in one or two sentences, 55–75 words when the evidence supports that detail. sarcastic is one dry, lightly mocking sentence of 24–42 words with no technology jargon. humorous_tech is one genuinely funny sentence of 24–42 words using one natural technology analogy tied to visible facts. humorous_non_tech is one warm everyday joke of 24–42 words with no technology jargon.\n\n${evidence}`;
       return validateCaptions(cleanJson(await askGemma([{ type: 'text', text: prompt }], CAPTION_MAX_TOKENS)));
     }
     async function rewriteHumorousTech(evidence, candidate) {
