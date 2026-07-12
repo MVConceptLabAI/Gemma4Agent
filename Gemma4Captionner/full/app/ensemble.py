@@ -87,6 +87,8 @@ W4_STYLE_SPLIT = _strict_env_bool("W4_STYLE_SPLIT")
 # candidate and a grounded editor choice. Kept opt-in for causal A/B testing.
 HTECH_CANDIDATE_SELECTION = _strict_env_bool("HTECH_CANDIDATE_SELECTION")
 _WRITER_TOTAL_MAX_TOKENS = 3000
+_TECH_ALTERNATE_MAX_TOKENS = 360
+_TECH_SELECTOR_MAX_TOKENS = 80
 _STYLE_WRITER_STYLES = (
     "formal",
     "sarcastic",
@@ -368,6 +370,21 @@ async def caption_ensemble_frames(
             async def write_style(style: str) -> tuple[str, str]:
                 style_system = _style_writer_system(style, system)
                 caption = ""
+                # Start the alternate alongside the four original writers.
+                # Starting it after the first candidate made v10 exceed the
+                # per-task deadline on the longest official clip.
+                alternate_task: asyncio.Task[str] | None = None
+                if style == "humorous_tech" and HTECH_CANDIDATE_SELECTION:
+                    alternate_task = asyncio.create_task(
+                        _call(
+                            client,
+                            WRITER,
+                            style_system + _TECH_ALTERNATE_CANDIDATE_RULE,
+                            write_content,
+                            _TECH_ALTERNATE_MAX_TOKENS,
+                            temperature=min(0.8, WRITER_TEMP + 0.15),
+                        )
+                    )
                 for attempt in range(2):
                     try:
                         raw = await _call(
@@ -386,6 +403,8 @@ async def caption_ensemble_frames(
                         ValueError,
                     ) as e:
                         if attempt == 1:
+                            if alternate_task is not None:
+                                alternate_task.cancel()
                             raise
                         log.warning(
                             "writer %s attempt 1 failed (%s), retrying once", style, e
@@ -398,14 +417,8 @@ async def caption_ensemble_frames(
                 # candidates before resorting to a repair.
                 if style == "humorous_tech" and HTECH_CANDIDATE_SELECTION:
                     try:
-                        alternate_raw = await _call(
-                            client,
-                            WRITER,
-                            style_system + _TECH_ALTERNATE_CANDIDATE_RULE,
-                            write_content,
-                            per_style_tokens,
-                            temperature=min(0.8, WRITER_TEMP + 0.15),
-                        )
+                        assert alternate_task is not None
+                        alternate_raw = await alternate_task
                         alternate = str(_parse_obj(alternate_raw).get("caption", ""))
                         candidates = {
                             "A": caption,
@@ -431,7 +444,7 @@ async def caption_ensemble_frames(
                                 WRITER,
                                 _TECH_SELECTOR_SYSTEM,
                                 selector_content,
-                                120,
+                                _TECH_SELECTOR_MAX_TOKENS,
                                 temperature=0.0,
                             )
                             winner = str(_parse_obj(selected_raw).get("winner", "")).upper()
