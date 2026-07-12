@@ -278,6 +278,11 @@
       const caption = String(result.caption || '').trim();
       return caption || candidate;
     }
+    async function verifyGrounding(evidence, captions) {
+      setStatus('Checking every caption against the visual evidence…');
+      const prompt = `You are the final grounded-caption verifier. Compare the four candidate captions with the verified visual evidence for ONE video. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. Preserve each requested style and its supported humour, but rewrite any literal claim that is not directly supported. Remove claims about frame counts, thumbnails, sampling, prompts, models, analysis, or processing. Do not claim a static camera, unchanged perspective, motion, time-lapse, readable text, a brand, an identity, intent, speech, an audience, or an off-screen event unless it is explicitly supported by the evidence. A tech or everyday comparison may remain only as a clearly figurative joke anchored to a visible fact; it must not create new literal events. When uncertain, replace the risky detail with a supported general observation rather than deleting the entire caption.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCANDIDATE CAPTIONS:\n${JSON.stringify(captions)}`;
+      return validateCaptions(cleanJson(await askGemma([{ type: 'text', text: prompt }], CAPTION_MAX_TOKENS)));
+    }
     async function run() {
       const file = videoFile.files[0];
       saveSettings(); results.replaceChildren(); resultActions.classList.add('hidden');
@@ -294,6 +299,8 @@
       if (rewrites[0].status === 'fulfilled') currentCaptions.humorous_tech = rewrites[0].value;
       if (rewrites[1].status === 'fulfilled') currentCaptions.humorous_non_tech = rewrites[1].value;
       if (rewrites.some(result => result.status === 'rejected')) setStatus('One humour rewrite was unavailable; keeping its grounded first draft.', 'warning');
+      try { currentCaptions = await verifyGrounding(evidence, currentCaptions); }
+      catch (error) { setStatus('Grounding verification was unavailable; keeping the evidence-based captions.', 'warning'); }
       renderCaptions(currentCaptions); saveHistory(file, currentCaptions);
       setStatus(`Done — all ${FRAME_COUNT} frames were used at up to ${box.width}×${box.height}, and the original video stayed in this browser.`);
     }
