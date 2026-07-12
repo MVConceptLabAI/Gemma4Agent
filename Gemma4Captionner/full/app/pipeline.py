@@ -49,9 +49,9 @@ log = logging.getLogger("track2.pipeline")
 FIREWORKS_BASE_URL = os.environ.get(
     "FIREWORKS_BASE_URL", "https://api.fireworks.ai/inference/v1"
 )
-FIREWORKS_API_KEY = os.environ.get("FIREWORKS_API_KEY", "")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+FIREWORKS_API_KEY = os.environ.get("FIREWORKS_API_KEY", "").strip()
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip()
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "").strip()
 PROVIDER_ORDER = os.environ.get("PROVIDER_ORDER", "openrouter,fireworks")
 DESCRIBE_PROVIDER_ORDER = os.environ.get("DESCRIBE_PROVIDER_ORDER", PROVIDER_ORDER)
 STYLE_PROVIDER_ORDER = os.environ.get("STYLE_PROVIDER_ORDER", PROVIDER_ORDER)

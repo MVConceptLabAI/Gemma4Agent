@@ -45,7 +45,7 @@ def _strict_env_bool(name: str, default: bool = False) -> bool:
     )
 
 
-OR_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+OR_KEY = os.environ.get("OPENROUTER_API_KEY", "").strip()
 OR_URL = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 OBSERVERS = [m.strip() for m in os.environ.get(
     "ENSEMBLE_OBSERVERS",
