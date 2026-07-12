@@ -33,7 +33,7 @@
       <label>MP4, WebM or MOV<input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"></label>
       <video id="preview" class="preview" controls muted playsinline></video>
       <div id="videoMeta" class="video-meta"></div>
-      <div id="frames" class="facts" aria-label="Six sampled video frames"></div>
+      <div id="frames" class="facts" aria-label="Twelve sampled video frames"></div>
       <button id="caption" type="button">2. Create four captions with Gemma 4</button>
       <div id="status" class="status" aria-live="polite"></div>
       <div id="results" class="result-grid" aria-live="polite"></div>
@@ -101,7 +101,7 @@
       return canvas.toDataURL('image/jpeg', 0.78);
     }
     async function sampleFrames(video) {
-      const count = 6, samples = [];
+      const count = 12, samples = [];
       frames.replaceChildren();
       for (let index = 1; index <= count; index += 1) {
         await seek(video, video.duration * index / (count + 1));
@@ -166,27 +166,49 @@
       const blob = new Blob([JSON.stringify({ captions: currentCaptions }, null, 2)], { type: 'application/json' });
       const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'gemma4-captions.json'; link.click(); URL.revokeObjectURL(link.href);
     }
+    async function askGemma(content, maxTokens) {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey.value.trim()}`, 'Content-Type': 'application/json', 'HTTP-Referer': location.origin, 'X-Title': 'Gemma 4 SceneGate local demo' },
+        body: JSON.stringify({ model: model.value.trim(), messages: [{ role: 'user', content }], temperature: 0.25, max_tokens: maxTokens })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error?.message || `OpenRouter request failed (${response.status})`);
+      return payload.choices?.[0]?.message?.content;
+    }
+    function cleanFactList(value) {
+      const text = String(value || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+      const start = text.indexOf('['), end = text.lastIndexOf(']');
+      if (start >= 0 && end > start) {
+        const list = JSON.parse(text.slice(start, end + 1));
+        if (Array.isArray(list)) return list.map(item => String(item).trim()).filter(Boolean).slice(0, 24);
+      }
+      return text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '').trim()).filter(Boolean).slice(0, 24);
+    }
+    async function observeBatch(sampled, label) {
+      setStatus(`Analysing ${label} six frames with ${model.value.trim()}…`);
+      const prompt = `You are a precise visual analyst. These SIX images are sequential frames from ONE video. Return ONLY a JSON array of short facts clearly visible in this batch: subjects, actions, objects, setting, motion and lighting. Do not infer identity, intent, speech, brands, unreadable text, exact counts, or off-screen events.`;
+      const content = [{ type: 'text', text: prompt }, ...sampled.map(url => ({ type: 'image_url', image_url: { url } }))];
+      return cleanFactList(await askGemma(content, 700));
+    }
+    async function writeCaptions(firstFacts, secondFacts) {
+      setStatus('Reconciling all twelve frames into four captions…');
+      const prompt = `You are a careful video-captioning writer. Two visual analyses describe the first and second halves of ONE video. Cross-check them. Keep only facts supported by the records; omit conflicts and do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. formal is objective and factual. sarcastic is dry and lightly mocking with no technology jargon. humorous_tech uses one natural technology analogy tied to visible facts. humorous_non_tech uses warm everyday humour with no technology jargon.\n\nFIRST SIX FRAMES:\n- ${firstFacts.join('\n- ')}\n\nSECOND SIX FRAMES:\n- ${secondFacts.join('\n- ')}`;
+      return validateCaptions(cleanJson(await askGemma([{ type: 'text', text: prompt }], 1200)));
+    }
     async function run() {
       const file = videoFile.files[0];
       saveSettings(); results.replaceChildren(); resultActions.classList.add('hidden');
       if (!file) throw new Error('Choose a video first.');
       if (!apiKey.value.trim()) throw new Error('Enter an OpenRouter key in Local inference settings.');
       if (!model.value.trim()) throw new Error('Enter a vision-capable model slug.');
-      setStatus('Sampling six compact frames locally in your browser…');
+      setStatus('Sampling twelve compact frames locally in your browser…');
       const sampled = await sampleFrames(preview);
-      setStatus(`Sending frames directly to ${model.value.trim()}…`);
-      const prompt = `You are a careful video-captioning assistant. These SIX images are sequential frames from ONE video. Write only claims supported by the frames; do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. formal is objective and factual. sarcastic is dry and lightly mocking with no technology jargon. humorous_tech uses one natural technology analogy tied to visible facts. humorous_non_tech uses warm everyday humour with no technology jargon.`;
-      const content = [{ type: 'text', text: prompt }, ...sampled.map(url => ({ type: 'image_url', image_url: { url } }))];
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${apiKey.value.trim()}`, 'Content-Type': 'application/json', 'HTTP-Referer': location.origin, 'X-Title': 'Gemma 4 SceneGate local demo' },
-        body: JSON.stringify({ model: model.value.trim(), messages: [{ role: 'user', content }], temperature: 0.35, max_tokens: 1200 })
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error?.message || `OpenRouter request failed (${response.status})`);
-      currentCaptions = validateCaptions(cleanJson(payload.choices?.[0]?.message?.content));
+      const firstFacts = await observeBatch(sampled.slice(0, 6), 'the first');
+      const secondFacts = await observeBatch(sampled.slice(6, 12), 'the second');
+      currentCaptions = await writeCaptions(firstFacts, secondFacts);
       renderCaptions(currentCaptions); saveHistory(file, currentCaptions);
-      setStatus('Done — the original video stayed in this browser.');
+      setStatus('Done — all twelve frames were used and the original video stayed in this browser.');
     }
 
     restoreSettings(); renderHistory();
