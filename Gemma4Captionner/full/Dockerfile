@@ -56,6 +56,8 @@ ENV PYTHONPATH=/app \
     FRAME_MAX_EDGE=896 \
     VIDEO_CONTEXT_OBSERVER=google/gemma-4-31b-it \
     VIDEO_CONTEXT_MAX_BYTES=14000000 \
+    ENSEMBLE_MAX_OBSERVER_CONCURRENCY=8 \
+    ENSEMBLE_OBSERVER_RETRIES=1 \
     HTTP_429_RETRIES=5 \
     HTTP_429_MAX_WAIT_S=45 \
     RETRY_AFTER_GIVEUP_S=60 \
@@ -63,7 +65,8 @@ ENV PYTHONPATH=/app \
     SCENE_DETECT_ENABLED=0 \
     MAX_CONCURRENCY=3 \
     PER_TASK_TIMEOUT_S=130 \
-    GLOBAL_BUDGET_S=540
+    GLOBAL_BUDGET_S=540 \
+    ENSEMBLE_TIMEOUT_RECOVERY_S=70
 # Judging VM = 2 vCPU / 4 GB RAM (Participant Guide p.5). Scene-detection
 # decodes the ENTIRE UHD clip per video and three parallel ffmpeg passes
 # thrash 2 cores into the 10-minute wall - uniform -ss seeks are near-free.

@@ -49,6 +49,11 @@ MAX_CONCURRENCY = int(os.environ.get("MAX_CONCURRENCY", "3"))
 # and the submission was marked unscored). Tasks that would start or run past
 # this budget emit styled fallbacks instead.
 GLOBAL_BUDGET_S = float(os.environ.get("GLOBAL_BUDGET_S", "540"))
+# A bounded second path is far better than a generic caption when one ensemble
+# request stalls, provided the run still has enough time for later clips.
+ENSEMBLE_TIMEOUT_RECOVERY_S = float(
+    os.environ.get("ENSEMBLE_TIMEOUT_RECOVERY_S", "70")
+)
 _RUN_T0 = time.monotonic()
 
 
@@ -89,12 +94,32 @@ async def _run_one(sem: asyncio.Semaphore, task: dict[str, Any]) -> dict[str, An
                         timeout=task_timeout,
                     )
                 except asyncio.TimeoutError:
-                    # Do not launch a second full pipeline after the ensemble
-                    # has already consumed this task's budget. On a 12-clip
-                    # evaluation that cascade starves later tasks and turns a
-                    # few slow clips into a run-wide fallback failure.
-                    log.warning("[%s] ensemble timed out; preserving global budget", task_id)
-                    captions = _empty_caption_set(styles)
+                    remaining = _remaining_budget()
+                    recovery_timeout = min(
+                        ENSEMBLE_TIMEOUT_RECOVERY_S,
+                        max(0.0, remaining - 10.0),
+                    )
+                    if recovery_timeout < 10.0:
+                        log.warning("[%s] ensemble timed out; global budget exhausted", task_id)
+                        captions = _empty_caption_set(styles)
+                    else:
+                        log.warning(
+                            "[%s] ensemble timed out; running bounded %.0fs recovery",
+                            task_id,
+                            recovery_timeout,
+                        )
+                        try:
+                            captions = await asyncio.wait_for(
+                                caption_one_video(video_url=video_url, styles=styles),
+                                timeout=recovery_timeout,
+                            )
+                        except Exception as recovery_error:  # noqa: BLE001
+                            log.warning(
+                                "[%s] recovery failed (%s); using safe captions",
+                                task_id,
+                                recovery_error,
+                            )
+                            captions = _empty_caption_set(styles)
                 except Exception as e:  # noqa: BLE001
                     # Ensemble needs paid frontier APIs; on any failure (e.g. 402
                     # out-of-credit) degrade to the single-model pipeline, which

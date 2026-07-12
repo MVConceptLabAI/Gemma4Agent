@@ -40,6 +40,8 @@ SUBMISSION_PROFILE: list[tuple[str, str]] = [
     ("FRAME_MAX_EDGE", "896"),
     ("VIDEO_CONTEXT_OBSERVER", "google/gemma-4-31b-it"),
     ("VIDEO_CONTEXT_MAX_BYTES", "14000000"),
+    ("ENSEMBLE_MAX_OBSERVER_CONCURRENCY", "8"),
+    ("ENSEMBLE_OBSERVER_RETRIES", "1"),
     ("HTTP_429_RETRIES", "5"),
     ("HTTP_429_MAX_WAIT_S", "45"),
     ("RETRY_AFTER_GIVEUP_S", "60"),
@@ -48,6 +50,7 @@ SUBMISSION_PROFILE: list[tuple[str, str]] = [
     ("MAX_CONCURRENCY", "3"),
     ("PER_TASK_TIMEOUT_S", "130"),
     ("GLOBAL_BUDGET_S", "540"),
+    ("ENSEMBLE_TIMEOUT_RECOVERY_S", "70"),
 ]
 
 EXPECTED_OBSERVERS = [
@@ -90,7 +93,7 @@ def _submission_profile() -> list[tuple[str, str]]:
     end = next(
         index
         for index in range(start, len(assignments))
-        if assignments[index][0] == "GLOBAL_BUDGET_S"
+        if assignments[index][0] == "ENSEMBLE_TIMEOUT_RECOVERY_S"
     )
     return assignments[start : end + 1]
 

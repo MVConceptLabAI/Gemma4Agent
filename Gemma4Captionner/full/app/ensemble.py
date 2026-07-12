@@ -67,6 +67,11 @@ VIDEO_CONTEXT_OBSERVER = os.environ.get(
     "VIDEO_CONTEXT_OBSERVER", "google/gemma-4-31b-it"
 )
 VIDEO_CONTEXT_MAX_BYTES = int(os.environ.get("VIDEO_CONTEXT_MAX_BYTES", "14000000"))
+# A 12-clip run starts several tasks together. Limit only the expensive vision
+# observations globally: this prevents OpenRouter from timing out an entire
+# four-model panel while keeping downloads, video evidence and writers flowing.
+MAX_OBSERVER_CONCURRENCY = int(os.environ.get("ENSEMBLE_MAX_OBSERVER_CONCURRENCY", "8"))
+OBSERVER_RETRIES = int(os.environ.get("ENSEMBLE_OBSERVER_RETRIES", "1"))
 # Some writers (Gemini) default to terse captions; long rich ones score better
 # with the official judge (measured 0.89 long vs 0.84 concise). Optional hint.
 WRITER_LENGTH_HINT = os.environ.get("WRITER_LENGTH_HINT", "")
@@ -90,6 +95,18 @@ _STYLE_WRITER_STYLES = (
     "humorous_tech",
     "humorous_non_tech",
 )
+_observer_semaphore: asyncio.Semaphore | None = None
+_observer_semaphore_loop: asyncio.AbstractEventLoop | None = None
+
+
+def _shared_observer_semaphore() -> asyncio.Semaphore:
+    """Return one observer limiter per event loop, shared by all tasks."""
+    global _observer_semaphore, _observer_semaphore_loop
+    loop = asyncio.get_running_loop()
+    if _observer_semaphore is None or _observer_semaphore_loop is not loop:
+        _observer_semaphore = asyncio.Semaphore(MAX_OBSERVER_CONCURRENCY)
+        _observer_semaphore_loop = loop
+    return _observer_semaphore
 _GROUNDING_RULE = (
     "\n\nSTRICT GROUNDING + MAX COVERAGE (the judge rewards rich CORRECT detail): every "
     "concrete noun, colour, count, vehicle/animal/object TYPE, action, and piece of text "
@@ -314,11 +331,18 @@ async def caption_ensemble_frames(
     content = _frames_content(frames)
     async with httpx.AsyncClient(timeout=httpx.Timeout(240.0)) as client:
         async def observe(model: str) -> tuple[str, list[str]]:
-            try:
-                return model, _parse_list(await _call(client, model, OBSERVE_SYSTEM, content, 4000))
-            except Exception as e:  # noqa: BLE001
-                log.warning("observer %s failed: %s", model, e)
-                return model, []
+            for attempt in range(OBSERVER_RETRIES + 1):
+                try:
+                    async with _shared_observer_semaphore():
+                        raw = await _call(client, model, OBSERVE_SYSTEM, content, 4000)
+                    return model, _parse_list(raw)
+                except Exception as e:  # noqa: BLE001
+                    if attempt < OBSERVER_RETRIES:
+                        log.warning("observer %s failed (%s), retrying once", model, e)
+                        await asyncio.sleep(1)
+                        continue
+                    log.warning("observer %s failed: %s", model, e)
+            return model, []
 
         observers = [observe(m) for m in OBSERVERS]
         obs = await asyncio.gather(*observers)

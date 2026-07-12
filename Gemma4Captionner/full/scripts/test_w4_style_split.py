@@ -34,6 +34,7 @@ _CONTROLLED_ENV = {
     "WRITER_LENGTH_HINT": "",
     "WRITER_TEMP": "0.5",
     "VIDEO_OBSERVER": "",
+    "ENSEMBLE_MAX_OBSERVER_CONCURRENCY": "8",
     "OPENROUTER_API_KEY": "w4-offline-test-secret",
 }
 _V8_DOCKER_WRITER_SHA256 = (
@@ -121,6 +122,28 @@ def test_empty_observer_content_is_skipped() -> None:
     with _loaded_ensemble(None) as ensemble:
         assert ensemble._parse_list(None) == []
         assert ensemble._parse_list("") == []
+
+
+def test_observer_limiter_is_shared_within_one_event_loop() -> None:
+    with _loaded_ensemble(None) as ensemble:
+        ensemble.MAX_OBSERVER_CONCURRENCY = 1
+
+        async def exercise() -> int:
+            active = 0
+            peak = 0
+
+            async def take_slot() -> None:
+                nonlocal active, peak
+                async with ensemble._shared_observer_semaphore():
+                    active += 1
+                    peak = max(peak, active)
+                    await asyncio.sleep(0)
+                    active -= 1
+
+            await asyncio.gather(*(take_slot() for _ in range(3)))
+            return peak
+
+        assert asyncio.run(exercise()) == 1
 
 
 def test_on_runs_four_style_writers_concurrently_with_one_observation_spine() -> None:
@@ -325,6 +348,7 @@ def test_flag_is_strict_and_off_unless_explicitly_enabled() -> None:
 
 def main() -> None:
     test_empty_observer_content_is_skipped()
+    test_observer_limiter_is_shared_within_one_event_loop()
     test_default_off_preserves_the_v38_common_writer()
     test_on_runs_four_style_writers_concurrently_with_one_observation_spine()
     test_each_style_keeps_the_existing_single_retry_contract()
