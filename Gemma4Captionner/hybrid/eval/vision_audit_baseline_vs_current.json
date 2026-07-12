@@ -1,0 +1,1258 @@
+{
+  "summary": "Adversarially verify captions against real video frames; current vs baseline",
+  "agentCount": 30,
+  "logs": [],
+  "result": {
+    "summary": {
+      "current": {
+        "meanAccuracy": 0.793,
+        "totalHallucinations": 8,
+        "totalContradictions": 2,
+        "captions": 12
+      },
+      "baseline": {
+        "meanAccuracy": 0.958,
+        "totalHallucinations": 4,
+        "totalContradictions": 0,
+        "captions": 12
+      }
+    },
+    "perCaption": [
+      {
+        "set": "current",
+        "clip": "v1",
+        "style": "formal",
+        "accuracy": 0.4,
+        "hallucinations": [
+          "'red buses' - CONTRADICTED: the visible bus is blue/white, not red; no red bus appears in any frame."
+        ],
+        "missed": [
+          "Autumn/fall setting: ginkgo trees lining the street in full golden-yellow color",
+          "High-rise apartment towers and other buildings in the background",
+          "Hazy mountains on the horizon",
+          "Long-exposure / time-lapse motion blur on the moving vehicles",
+          "Korean/Seoul context: 'KOREA ILLIES ENGINEERING' building sign and Korean road/traffic signs",
+          "Green traffic signal(s) at the intersection",
+          "Intersection with crosswalk on the left side",
+          "Colored banners/flags along the right-side sidewalk"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "current",
+        "clip": "v1",
+        "style": "sarcastic",
+        "accuracy": 0.75,
+        "hallucinations": [
+          "'transport people' \u00e2\u20ac\u201d no people/occupants are visible in the frames; occupancy is inferred, not shown"
+        ],
+        "missed": [
+          "The footage is a time-lapse / long-exposure (heavy motion blur on moving vehicles)",
+          "Public buses are among the traffic, not just cars",
+          "Autumn/fall setting with the characteristic yellow ginkgo foliage",
+          "Tall apartment high-rise towers dominate the background",
+          "A hazy mountain ridge sits on the horizon",
+          "Green traffic signals are visible",
+          "Banners/flags line the right-side sidewalk",
+          "Scene is clearly in Korea (Hangul signage, Korean company name)"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "current",
+        "clip": "v1",
+        "style": "humorous_tech",
+        "accuracy": 0.8,
+        "hallucinations": [
+          "Identifies the trees as 'ginkgo' specifically \u00e2\u20ac\u201d the yellow leaves are visible but the species is not verifiable from these frames."
+        ],
+        "missed": [
+          "This is clearly Korea (Korean-language road signs and a 'KOREA ILLIES ENGINEERING' building sign).",
+          "Warm low-angle golden-hour sunlight (sunset/sunrise glow).",
+          "Large high-rise apartment complexes and distant mountain ridges on the skyline.",
+          "Time-lapse footage \u00e2\u20ac\u201d vehicles are heavily motion-blurred, indicating sped-up/long-exposure capture.",
+          "An intersection with green traffic signals is visible mid-frame.",
+          "Buses among the traffic and vertical banners/flags along the right-hand sidewalk."
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "current",
+        "clip": "v1",
+        "style": "humorous_non_tech",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "Autumn/fall season setting",
+          "Korean city context (KOREA ILLIES ENGINEERING building sign)",
+          "Apartment high-rise towers in the background",
+          "Mountains on the horizon",
+          "Time-lapse motion blur on the vehicles",
+          "Green traffic lights",
+          "Buses among the traffic",
+          "Purple/pink banners along the right-side railing"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "current",
+        "clip": "v2",
+        "style": "formal",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "The kitten's tail is raised/upright in the final frame (f6)",
+          "The kitten has light-colored eyes and faint tabby striping on its head",
+          "Dense dry/woody brush and stems fill the right side of the frame",
+          "Dead leaves and litter scattered on the sandy ground"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "current",
+        "clip": "v2",
+        "style": "sarcastic",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "The kitten walks directly toward the camera (approaching, not passing by).",
+          "Setting is dappled sunlight/shade over dry sandy dirt ground, not grass.",
+          "A green leafy branch hangs prominently in the foreground, partly obscuring the kitten."
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "current",
+        "clip": "v2",
+        "style": "humorous_tech",
+        "accuracy": 0.8,
+        "hallucinations": [
+          "'garden' \u00e2\u20ac\u201d the setting is wild bushes/undergrowth and dry scrub, not a confirmable cultivated garden"
+        ],
+        "missed": [
+          "Low ground-level camera angle",
+          "Kitten emerging from under an arch of overhanging leafy branches",
+          "Dry twiggy shrubs/bare branches on the right side",
+          "Dappled sunlight on the dirt ground",
+          "Kitten's tail raised upright in the final frame"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "current",
+        "clip": "v2",
+        "style": "humorous_non_tech",
+        "accuracy": 0.86,
+        "hallucinations": [
+          "Calls the setting a 'garden' \u00e2\u20ac\u201d frames show wild bushes/undergrowth over bare dirt with dry dead branches, no visible cultivation to support a garden."
+        ],
+        "missed": [
+          "The kitten walks through a tunnel/archway of overhanging dry dead branches and thicket",
+          "Ground is bare dirt/sandy soil scattered with fallen dry leaves, not grass or planted beds",
+          "Heavy dead/brown branch bramble on the right side of the frame",
+          "Raised fluffy tail curled up in the final frame (f6)"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "current",
+        "clip": "v3",
+        "style": "formal",
+        "accuracy": 0.4,
+        "hallucinations": [
+          "'black keyboard' \u00e2\u20ac\u201d CONTRADICTED: the keyboard is white/silver, not black; the black item in frame is the monitor."
+        ],
+        "missed": [
+          "Pink/coral painted fingernails (clearly visible in f4 and f6)",
+          "Stud earrings",
+          "Green potted plant(s) in the background",
+          "Numerous circular/disc ceiling lights",
+          "Glass partition walls of an open-plan office",
+          "The keyboard is actually white and is also wired (cables run across the desk)"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "current",
+        "clip": "v3",
+        "style": "sarcastic",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "Setting is an open-plan office (glass partitions, cubicle walls), not a home or generic space",
+          "It's a desktop monitor / desktop computer, not a laptop",
+          "A wired mouse sits on the desk",
+          "A potted plant (peace lily) is behind/beside her",
+          "Round pendant ceiling lights overhead",
+          "She wears a beige/tan shirt over an orange top, hair in a bun",
+          "Painted pink nails visible in f4"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "current",
+        "clip": "v3",
+        "style": "humorous_tech",
+        "accuracy": 0.5,
+        "hallucinations": [
+          "'production server' \u00e2\u20ac\u201d no server is visible in any frame; it is invented and unverifiable",
+          "'higher tolerance for latency than she does right now' \u00e2\u20ac\u201d implies she is impatient/frustrated, but her expression reads as calm/focused; this is unverifiable opinion, not shown"
+        ],
+        "missed": [
+          "She is using a desktop computer with a large monitor, not a laptop",
+          "Wired mouse and keyboard are on the desk",
+          "She wears an orange top under a cream/beige shirt and a cross necklace",
+          "Her hair is styled up in a bun",
+          "Modern open-plan office setting with a potted plant and round ceiling lights in the background",
+          "She appears focused/calm rather than visibly stressed"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "current",
+        "clip": "v3",
+        "style": "humorous_non_tech",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "She wears a cream/beige shirt over an orange/coral top",
+          "Hair is worn up in a bun/updo",
+          "A wired mouse sits on the desk beside the keyboard",
+          "Open-plan office setting with round pendant lights, potted plants, and glass partitions",
+          "Wired connections/cables run across the white desk"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "baseline",
+        "clip": "v1",
+        "style": "formal",
+        "accuracy": 0.875,
+        "hallucinations": [
+          "'wide-angle': cannot be confirmed and the compressed background actually suggests a telephoto lens, not wide-angle"
+        ],
+        "missed": [
+          "Korean signage marks the location as Korea (building reads 'KOREA ILLIES ENGINEERING', plus 'INSURANCE' sign and Korean-text banners)",
+          "Distant mountains sit behind the buildings in the background",
+          "A large public transit bus is among the traffic (prominent on the left in f1/f2)",
+          "Traffic signals showing green are visible at the intersection",
+          "Warm low-angle golden-hour sunlight and a bright hazy sky",
+          "Colorful vertical banners/flags line the right-side railing"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "baseline",
+        "clip": "v1",
+        "style": "sarcastic",
+        "accuracy": 0.875,
+        "hallucinations": [
+          "\"wide-angle shot\" \u00e2\u20ac\u201d the lens cannot be confirmed, and the compressed background (hills/towers looming large) suggests a telephoto rather than a wide-angle view"
+        ],
+        "missed": [
+          "Golden-hour / late-afternoon backlighting with strong sun glare and lens flare on the right side",
+          "Autumn setting (yellow ginkgo foliage) rather than generic 'trees'",
+          "This is clearly a Korean/Seoul street scene \u00e2\u20ac\u201d signage reads 'KOREA ILLIES ENGINEERING' and 'INSURANCE'",
+          "A major signalized intersection with crosswalks, painted lane arrows, and green traffic signals",
+          "A blue city bus (in addition to cars/trucks) at lower-left in f1",
+          "Distant hills/mountains on the skyline behind the buildings",
+          "Colorful vertical banners/flags on the railing at the right edge"
+        ],
+        "style_ok": false
+      },
+      {
+        "set": "baseline",
+        "clip": "v1",
+        "style": "humorous_tech",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "Green traffic signals are lit at the intersection",
+          "Colorful vertical banners/flags along the right sidewalk",
+          "A white box/delivery truck in the traffic (frames f4/f6)",
+          "Distant mountains on the horizon behind the buildings",
+          "'KOREA ILLIES ENGINEERING' signage on the left building and an 'INSURANCE' sign at far left"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "baseline",
+        "clip": "v1",
+        "style": "humorous_non_tech",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "Autumn / golden-hour setting with warm low-angle sunlight",
+          "Korean-language signage (e.g. KOREA ILLIES ENGINEERING) indicating a South Korean city street",
+          "Hazy mountain silhouettes on the horizon",
+          "Green traffic signals at the intersection",
+          "Time-lapse light-trail effect from long exposure",
+          "Banners/flags along the right-side railing"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "baseline",
+        "clip": "v2",
+        "style": "formal",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "Setting is shaded dry dirt/ground beneath bushes with dappled sunlight, not lush green surroundings",
+          "Dense dry, twiggy brush/undergrowth frames the right side",
+          "The kitten's tail is raised upright in the closest frame",
+          "Kitten's eyes appear light amber/green and are fixed on the camera"
+        ],
+        "style_ok": false
+      },
+      {
+        "set": "baseline",
+        "clip": "v2",
+        "style": "sarcastic",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "The subject is specifically a ginger/orange kitten (a cat) \u00e2\u20ac\u201d the caption never identifies it as a cat",
+          "The kitten has long fluffy fur, especially visible in later frames",
+          "It is emerging/walking toward the camera through a gap in dense bushes/undergrowth",
+          "The scene is in dappled sunlight and shade",
+          "The kitten looks directly at the camera"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "baseline",
+        "clip": "v2",
+        "style": "humorous_tech",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "The kitten is framed by / emerging from hanging green vine-like foliage draped in the foreground",
+          "Setting is scrubby bushes/undergrowth with a dry twiggy shrub on the right, not open ground",
+          "Ground is bare packed dirt/sand with scattered leaf litter",
+          "Kitten has light greenish/hazel eyes looking at the camera",
+          "In the last frame the tail is raised straight up"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "baseline",
+        "clip": "v2",
+        "style": "humorous_non_tech",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "The animal is specifically a young kitten, not just a generic cat.",
+          "The setting is shaded undergrowth/bushes over bare dry dirt, not open ground.",
+          "The kitten has light greenish eyes (caption wisely avoided asserting eye color)."
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "baseline",
+        "clip": "v3",
+        "style": "formal",
+        "accuracy": 0.91,
+        "hallucinations": [
+          "Monitor 'positioned to her right' \u00e2\u20ac\u201d it is directly in front of her; the 'right' placement is an artifact of the camera angle, not her egocentric frame."
+        ],
+        "missed": [
+          "A wired computer mouse and a mess of tangled cables sit on the desk beside the keyboard",
+          "A cross/crucifix pendant necklace is worn",
+          "Painted (pink) fingernails visible in f4",
+          "A potted leafy plant sits directly behind her",
+          "The setting is an open-plan office with glass partitions and empty chairs, not just a desk"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "baseline",
+        "clip": "v3",
+        "style": "sarcastic",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "She is a Black/African woman",
+          "Orange top worn under the beige shirt",
+          "Cross/crucifix pendant necklace",
+          "Hair worn up in a bun/updo",
+          "Open-plan office with glass partitions and white chairs",
+          "Black mouse and white keyboard"
+        ],
+        "style_ok": false
+      },
+      {
+        "set": "baseline",
+        "clip": "v3",
+        "style": "humorous_tech",
+        "accuracy": 0.83,
+        "hallucinations": [
+          "The monitor is 'silver' \u00e2\u20ac\u201d the monitor's dominant visible casing is dark gray/black; the silver/white object on the desk is the keyboard, not clearly the monitor. Likely a keyboard-vs-monitor color mix-up."
+        ],
+        "missed": [
+          "Bright coral/orange top worn underneath the beige jacket",
+          "Thin gold cross/crucifix necklace",
+          "Black wired mouse sitting on the desk",
+          "Wired keyboard (silver/white) she is actually typing on",
+          "Open-plan office with large round ceiling lights and glass partition walls",
+          "Hair worn in a bun; small stud earrings"
+        ],
+        "style_ok": true
+      },
+      {
+        "set": "baseline",
+        "clip": "v3",
+        "style": "humorous_non_tech",
+        "accuracy": 1,
+        "hallucinations": [],
+        "missed": [
+          "She is working at a large desktop computer monitor (not a laptop) in the foreground",
+          "The setting is a modern open-plan office with distinctive round ceiling lights and glass partitions",
+          "She wears a coral/orange top under a beige/tan shirt or cardigan",
+          "Her hair is styled in a bun/updo",
+          "She wears stud earrings",
+          "She appears focused and serious rather than upbeat"
+        ],
+        "style_ok": true
+      }
+    ],
+    "groundTruth": {
+      "v2": [
+        {
+          "subjects_and_attributes": [
+            "One kitten (young cat), walking toward the camera under/through foliage",
+            "Kitten coat: orange/ginger tabby markings with white \u00e2\u20ac\u201d white muzzle/chin, white chest, white belly, white paws/legs",
+            "Fluffy, medium-long fur, bushy tail (tail raised/curved upward in the last frame)",
+            "Pink nose",
+            "Orange ears with orange tabby striping on the head/face",
+            "Hanging green leafy vine/branch with pointed oval leaves in the foreground (center)",
+            "Dry brown twiggy shrub/brush branches framing both left and right sides",
+            "Tree trunk(s) in the background",
+            "Sandy/dirt ground with dry fallen leaves and dappled sunlight"
+          ],
+          "setting": "Outdoors in a shaded, sunny natural spot \u00e2\u20ac\u201d bare dirt/sandy ground under bushes and shrubs with green vines overhead and dry brush on both sides. Low, near-ground camera angle facing the kitten as it walks toward the lens; bright dappled daylight.",
+          "counts": [
+            "1 kitten"
+          ],
+          "readable_sign_text": [],
+          "uncertain": [
+            "Eye color (appears greenish/amber but not certain)",
+            "Exact breed/species",
+            "A blue object/patch in the blurred background (possibly a tarp, fabric, or container) \u00e2\u20ac\u201d cannot identify",
+            "Whether structures/buildings are present in the out-of-focus background",
+            "Possible faint hint of another animal in the upper-right background of the first frame \u00e2\u20ac\u201d not confirmable"
+          ]
+        },
+        {
+          "subjects_and_attributes": [
+            "A single kitten, ginger/orange tabby with faint darker orange striping on the head",
+            "Kitten has a lighter cream/pale-orange chest, belly and lower legs",
+            "Kitten has long, fluffy/fuzzy fur (fur-tips catch the sunlight)",
+            "Kitten has a pink nose",
+            "Kitten has upright pointed ears with paler/whitish inner-ear fur",
+            "Kitten has a fluffy tail held upright in the final frame",
+            "Kitten is walking/creeping forward toward the camera through the undergrowth across the frames",
+            "Green leafy vines and thin branches hang down in the foreground of every frame",
+            "Dry brown branches / dead brushwood form a dense thicket on the right side",
+            "Thicker tree trunk with vertical bark on the left side",
+            "Bare dirt / sandy pale-brown ground with scattered dead leaves and twigs"
+          ],
+          "setting": "Outdoors in daytime, under and among bushes/undergrowth (a thicket of green leaves and dry branches) with dappled sunlight on a dry dirt ground; low camera angle near ground level pointing at the kitten as it approaches.",
+          "counts": [
+            "1 kitten",
+            "1 larger tree trunk (left)",
+            "multiple thin branches/vines throughout"
+          ],
+          "readable_sign_text": [],
+          "uncertain": [
+            "Eye color (appears greenish/amber but not certain)",
+            "Exact breed/species beyond domestic kitten",
+            "Whether paws or chest are distinctly white vs pale cream",
+            "Faint blue/turquoise object in far background (possibly fabric or tarp)",
+            "A small orange/yellow shape in the right thicket (possibly a fruit or flower)"
+          ]
+        }
+      ],
+      "v3": [
+        {
+          "subjects_and_attributes": [
+            "One person: a Black woman, seated, working at a desktop computer",
+            "Hair: dark hair worn up in a bun/updo with short curls at the front",
+            "Earrings: small stud earrings visible on the ear",
+            "Necklace: thin gold/pale chain necklace with a cross pendant",
+            "Top layer: light beige/cream/tan button-up shirt worn open as an overshirt, sleeves rolled up",
+            "Inner top: bright orange/coral top underneath",
+            "Nails: pink/coral painted fingernails (clearly visible in closer frames)",
+            "Computer: light-gray/silver desktop monitor (back and side facing camera in foreground)",
+            "Keyboard: light-colored keyboard on the desk",
+            "Mouse: black corded computer mouse on the white desk",
+            "Cables: black cables running across the white desktop"
+          ],
+          "setting": "Interior of a modern open-plan office. White desk in the foreground with the woman working at a desktop computer. Background shows office furniture, a green leafy potted plant, glass partition walls, and a ceiling with many round recessed/circular lights. Camera is at desk level, positioned to the side, filming past the back of the monitor toward the woman; angle and framing shift slightly between frames (camera appears to move/lower across the clip).",
+          "counts": [
+            "People: 1",
+            "Potted plant: 1 (green, leafy) in background",
+            "Monitors: 1 desktop monitor",
+            "Mouse: 1",
+            "Round ceiling lights: multiple (many, especially visible in later frames)",
+            "Chairs: at least 1 light/white chair near the woman; additional office seating in background"
+          ],
+          "readable_sign_text": [],
+          "uncertain": [
+            "Exact shirt color (beige vs light gray/tan) under office lighting",
+            "Whether the pendant is specifically a cross vs another small charm",
+            "Eye color (not clearly discernible)",
+            "Exact plant species (appears to be a peace lily / broad-leaf houseplant, not certain)",
+            "Presence/details of any wall-mounted or upright object in the background (a possibly hanging garment or stand near the glass partition)",
+            "Whether there are additional people farther back in the office",
+            "Any small text on the keyboard or objects (none legibly readable)",
+            "Number of buildings \u00e2\u20ac\u201d not applicable, interior scene only"
+          ]
+        },
+        {
+          "subjects_and_attributes": [
+            "Woman, Black / dark skin, adult; single subject present in all four frames",
+            "Hair: dark natural hair pulled up into a bun/puff updo on top of the head",
+            "Earring: small stud earring visible in the ear",
+            "Necklace: thin gold-toned chain with a small cross pendant",
+            "Top layer: light beige / tan long-sleeve open shirt (worn unbuttoned like a shirt-jacket)",
+            "Under layer: orange / coral top visible beneath the beige shirt",
+            "Nails: pink/coral painted fingernails (clearly visible on the hand in frames f4 and f6)",
+            "Posture/activity: seated at a desk, using a desktop computer (typing / hand on keyboard)",
+            "Desk: white desktop surface",
+            "Computer monitor: one monitor, dark/black rear casing facing the camera in the right foreground",
+            "Keyboard: one light-colored keyboard on the desk",
+            "Mouse: one black wired computer mouse on the desk",
+            "Cables: black cables/wires lying across the white desk",
+            "Potted plant: one green leafy potted plant in a light/white planter in the background",
+            "Ceiling: many round recessed white ceiling lights (open-plan office ceiling)",
+            "Chairs: office chairs in the background (light/white and dark colored)",
+            "Glass partition walls in the background"
+          ],
+          "setting": "Indoor modern open-plan office or co-working space with round recessed ceiling lights and glass partition walls. The subject sits at a white desk working at a desktop computer. Camera is positioned to the woman's right, giving a three-quarter/profile view; the dark rear of a computer monitor occupies the right foreground. Later frames (f4, f6) are shot from a slightly lower angle.",
+          "readable_sign_text": [],
+          "counts": [
+            "1 person",
+            "1 computer monitor",
+            "1 keyboard",
+            "1 wired mouse",
+            "1 prominent potted plant",
+            "multiple round ceiling lights"
+          ],
+          "uncertain": [
+            "Exact plant species (appears to be a peace lily / broad-leaf houseplant, not certain)",
+            "Eye color (not clearly determinable)",
+            "Whether the beige garment is a shirt vs. a light cardigan/jacket",
+            "Exact shade of nail polish (pink vs coral)",
+            "No readable sign, storefront, or on-screen text could be made out in any frame",
+            "Number of background chairs (several present but not all countable)"
+          ]
+        }
+      ],
+      "v1": [
+        {
+          "subjects_and_attributes": [
+            "Wide divided multi-lane urban road carrying heavy vehicle traffic; vehicles are motion-blurred from time-lapse exposure",
+            "Cars in multiple colors visible: white, silver, black, plus many red rear brake/tail lights",
+            "A large bus/coach in the left-side lanes (heavily blurred), especially in the earlier frames",
+            "A white box truck/van on the right lanes in the later frames (v1_f4, v1_f6)",
+            "Ginkgo trees lining both sides of the road with bright yellow/golden autumn leaves",
+            "Some green-foliage trees mixed in among the yellow trees on the right side",
+            "Cluster of high-rise apartment towers in the background, light beige/tan colored with many windows",
+            "Low-rise beige/white building on the left with dark windows bearing large 'KOREA ILLIES ENGINEERING' lettering",
+            "A reddish-brown brick mid-rise building in the mid-background, center-left",
+            "Tall street-light poles spaced along the right side of the road",
+            "Vertical hanging banners/flags on the right side, pink/magenta and white, carrying text",
+            "Green traffic signals lit at the intersection area",
+            "White painted directional arrows, lane-dividing lines, and yellow center markings on the road surface",
+            "Overhead sign gantry structure spanning the road in the mid-distance",
+            "Distant low hills/mountains along the horizon under a bright, hazy sky",
+            "White rectangular sign on the lower-left with the word 'INSURANCE'",
+            "Small blue circular directional (arrow) sign near the intersection on the left"
+          ],
+          "setting": "Elevated / high-angle daytime time-lapse looking down a busy multi-lane city avenue that recedes and curves into the distance. Autumn season (golden ginkgo foliage), bright golden-hour/hazy sunlight. Tree-lined street flanked by high-rise apartment towers and lower commercial buildings, with hills on the horizon. Korean-language signage indicates the location is likely South Korea. Fixed camera; motion blur on vehicles confirms sped-up time-lapse capture.",
+          "counts": [
+            "Road lanes: approximately 6-8 total across both directions",
+            "Visible vehicles per frame: roughly 20-40 (varies, motion-blurred)",
+            "High-rise apartment towers in background: approximately 5-7",
+            "Vertical banners on the right side: approximately 4-6",
+            "Street-light poles along the right: several (roughly 4-6 visible)"
+          ],
+          "readable_sign_text": [
+            "KOREA ILLIES ENGINEERING",
+            "INSURANCE (partial, on the lower-left white sign)"
+          ],
+          "uncertain": [
+            "Full text of the lower-left sign (the word(s) above 'INSURANCE')",
+            "Korean text printed on the vertical banners/flags",
+            "Exact number of vehicles (heavy motion blur)",
+            "Whether the large left-side vehicle is a bus or a truck",
+            "Identification/name of the reddish brick building",
+            "Exact number of road lanes",
+            "Country identification (Korea inferred from the word 'KOREA' in signage, but not fully certain)",
+            "Exact colors of individual blurred cars"
+          ]
+        },
+        {
+          "subjects_and_attributes": [
+            "Cluster of tall high-rise apartment/residential towers in the left background, light beige/off-white facades, many windows, roughly 6-8 towers of varying heights",
+            "A mid-rise office building on the left bearing large white lettering 'KOREA ILLIES ENGINEERING' across its side, pale/white facade with rows of windows",
+            "A dark red-brick multi-story building in the mid-distance center-right",
+            "Additional lower-rise buildings/rooftops scattered in the mid-ground left and center",
+            "Rows of street-lining trees along both sides of the road, foliage a mix of bright golden-yellow and green (autumn coloring)",
+            "A large canopy tree with green-and-yellow leaves at the right foreground edge",
+            "A wide multi-lane divided roadway running from foreground into the distance, lane markings and directional arrows painted on asphalt, painted median/refuge islands",
+            "Many vehicles on the road, most motion-blurred (time-lapse): passenger cars in various colors (red, white, silver/gray, dark), city buses (one long blue/white bus lower-left), and a white box truck/van visible on the right lanes",
+            "Traffic signal lights over the road showing green",
+            "Tall street-lamp poles lining the roadway",
+            "Vertical hanging banners/flags mounted on posts along the right sidewalk/fence, pink/magenta and white colored with text",
+            "Distant mountain ridgeline across the far background under a bright hazy sky",
+            "Bright, hazy/glowing sky (low-sun lighting) filling the upper right"
+          ],
+          "setting": "Fixed elevated/overhead time-lapse camera looking down a wide multi-lane divided urban arterial road, autumn daytime with golden trees and hazy low-sun light; a dense city with apartment towers and mountains in the background (Korean-language signage present).",
+          "counts": [
+            "High-rise/apartment towers in background: approximately 6-8",
+            "Distinct road lanes visible: roughly 6-7 across the divided roadway",
+            "Vehicles visible on road per frame: approximately 15-30 (varies by frame, many motion-blurred)",
+            "Buses clearly visible: 1-2",
+            "White truck/van: 1 (clearest in later frames)",
+            "Hanging banners on right side: approximately 3-4"
+          ],
+          "readable_sign_text": [
+            "KOREA ILLIES ENGINEERING",
+            "INSURANCE"
+          ],
+          "uncertain": [
+            "Exact tree species (yellow foliage is characteristic of ginkgo but not confirmable)",
+            "Korean-language text on the pink/white vertical banners (too small/blurred to transcribe)",
+            "Small Korean text on a circular sign and other roadside signs at lower-left",
+            "Exact vehicle counts and specific car makes/models (heavy motion blur)",
+            "Whether the lighting is sunrise or sunset",
+            "Exact number/height of background towers",
+            "Precise city/location identity"
+          ]
+        }
+      ]
+    }
+  },
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "GroundTruth"
+    },
+    {
+      "type": "workflow_phase",
+      "index": 2,
+      "title": "Verify"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "gt:v1:obs1",
+      "phaseIndex": 1,
+      "phaseTitle": "GroundTruth",
+      "agentId": "a9d7c91ebb8e229f7",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552788713,
+      "queuedAt": 1783552788625,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Elevated / high-angle daytime time-lapse looking down a bus\u00e2\u20ac\u00a6",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552848403,
+      "tokens": 54888,
+      "toolCalls": 5,
+      "durationMs": 59687,
+      "resultPreview": "{\"subjects_and_attributes\":[\"Wide divided multi-lane urban road carrying heavy vehicle traffic; vehicles are motion-blurred from time-lapse exposure\",\"Cars in multiple colors visible: white, silver, black, plus many red rear brake/tail lights\",\"A large bus/coach in the left-side lanes (heavily blurred), especially in the earlier frames\",\"A white box truck/van on the right lanes in the later frames\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "gt:v1:obs2",
+      "phaseIndex": 1,
+      "phaseTitle": "GroundTruth",
+      "agentId": "a5aa541638a8834bd",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552788725,
+      "queuedAt": 1783552788625,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Fixed elevated/overhead time-lapse camera looking down a wi\u00e2\u20ac\u00a6",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552830690,
+      "tokens": 54891,
+      "toolCalls": 5,
+      "durationMs": 41965,
+      "resultPreview": "{\"subjects_and_attributes\":[\"Cluster of tall high-rise apartment/residential towers in the left background, light beige/off-white facades, many windows, roughly 6-8 towers of varying heights\",\"A mid-rise office building on the left bearing large white lettering 'KOREA ILLIES ENGINEERING' across its side, pale/white facade with rows of windows\",\"A dark red-brick multi-story building in the mid-dist\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "gt:v2:obs1",
+      "phaseIndex": 1,
+      "phaseTitle": "GroundTruth",
+      "agentId": "aebfedffa520e8209",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552788734,
+      "queuedAt": 1783552788732,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Outdoors in a shaded, sunny natural spot \u00e2\u20ac\u201d bare dirt/sandy \u00e2\u20ac\u00a6",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552814484,
+      "tokens": 54890,
+      "toolCalls": 5,
+      "durationMs": 25749,
+      "resultPreview": "{\"subjects_and_attributes\":[\"One kitten (young cat), walking toward the camera under/through foliage\",\"Kitten coat: orange/ginger tabby markings with white \u00e2\u20ac\u201d white muzzle/chin, white chest, white belly, white paws/legs\",\"Fluffy, medium-long fur, bushy tail (tail raised/curved upward in the last frame)\",\"Pink nose\",\"Orange ears with orange tabby striping on the head/face\",\"Hanging green leafy vine/\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "gt:v2:obs2",
+      "phaseIndex": 1,
+      "phaseTitle": "GroundTruth",
+      "agentId": "a32848a42aaf018ef",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552788737,
+      "queuedAt": 1783552788732,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Outdoors in daytime, under and among bushes/undergrowth (a \u00e2\u20ac\u00a6",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552809501,
+      "tokens": 54886,
+      "toolCalls": 5,
+      "durationMs": 20764,
+      "resultPreview": "{\"subjects_and_attributes\":[\"A single kitten, ginger/orange tabby with faint darker orange striping on the head\",\"Kitten has a lighter cream/pale-orange chest, belly and lower legs\",\"Kitten has long, fluffy/fuzzy fur (fur-tips catch the sunlight)\",\"Kitten has a pink nose\",\"Kitten has upright pointed ears with paler/whitish inner-ear fur\",\"Kitten has a fluffy tail held upright in the final frame\",\"\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "gt:v3:obs1",
+      "phaseIndex": 1,
+      "phaseTitle": "GroundTruth",
+      "agentId": "a7fd8946eced5bb79",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552788742,
+      "queuedAt": 1783552788740,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Interior of a modern open-plan office. White desk in the fo\u00e2\u20ac\u00a6",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552813602,
+      "tokens": 54905,
+      "toolCalls": 5,
+      "durationMs": 24860,
+      "resultPreview": "{\"subjects_and_attributes\":[\"One person: a Black woman, seated, working at a desktop computer\",\"Hair: dark hair worn up in a bun/updo with short curls at the front\",\"Earrings: small stud earrings visible on the ear\",\"Necklace: thin gold/pale chain necklace with a cross pendant\",\"Top layer: light beige/cream/tan button-up shirt worn open as an overshirt, sleeves rolled up\",\"Inner top: bright orange\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "gt:v3:obs2",
+      "phaseIndex": 1,
+      "phaseTitle": "GroundTruth",
+      "agentId": "adecb55b3cd961770",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552788745,
+      "queuedAt": 1783552788740,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Indoor modern open-plan office or co-working space with rou\u00e2\u20ac\u00a6",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552825039,
+      "tokens": 54975,
+      "toolCalls": 5,
+      "durationMs": 36294,
+      "resultPreview": "{\"subjects_and_attributes\":[\"Woman, Black / dark skin, adult; single subject present in all four frames\",\"Hair: dark natural hair pulled up into a bun/puff updo on top of the head\",\"Earring: small stud earring visible in the ear\",\"Necklace: thin gold-toned chain with a small cross pendant\",\"Top layer: light beige / tan long-sleeve open shirt (worn unbuttoned like a shirt-jacket)\",\"Under layer: ora\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 7,
+      "label": "ver:current:v1:formal",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a2a44595bfd30b437",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552848509,
+      "queuedAt": 1783552848438,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552902187,
+      "tokens": 55172,
+      "toolCalls": 5,
+      "durationMs": 53674,
+      "resultPreview": "{\"claims\":[{\"claim\":\"Bright golden sunlight illuminates the scene\",\"verdict\":\"SUPPORTED\",\"note\":\"Strong warm low-sun backlight on the right side; golden-hour lighting is clearly present.\"},{\"claim\":\"The scene is a wide urban street\",\"verdict\":\"SUPPORTED\",\"note\":\"A wide multi-lane divided city road with buildings on both sides.\"},{\"claim\":\"Numerous vehicles are present\",\"verdict\":\"SUPPORTED\",\"note\"\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 8,
+      "label": "ver:current:v1:sarcastic",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a2b9fe65a9ad80ccb",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552848521,
+      "queuedAt": 1783552848438,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552887043,
+      "tokens": 55182,
+      "toolCalls": 5,
+      "durationMs": 38522,
+      "resultPreview": "{\"claims\":[{\"claim\":\"There is a large quantity of vehicles on the road\",\"verdict\":\"SUPPORTED\",\"note\":\"Multiple lanes filled with cars and buses across all frames.\"},{\"claim\":\"The vehicles transport people\",\"verdict\":\"UNSUPPORTED\",\"note\":\"Distant time-lapse; vehicles are motion-blurred and no occupants or pedestrians are visibly confirmable.\"},{\"claim\":\"The vehicles pass remarkably yellow trees\",\"v\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 9,
+      "label": "ver:current:v1:humorous_tech",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a3f9669b95d3a69f3",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552848529,
+      "queuedAt": 1783552848439,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552897167,
+      "tokens": 55163,
+      "toolCalls": 5,
+      "durationMs": 48637,
+      "resultPreview": "{\"claims\":[{\"claim\":\"The scene is a city / urban setting\",\"verdict\":\"SUPPORTED\",\"note\":\"Dense high-rise apartment towers, city buildings and a major urban road are clearly visible.\"},{\"claim\":\"There is a road carrying vehicle traffic (the 'traffic pipeline')\",\"verdict\":\"SUPPORTED\",\"note\":\"Wide multi-lane divided road filled with cars and buses in every frame.\"},{\"claim\":\"The street trees have yell\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 10,
+      "label": "ver:current:v1:humorous_non_tech",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a39f583391200dc75",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552848536,
+      "queuedAt": 1783552848439,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552887525,
+      "tokens": 55152,
+      "toolCalls": 5,
+      "durationMs": 38988,
+      "resultPreview": "{\"claims\":[{\"claim\":\"There are yellow trees lining the street\",\"verdict\":\"SUPPORTED\",\"note\":\"Rows of bright yellow autumn (ginkgo) trees line both sides of the road in every frame.\"},{\"claim\":\"There is traffic on the street (vehicles / commuters)\",\"verdict\":\"SUPPORTED\",\"note\":\"Heavy multi-lane traffic with time-lapse motion blur is clearly visible; 'trying to get home' is joke framing about intent\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 11,
+      "label": "ver:current:v2:formal",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a4d7edb6d45efbd7c",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552848540,
+      "queuedAt": 1783552848439,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552892717,
+      "tokens": 55185,
+      "toolCalls": 5,
+      "durationMs": 44177,
+      "resultPreview": "{\"claims\":[{\"claim\":\"There is a kitten (very young cat)\",\"verdict\":\"SUPPORTED\",\"note\":\"Small kitten with kitten proportions in all frames.\"},{\"claim\":\"The kitten is fluffy\",\"verdict\":\"SUPPORTED\",\"note\":\"Long, soft fur visible, especially around body and tail.\"},{\"claim\":\"The kitten is ginger/orange\",\"verdict\":\"SUPPORTED\",\"note\":\"Clearly an orange/ginger tabby.\"},{\"claim\":\"The kitten has a white ch\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 12,
+      "label": "ver:current:v2:sarcastic",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "afbcf91c0eb91098c",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552848545,
+      "queuedAt": 1783552848439,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552879703,
+      "tokens": 55161,
+      "toolCalls": 5,
+      "durationMs": 31158,
+      "resultPreview": "{\"claims\":[{\"claim\":\"A ginger kitten is the subject\",\"verdict\":\"SUPPORTED\",\"note\":\"Small fluffy orange/ginger cat with kitten proportions (oversized head and eyes) visible in all four frames.\"},{\"claim\":\"The kitten is walking / in motion (a 'procession')\",\"verdict\":\"SUPPORTED\",\"note\":\"Progresses forward toward the camera across frames, a forepaw lifted mid-step.\"},{\"claim\":\"It moves through underg\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 13,
+      "label": "ver:current:v2:humorous_tech",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "afe89a4206f1763e5",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552848549,
+      "queuedAt": 1783552848440,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552882718,
+      "tokens": 55155,
+      "toolCalls": 5,
+      "durationMs": 34169,
+      "resultPreview": "{\"claims\":[{\"claim\":\"There is a ginger/orange kitten\",\"verdict\":\"SUPPORTED\",\"note\":\"A small orange fluffy young cat is clearly the subject in all frames.\"},{\"claim\":\"The kitten is walking/stepping forward one step at a time\",\"verdict\":\"SUPPORTED\",\"note\":\"Across the ordered frames the kitten advances toward the camera through the undergrowth.\"},{\"claim\":\"The environment is leafy\",\"verdict\":\"SUPPORT\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 14,
+      "label": "ver:current:v2:humorous_non_tech",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a2d9820c83d7c748e",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552848554,
+      "queuedAt": 1783552848440,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552896933,
+      "tokens": 55171,
+      "toolCalls": 5,
+      "durationMs": 48378,
+      "resultPreview": "{\"claims\":[{\"claim\":\"The scene has dappled sunlight (sun-dappled)\",\"verdict\":\"SUPPORTED\",\"note\":\"Clear patches of light and shadow on the dirt ground.\"},{\"claim\":\"The setting is a garden\",\"verdict\":\"UNSUPPORTED\",\"note\":\"Appears to be wild bushes/undergrowth over bare dirt with dry dead branches; no visible cultivation (beds, lawn, planted rows) to confirm 'garden'.\"},{\"claim\":\"There is one kitten\"\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 15,
+      "label": "ver:current:v3:formal",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a4a5f17597b813c19",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552848559,
+      "queuedAt": 1783552848440,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552902158,
+      "tokens": 55198,
+      "toolCalls": 5,
+      "durationMs": 53599,
+      "resultPreview": "{\"claims\":[{\"claim\":\"A woman\",\"verdict\":\"SUPPORTED\"},{\"claim\":\"with curly black hair\",\"verdict\":\"SUPPORTED\"},{\"claim\":\"hair in a high bun\",\"verdict\":\"SUPPORTED\"},{\"claim\":\"works at a white desk\",\"verdict\":\"SUPPORTED\"},{\"claim\":\"in an office\",\"verdict\":\"SUPPORTED\",\"note\":\"Open-plan office with cubicles, round ceiling lights, glass walls, plants.\"},{\"claim\":\"typing on a keyboard\",\"verdict\":\"SUPPORTE\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 16,
+      "label": "ver:current:v3:sarcastic",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a005e513444b5072b",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552848565,
+      "queuedAt": 1783552848440,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552887496,
+      "tokens": 55165,
+      "toolCalls": 5,
+      "durationMs": 38931,
+      "resultPreview": "{\"claims\":[{\"claim\":\"Subject is female (\\\"She\\\")\",\"verdict\":\"SUPPORTED\",\"note\":\"Woman clearly visible in all frames.\"},{\"claim\":\"Navigating the digital world (using a computer)\",\"verdict\":\"SUPPORTED\",\"note\":\"Typing on keyboard connected to a desktop monitor.\"},{\"claim\":\"From a white desk\",\"verdict\":\"SUPPORTED\",\"note\":\"Desk surface is clearly white in every frame.\"},{\"claim\":\"Accessorized with a co\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 17,
+      "label": "ver:current:v3:humorous_tech",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a888192a6e514601e",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552879708,
+      "queuedAt": 1783552848440,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552915092,
+      "tokens": 55159,
+      "toolCalls": 5,
+      "durationMs": 35384,
+      "resultPreview": "{\"claims\":[{\"claim\":\"There is a tangled cable on her desk\",\"verdict\":\"SUPPORTED\",\"note\":\"A visibly tangled/coiled black cable lies across the white desk near the wired mouse and keyboard in every frame.\"},{\"claim\":\"The desk belongs to a woman working at it\",\"verdict\":\"SUPPORTED\",\"note\":\"A woman is seated at the desk operating the computer in all four frames.\"},{\"claim\":\"She has a production server\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 18,
+      "label": "ver:current:v3:humorous_non_tech",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "aaebdc774ce73dfa8",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552882721,
+      "queuedAt": 1783552848441,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552912919,
+      "tokens": 55174,
+      "toolCalls": 5,
+      "durationMs": 30198,
+      "resultPreview": "{\"claims\":[{\"claim\":\"The subject is a woman\",\"verdict\":\"SUPPORTED\",\"note\":\"Clearly a woman seated at the desk across all frames.\"},{\"claim\":\"She is typing / working at a keyboard (one keystroke at a time)\",\"verdict\":\"SUPPORTED\",\"note\":\"Hands are on a keyboard, fingers positioned to type in every frame.\"},{\"claim\":\"She glances at a monitor\",\"verdict\":\"SUPPORTED\",\"note\":\"A desktop monitor is present\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 19,
+      "label": "ver:baseline:v1:formal",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "ac3f0ba5452fcefe4",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552887046,
+      "queuedAt": 1783552848441,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552944728,
+      "tokens": 55186,
+      "toolCalls": 5,
+      "durationMs": 57682,
+      "resultPreview": "{\"claims\":[{\"claim\":\"The camera is static (fixed position)\",\"verdict\":\"SUPPORTED\",\"note\":\"Buildings, lampposts, trees and railings occupy identical positions across all four frames; only vehicles change.\"},{\"claim\":\"The shot is wide-angle\",\"verdict\":\"UNSUPPORTED\",\"note\":\"Framing is broad but the compressed background (large-looking distant mountains/high-rises stacked behind the street) reads as t\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 20,
+      "label": "ver:baseline:v1:sarcastic",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "afb3507abe05b43a5",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552887500,
+      "queuedAt": 1783552848441,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552939732,
+      "tokens": 55163,
+      "toolCalls": 5,
+      "durationMs": 52232,
+      "resultPreview": "{\"claims\":[{\"claim\":\"It is a static shot (camera does not move)\",\"verdict\":\"SUPPORTED\",\"note\":\"Buildings, trees, road, and signage are pixel-identical across all four frames while only the traffic changes; the heavy motion-blur on cars confirms a fixed time-lapse camera.\"},{\"claim\":\"It is a wide-angle shot\",\"verdict\":\"UNSUPPORTED\",\"note\":\"Cannot confirm the lens. The strong background compression \u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 21,
+      "label": "ver:baseline:v1:humorous_tech",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "aa01e4ce5388e573f",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552887528,
+      "queuedAt": 1783552848441,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552923646,
+      "tokens": 55170,
+      "toolCalls": 5,
+      "durationMs": 36118,
+      "resultPreview": "{\"claims\":[{\"claim\":\"The scene depicts a city / urban traffic setting\",\"verdict\":\"SUPPORTED\",\"note\":\"Multi-lane road with heavy car and bus traffic, apartment towers, urban intersection.\"},{\"claim\":\"The footage is a time-lapse ('running on a time-lapse runtime')\",\"verdict\":\"SUPPORTED\",\"note\":\"Vehicles are motion-blurred/streaked against a static background and jump position frame-to-frame \u00e2\u20ac\u201d classi\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 22,
+      "label": "ver:baseline:v1:humorous_non_tech",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a7e91feab4d4e7666",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552892721,
+      "queuedAt": 1783552848441,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v1_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552936446,
+      "tokens": 55167,
+      "toolCalls": 5,
+      "durationMs": 43725,
+      "resultPreview": "{\"claims\":[{\"claim\":\"Cars are present in the scene\",\"verdict\":\"SUPPORTED\",\"note\":\"Numerous cars fill the multi-lane road in all frames.\"},{\"claim\":\"Trucks are present\",\"verdict\":\"SUPPORTED\",\"note\":\"A white box/delivery truck is visible in the right lanes, clearest in f4 and f6.\"},{\"claim\":\"Vehicles blur past (motion blur)\",\"verdict\":\"SUPPORTED\",\"note\":\"Clear time-lapse/long-exposure motion blur on\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 23,
+      "label": "ver:baseline:v2:formal",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "ad345b0db7953c627",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552896935,
+      "queuedAt": 1783552848442,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552926405,
+      "tokens": 55126,
+      "toolCalls": 5,
+      "durationMs": 29470,
+      "resultPreview": "{\"claims\":[{\"claim\":\"The animal is a kitten (young cat)\",\"verdict\":\"SUPPORTED\",\"note\":\"Small young cat with kitten proportions, oversized head, present in all four frames.\"},{\"claim\":\"The kitten is orange\",\"verdict\":\"SUPPORTED\",\"note\":\"Clearly ginger/orange coat with white chin and chest.\"},{\"claim\":\"The kitten is fluffy\",\"verdict\":\"SUPPORTED\",\"note\":\"Long, soft, fluffy fur is evident, especially \u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 24,
+      "label": "ver:baseline:v2:sarcastic",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "ab27e39932734a406",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552897170,
+      "queuedAt": 1783552848442,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552933248,
+      "tokens": 55152,
+      "toolCalls": 5,
+      "durationMs": 36078,
+      "resultPreview": "{\"claims\":[{\"claim\":\"A tiny [subject] is present\",\"verdict\":\"SUPPORTED\",\"note\":\"A small ginger kitten is the clear subject in all four frames.\"},{\"claim\":\"crosses dirt\",\"verdict\":\"SUPPORTED\",\"note\":\"Ground is bare dirt/soil; the kitten walks across it toward the camera.\"},{\"claim\":\"and leaves\",\"verdict\":\"SUPPORTED\",\"note\":\"Green vine leaves hang in the foreground and dead leaf litter covers the gr\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 25,
+      "label": "ver:baseline:v2:humorous_tech",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a436d6c2b234ca3b2",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552902162,
+      "queuedAt": 1783552848442,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552946947,
+      "tokens": 55158,
+      "toolCalls": 5,
+      "durationMs": 44785,
+      "resultPreview": "{\"claims\":[{\"claim\":\"The animal is a kitten (small young cat)\",\"verdict\":\"SUPPORTED\",\"note\":\"Small-bodied young cat with kitten proportions in all four frames.\"},{\"claim\":\"It is orange\",\"verdict\":\"SUPPORTED\",\"note\":\"Clearly ginger/orange tabby fur.\"},{\"claim\":\"It is fluffy\",\"verdict\":\"SUPPORTED\",\"note\":\"Visibly long, fuzzy fur; raised fluffy tail in f6.\"},{\"claim\":\"It is striding/moving toward the\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 26,
+      "label": "ver:baseline:v2:humorous_non_tech",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a340bc6a7ea16d914",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552902190,
+      "queuedAt": 1783552848442,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v2_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552932638,
+      "tokens": 55172,
+      "toolCalls": 5,
+      "durationMs": 30448,
+      "resultPreview": "{\"claims\":[{\"claim\":\"The animal is an orange fluffball (a fluffy orange cat)\",\"verdict\":\"SUPPORTED\",\"note\":\"Fluffy orange kitten clearly visible in all four frames.\"},{\"claim\":\"The cat has a pink nose\",\"verdict\":\"SUPPORTED\",\"note\":\"Pink nose clearly visible, especially in the closer frames (f4, f6).\"},{\"claim\":\"The cat is walking toward the viewer/camera\",\"verdict\":\"SUPPORTED\",\"note\":\"Mid-stride w\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 27,
+      "label": "ver:baseline:v3:formal",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a54efed97d304393f",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552912922,
+      "queuedAt": 1783552848443,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552975280,
+      "tokens": 55204,
+      "toolCalls": 5,
+      "durationMs": 62358,
+      "resultPreview": "{\"claims\":[{\"claim\":\"A woman is present\",\"verdict\":\"SUPPORTED\",\"note\":\"A woman is seated at the desk in every frame.\"},{\"claim\":\"She has dark curly hair\",\"verdict\":\"SUPPORTED\",\"note\":\"Dark hair with visible curly/afro texture.\"},{\"claim\":\"Hair is in a high bun\",\"verdict\":\"SUPPORTED\",\"note\":\"Hair gathered into a bun high on the crown.\"},{\"claim\":\"Wearing a beige jacket\",\"verdict\":\"SUPPORTED\",\"note\"\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 28,
+      "label": "ver:baseline:v3:sarcastic",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a16c5cad11f5e2e3c",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552915095,
+      "queuedAt": 1783552848445,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552961390,
+      "tokens": 55175,
+      "toolCalls": 5,
+      "durationMs": 46295,
+      "resultPreview": "{\"claims\":[{\"claim\":\"A woman\",\"verdict\":\"SUPPORTED\"},{\"claim\":\"in a beige jacket\",\"verdict\":\"SUPPORTED\",\"note\":\"Tan/beige open collared shirt worn jacket-like over an orange top.\"},{\"claim\":\"pink nails\",\"verdict\":\"SUPPORTED\",\"note\":\"Clearly pink/magenta nails visible in f4 and f6.\"},{\"claim\":\"types away\",\"verdict\":\"SUPPORTED\",\"note\":\"Hands on the keyboard, typing.\"},{\"claim\":\"under circular ceilin\u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 29,
+      "label": "ver:baseline:v3:humorous_tech",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a6d2271179db1e04f",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552923650,
+      "queuedAt": 1783552848446,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783553035761,
+      "tokens": 55243,
+      "toolCalls": 5,
+      "durationMs": 112111,
+      "resultPreview": "{\"claims\":[{\"claim\":\"The subject is a woman\",\"verdict\":\"SUPPORTED\",\"note\":\"Clearly a woman seated at the desk in all four frames.\"},{\"claim\":\"She is wearing a beige jacket\",\"verdict\":\"SUPPORTED\",\"note\":\"Light beige/cream open overshirt-style jacket worn over a coral top; 'beige jacket' is fair.\"},{\"claim\":\"She has pink nails\",\"verdict\":\"SUPPORTED\",\"note\":\"Pink/coral nail polish clearly visible on \u00e2\u20ac\u00a6"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 30,
+      "label": "ver:baseline:v3:humorous_non_tech",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "ad81f9ac5166e1864",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783552926408,
+      "queuedAt": 1783552848446,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "First use the Read tool on EACH of these frame images. They are frames sampled in order from ONE short video clip:\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f1.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-a62b-94e91b207486/scratchpad/gt/v3_f2.jpg\n- C:/Users/Nad/AppData/Local/Temp/claude/F--AMD/e16e7134-9cfa-4695-\u00e2\u20ac\u00a6",
+      "lastProgressAt": 1783552976095,
+      "tokens": 55187,
+      "toolCalls": 5,
+      "durationMs": 49687,
+      "resultPreview": "{\"claims\":[{\"claim\":\"She's typing\",\"verdict\":\"SUPPORTED\",\"note\":\"Both hands on the keyboard, actively typing across all frames.\"},{\"claim\":\"wearing pink nails\",\"verdict\":\"SUPPORTED\",\"note\":\"Fingernails clearly painted pink/magenta, most visible in f4 and f6.\"},{\"claim\":\"silver cross (necklace pendant)\",\"verdict\":\"SUPPORTED\",\"note\":\"A cross pendant on a chain is visible; it reads as a pale/silver m\u00e2\u20ac\u00a6"
+    }
+  ],
+  "totalTokens": 1653575,
+  "totalToolCalls": 150
+}

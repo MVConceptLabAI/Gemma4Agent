@@ -1,0 +1,40 @@
+name: Track 2 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  offline-preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Offline preflight
+        run: python scripts/preflight.py
+      - name: Style-filter guard
+        run: python scripts/test_style_filter.py
+        env:
+          PYTHONPATH: .
+      - name: Four-observer submission-profile guard
+        run: python scripts/test_qwen4_observer_profile.py
+      - name: W4 per-style writer guard
+        run: python scripts/test_w4_style_split.py
+        env:
+          PYTHONPATH: .
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build linux/amd64 image
+        run: docker buildx build --platform linux/amd64 --tag track2-captioner:ci --load .
+      - name: Inspect image
+        run: docker inspect track2-captioner:ci --format 'architecture={{.Architecture}} os={{.Os}} size={{.Size}}'

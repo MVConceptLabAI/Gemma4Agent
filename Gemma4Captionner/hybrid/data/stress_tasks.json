@@ -1,0 +1,62 @@
+[
+  {
+    "task_id": "stress_city_banner",
+    "video_url": "https://videos.pexels.com/video-files/3195394/3195394-uhd_2560_1440_25fps.mp4",
+    "styles": ["formal", "sarcastic", "humorous_tech", "humorous_non_tech"]
+  },
+  {
+    "task_id": "stress_dog_eating",
+    "video_url": "https://videos.pexels.com/video-files/854132/854132-sd_640_360_25fps.mp4",
+    "styles": ["formal", "sarcastic", "humorous_tech", "humorous_non_tech"]
+  },
+  {
+    "task_id": "stress_weather_city",
+    "video_url": "https://videos.pexels.com/video-files/1851190/1851190-uhd_2560_1440_25fps.mp4",
+    "styles": ["formal", "sarcastic", "humorous_tech", "humorous_non_tech"]
+  },
+  {
+    "task_id": "stress_qwen_doc_clip",
+    "video_url": "https://videos.pexels.com/video-files/4114797/4114797-uhd_3840_2160_25fps.mp4",
+    "styles": ["formal", "sarcastic", "humorous_tech", "humorous_non_tech"]
+  },
+  {
+    "task_id": "stress_parking_management",
+    "video_url": "https://videos.pexels.com/video-files/3858833/3858833-hd_1280_720_24fps.mp4",
+    "styles": ["formal", "sarcastic", "humorous_tech", "humorous_non_tech"]
+  },
+  {
+    "task_id": "stress_homeoffice",
+    "video_url": "https://videos.pexels.com/video-files/3254066/3254066-uhd_2560_1440_25fps.mp4",
+    "styles": ["formal", "sarcastic", "humorous_tech", "humorous_non_tech"]
+  },
+  {
+    "task_id": "stress_vertical_activity",
+    "video_url": "https://videos.pexels.com/video-files/5269588/5269588-uhd_2160_3840_25fps.mp4",
+    "styles": ["formal", "sarcastic", "humorous_tech", "humorous_non_tech"]
+  },
+  {
+    "task_id": "stress_food_social",
+    "video_url": "https://videos.pexels.com/video-files/5846303/5846303-hd_1080_1920_25fps.mp4",
+    "styles": ["formal", "sarcastic", "humorous_tech", "humorous_non_tech"]
+  },
+  {
+    "task_id": "stress_holiday_vertical",
+    "video_url": "https://videos.pexels.com/video-files/12119519/12119519-hd_1080_1920_30fps.mp4",
+    "styles": ["formal", "sarcastic", "humorous_tech", "humorous_non_tech"]
+  },
+  {
+    "task_id": "stress_cartagena_city",
+    "video_url": "https://videos.pexels.com/video-files/6537653/6537653-hd_1920_1080_24fps.mp4",
+    "styles": ["formal", "sarcastic", "humorous_tech", "humorous_non_tech"]
+  },
+  {
+    "task_id": "stress_dog_collar",
+    "video_url": "https://videos.pexels.com/video-files/8853490/8853490-hd_1920_1080_24fps.mp4",
+    "styles": ["formal", "sarcastic", "humorous_tech", "humorous_non_tech"]
+  },
+  {
+    "task_id": "stress_repair_workshop",
+    "video_url": "https://videos.pexels.com/video-files/9464870/9464870-hd_1080_2048_30fps.mp4",
+    "styles": ["formal", "sarcastic", "humorous_tech", "humorous_non_tech"]
+  }
+]

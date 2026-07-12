@@ -1,0 +1,26 @@
+# Local env and secrets — NEVER commit real keys
+.env
+.env.*
+!.env.example
+
+# Generated outputs
+out/
+out_docker/
+in/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Virtualenvs and dependency caches
+.venv/
+venv/
+env/
+node_modules/
+
+# Tool config (mcporter/agent-reach) and archives
+config/
+*.zip
+
+# Local audit artifacts (videos/frames) and design-tool config
+audits/
+.impeccable/

@@ -1,0 +1,110 @@
+[
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the time-lapse, traffic, trees, and buildings, and uses formal, objective language without jokes or jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "formal",
+    "caption": "A static wide-angle time-lapse captures rapid traffic flow across a city intersection, framed by golden-leafed trees and flanked by high-rise buildings under bright daylight."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the scene with speeding cars and golden leaves, and the sarcastic tone is dry and ironic, matching the requested style without overstatement or cliché.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "sarcastic",
+    "caption": "A city exhales its daily breath through speeding cars and golden leaves, all while ignoring the banners screaming for attention."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes heavy traffic as 'latency complaints' from lanes, matching the visual congestion, and uses a clear tech/programming pun with a funny punchline.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "humorous_tech",
+    "caption": "The traffic scheduler is live in production, and every lane is filing a latency complaint."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 1.0,
+    "reason": "The caption is humorous and warm, matching the requested style, but lacks specific visual detail about the cars or the setting.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "humorous_non_tech",
+    "caption": "Cars zipping past like they're on a very important delivery-probably to the mountains in the distance."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible kitten and its surroundings in a formal, objective tone without jargon or humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "formal",
+    "caption": "A fluffy orange kitten with large green eyes walks steadily toward the camera through sun-dappled leafy branches in a forest setting."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the kitten's cautious walk and matches the sarcastic tone with dry irony.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "sarcastic",
+    "caption": "A tiny explorer crosses dirt and leaves with the grave importance of a royal inspection."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the kitten's curious approach and humorously frames it as a 'zero-config headless agent' with tech jargon, matching the requested humorous_tech style.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "humorous_tech",
+    "caption": "This kitten is deploying a zero-config headless agent with no config files, just curiosity and a direct path to the camera."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the kitten's curious, focused behavior and uses warm, everyday humor without tech jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "humorous_non_tech",
+    "caption": "That kitten is inspecting the leaves like someone misplaced a very important snack."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes all visible elements in the frames and uses a formal, objective tone without jargon or humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "formal",
+    "caption": "A woman in a beige jacket over an orange top types on a silver laptop at a white desk, with a black mouse to her left and a potted plant behind her."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 1.0,
+    "reason": "The caption matches the sarcastic tone and understated irony requested, but misses specific visual details like the woman's focused expression and the office lighting.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "sarcastic",
+    "caption": "She types with the precision of someone who's never heard a keyboard click, surrounded by beige, white, and the quiet dignity of a plant."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the woman typing on a computer and uses a relatable tech joke about autocomplete, fitting the humorous_tech style perfectly.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "humorous_tech",
+    "caption": "She's optimizing her terminal session with one hand while the other monitors for rogue autocomplete suggestions."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 1.0,
+    "reason": "The caption humorously contrasts the keyboard and desk plant but misses specific visual details like the woman’s focused expression and the office setting.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "humorous_non_tech",
+    "caption": "The keyboard gets all the attention while the desk plant quietly carries the room."
+  }
+]

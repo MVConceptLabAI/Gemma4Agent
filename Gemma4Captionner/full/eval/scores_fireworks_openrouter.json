@@ -1,0 +1,110 @@
+[
+  {
+    "accuracy": 0.0,
+    "style_match": 1.0,
+    "reason": "The caption does not describe the visual content of the images.",
+    "judge_model": "groq:meta-llama/llama-4-scout-17b-16e-instruct",
+    "task_id": "v1",
+    "style": "formal",
+    "caption": "* **Safety/Taste:** Plain ASCII, no sensitive traits jokes, no mean"
+  },
+  {
+    "accuracy": 0.0,
+    "style_match": 0.0,
+    "reason": "The caption is incomplete and does not describe the clip, and it also does not follow the sarcastic style.",
+    "judge_model": "groq:meta-llama/llama-4-scout-17b-16e-instruct",
+    "task_id": "v1",
+    "style": "sarcastic",
+    "caption": "* No uncertainty fillers ("
+  },
+  {
+    "accuracy": 0,
+    "style_match": 0,
+    "reason": "all judge providers failed",
+    "judge_model": "",
+    "task_id": "v1",
+    "style": "humorous_tech",
+    "caption": "The visual pipeline keeps processing the scene while the punchline service warms its cache."
+  },
+  {
+    "accuracy": 0,
+    "style_match": 0,
+    "reason": "all judge providers failed",
+    "judge_model": "",
+    "task_id": "v1",
+    "style": "humorous_non_tech",
+    "caption": "* **Scene Facts"
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the scene with concrete detail and is written in a formal style.",
+    "judge_model": "groq:meta-llama/llama-4-scout-17b-16e-instruct",
+    "task_id": "v2",
+    "style": "formal",
+    "caption": "A small orange kitten walks forward through a shaded, leafy area towards the camera."
+  },
+  {
+    "accuracy": 0,
+    "style_match": 0,
+    "reason": "all judge providers failed",
+    "judge_model": "",
+    "task_id": "v2",
+    "style": "sarcastic",
+    "caption": "* Tech"
+  },
+  {
+    "accuracy": 0,
+    "style_match": 0,
+    "reason": "all judge providers failed",
+    "judge_model": "",
+    "task_id": "v2",
+    "style": "humorous_tech",
+    "caption": "The visual pipeline keeps processing the scene while the punchline service warms its cache."
+  },
+  {
+    "accuracy": 0,
+    "style_match": 0,
+    "reason": "all judge providers failed",
+    "judge_model": "",
+    "task_id": "v2",
+    "style": "humorous_non_tech",
+    "caption": "That kitten is inspecting the leaves like someone misplaced a very important snack."
+  },
+  {
+    "accuracy": 0,
+    "style_match": 0,
+    "reason": "all judge providers failed",
+    "judge_model": "",
+    "task_id": "v3",
+    "style": "formal",
+    "caption": "* `{\"summary\": \"\", \"setting\": \"\", \"subjects\": [], \"actions\": [], \"mood\": \"\", \"audio_hint"
+  },
+  {
+    "accuracy": 0,
+    "style_match": 0,
+    "reason": "all judge providers failed",
+    "judge_model": "",
+    "task_id": "v3",
+    "style": "sarcastic",
+    "caption": "The scene proceeds with great confidence, as if the room had been waiting for this exact moment."
+  },
+  {
+    "accuracy": 0,
+    "style_match": 0,
+    "reason": "all judge providers failed",
+    "judge_model": "",
+    "task_id": "v3",
+    "style": "humorous_tech",
+    "caption": "The visual pipeline keeps processing the scene while the punchline service warms its cache."
+  },
+  {
+    "accuracy": 0,
+    "style_match": 0,
+    "reason": "all judge providers failed",
+    "judge_model": "",
+    "task_id": "v3",
+    "style": "humorous_non_tech",
+    "caption": "* Input Scene Facts: `{}` ("
+  }
+]

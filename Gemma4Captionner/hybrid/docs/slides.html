@@ -1,0 +1,97 @@
+<!doctype html><meta charset="utf-8"><title>Track 2 Captioner — slides</title>
+<style>
+:root{--bg:#0b0f14;--fg:#eef3f8;--accent:#4fd1b5;--blue:#78a6ff;--muted:#a9b4c0;--line:#263341}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.deck{scroll-snap-type:y mandatory;height:100vh;overflow-y:scroll}
+section{scroll-snap-align:start;min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:6vh 8vw;border-bottom:1px solid var(--line);position:relative}
+.tag{color:var(--accent);font-size:14px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:18px}
+h1{font-size:clamp(34px,6vw,72px);line-height:1.02;letter-spacing:-1px}
+h2{font-size:clamp(26px,4vw,46px);line-height:1.08;margin-bottom:22px}
+p,li{font-size:clamp(17px,2vw,23px);line-height:1.5;color:var(--muted);max-width:60ch}
+b{color:var(--fg)}.hi{color:var(--accent)}.bl{color:var(--blue)}
+ul{margin:14px 0 0 22px}li{margin:10px 0}
+.big{font-size:clamp(40px,9vw,120px);font-weight:800;letter-spacing:-2px;line-height:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:26px}
+.card{border:1px solid var(--line);border-radius:14px;padding:20px 22px;background:#111823}
+.card .n{font-size:34px;font-weight:800;color:var(--accent)}.card .l{color:var(--muted);font-size:15px;margin-top:6px}
+.foot{position:absolute;bottom:22px;right:8vw;color:#4a5766;font-size:13px}
+.flow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:26px;font-size:15px}
+.node{border:1px solid var(--line);border-radius:10px;padding:12px 16px;background:#111823;color:var(--fg)}
+.arrow{color:var(--accent);font-size:22px}
+@media print{.deck{height:auto;overflow:visible}section{min-height:96vh;page-break-after:always;border:none}}
+</style>
+<div class="deck">
+
+<section>
+  <div class="tag">AMD Developer Hackathon · ACT II · Track 2</div>
+  <h1>Track 2 Captioner</h1>
+  <p style="margin-top:22px;font-size:clamp(19px,2.4vw,28px);color:var(--fg)">A vision‑model <span class="hi">ensemble</span> that captions any video in four distinct voices — <b>accurate and richly detailed at once.</b></p>
+  <div class="foot">ghcr.io/theskygold/track2-captioner</div>
+</section>
+
+<section>
+  <div class="tag">The problem</div>
+  <h2>Two scores that fight each other</h2>
+  <p>Track 2 grades every caption on <b class="hi">accuracy</b> (does it match the video?) and <b class="bl">style match</b> (does the tone land?) — across four tones of the <b>same</b> clip. Push for vivid tone and you drift from the facts. Play it safe and you say nothing. You have to win both.</p>
+</section>
+
+<section>
+  <div class="tag">The idea</div>
+  <h2>Three models see more. Agreement lies less.</h2>
+  <div class="flow">
+    <span class="node">frames</span><span class="arrow">→</span>
+    <span class="node">GPT‑5.5</span><span class="node">Gemini 3.1 Pro</span><span class="node">Opus 4.5</span>
+    <span class="arrow">→</span><span class="node">cross‑reference + write</span><span class="arrow">→</span>
+    <span class="node">4 styled captions</span>
+  </div>
+  <p style="margin-top:26px">Each model lists everything it sees, independently. A writer fuses them: a detail <b class="hi">two or more models agree on</b> is trusted; a lone, unverifiable guess is <b>dropped</b>. Detection = the union of what they see. Precision = their agreement.</p>
+</section>
+
+<section>
+  <div class="tag">Proof — on the judge's own clips</div>
+  <h2>Adversarially audited on AMD's official bucket</h2>
+  <div class="grid">
+    <div class="card"><div class="n">0.942</div><div class="l">caption accuracy (vision audit)</div></div>
+    <div class="card"><div class="n">~14.8</div><div class="l">verified details / caption</div></div>
+    <div class="card"><div class="n">~3×</div><div class="l">the detail of any single model</div></div>
+    <div class="card"><div class="n">15</div><div class="l">official clips = the jury's distribution</div></div>
+  </div>
+  <p style="margin-top:24px">We built an <b>adversarial vision audit</b> — agents that read the real frames and try to refute every claim — and retired the unreliable proxy judge. The ensemble even reads a street sign no single model gets right, by agreement.</p>
+</section>
+
+<section>
+  <div class="tag">Not a demo — a product</div>
+  <h2>Runs on any video, deploys anywhere</h2>
+  <ul>
+    <li><b class="hi">Upload or paste a URL</b> → get all four styles (web app).</li>
+    <li>Reproducible <b>Docker</b> image: reads <code>/input</code>, writes <code>/output</code>, linux/amd64, ≈1 GB, no keys in the repo.</li>
+    <li>Graceful degradation, multi‑provider failover, filter + safety guards, guarded by CI.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="tag">Use of AMD platforms</div>
+  <h2>Qwen‑VL on AMD ROCm — real video</h2>
+  <ul>
+    <li>Stood <b class="hi">Qwen‑VL</b> up on an <b>AMD Radeon / ROCm</b> instance to caption real video the hosted APIs won't ingest.</li>
+    <li>Turnkey <b>MI300X notebook</b> to scale it — 192 GB HBM3, no sharding.</li>
+    <li>Frontier vision on the hosted path; AMD silicon for the self‑hosted video path.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="tag">Why we place first</div>
+  <h2>Accurate. Detailed. Four real voices. Verified.</h2>
+  <p>Method over luck: <b class="hi">audit → iterate → re‑audit</b> on the real distribution until the numbers hold. The strict‑writer iteration alone cut contradictions ~30% while keeping the detail.</p>
+  <h1 style="margin-top:30px" class="big">0.94 <span style="font-size:.4em;color:var(--muted)">on the clips the jury actually uses</span></h1>
+  <div class="foot">docker pull ghcr.io/theskygold/track2-captioner:latest</div>
+</section>
+
+</div>
+<script>
+addEventListener('keydown',e=>{const s=[...document.querySelectorAll('section')];const y=scrollY;
+ let i=s.findIndex(x=>x.offsetTop>y+10);if(e.key==='ArrowDown'||e.key===' '){(s[i]||s[s.length-1]).scrollIntoView({behavior:'smooth'})}
+ if(e.key==='ArrowUp'){s.reverse();const j=s.find(x=>x.offsetTop<y-10);if(j)j.scrollIntoView({behavior:'smooth'})}});
+</script>

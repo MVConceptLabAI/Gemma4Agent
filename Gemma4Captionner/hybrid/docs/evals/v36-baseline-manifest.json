@@ -1,0 +1,14 @@
+{
+  "attributed_digest": null,
+  "displayed_historical_score": 0.9133,
+  "evaluation_timestamp": null,
+  "image": "ghcr.io/theskygold/track2-captioner@sha256:161efc8b098a6a46f395f01fb83ce7c41a9e71c61a51205b59934393bac5f19d",
+  "index_digest": "sha256:161efc8b098a6a46f395f01fb83ce7c41a9e71c61a51205b59934393bac5f19d",
+  "linux_amd64_digest": "sha256:1b39f65c4b99642a318b353a2e0281c4d5ddb4d346510766e40c27ae5ed0ac07",
+  "note": "The Lablab score row did not expose an image digest; the displayed score is timestamp-inferred and not cryptographically proven.",
+  "reference": "R0_exact",
+  "resubmission_timestamp": null,
+  "schema": "amd-track2-baseline-manifest/v1",
+  "score_attribution": "timestamp-inferred",
+  "source_commit": "283ce7f"
+}

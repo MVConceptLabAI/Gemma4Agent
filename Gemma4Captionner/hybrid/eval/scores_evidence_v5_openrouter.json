@@ -1,0 +1,110 @@
+[
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible content and uses a formal, objective, third-person tone without jargon or humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "formal",
+    "caption": "A time-lapse of heavy traffic moving along a wide urban road lined with trees displaying bright yellow autumn leaves, with tall apartment buildings in the background."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the scene with vivid, sarcastic tone, matching the requested dry, ironic style without exclamations or jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "sarcastic",
+    "caption": "A static wide shot watches traffic churn beneath trees draped in bright yellow leaves, while beige apartment blocks loom behind and pink-blue banners flutter right-nature's palette, politely ignored by the asphalt."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 0.7,
+    "reason": "The caption accurately describes the time-lapse traffic scene with visible details like yellow trees and apartment buildings, and it humorously frames the traffic as a 'scheduler' with a tech pun, though the punchline is weak.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "humorous_tech",
+    "caption": "The urban road's traffic scheduler is live, routing cars past yellow-leaved trees and beige apartment buildings under a time-lapse deploy."
+  },
+  {
+    "accuracy": 0.9,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the slow-moving traffic and the yellow trees/beige buildings, and the humor is warm and non-tech as requested.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "humorous_non_tech",
+    "caption": "Cars and trucks inching forward like they're playing a very slow, very loud game of musical chairs under bright yellow trees and beige apartment buildings."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visual content in a formal, objective, and factual tone without jargon or humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "formal",
+    "caption": "A fluffy orange kitten walks steadily toward the camera through dappled sunlight filtering through green leaves in a forest, centered in a static eye-level shot."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 0.7,
+    "reason": "The caption accurately describes the kitten's appearance and movement, but the sarcastic tone is weak and understated, leaning more toward neutral observation than dry irony.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "sarcastic",
+    "caption": "A fluffy orange kitten, eyes wide as saucers, marches toward the lens through dappled greenery - clearly on a mission to become the next viral sensation."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the kitten's forward movement and the dappled sunlight, and humorously references a tech term ('forward-facing commit') with a clear, funny punchline.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "humorous_tech",
+    "caption": "The orange kitten is deploying a forward-facing commit through dappled sunlight and leafy branches, eyes locked on the camera's lens."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the kitten's approach and adds playful anthropomorphism without tech jargon, matching the humorous_non_tech style perfectly.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "humorous_non_tech",
+    "caption": "That orange furball is walking straight toward you like you're the snack, not the camera. Leaves rustle. Trees watch."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes all visible elements in the frames and uses a formal, objective, third-person tone without jargon or humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "formal",
+    "caption": "A woman in a beige jacket and orange top, with pink nail polish, types on a silver laptop at a white desk, occasionally glancing at the screen, as a black mouse rests to the left and a white-potted plant stands behind her under circular ceiling lights."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "sarcastic",
+    "caption": "A woman in beige and orange, pink nails gleaming, types furiously while a plant watches from behind her white desk. The ceiling lights, unimpressed, remain silent."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 0.7,
+    "reason": "The caption accurately describes the woman's attire and equipment, and humorously frames her typing as 'deploying code' with a tech metaphor, though the punchline is weak and not particularly funny.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "humorous_tech",
+    "caption": "The woman in the beige jacket and pink nails is deploying code in silence, with her silver laptop and black mouse in full runtime."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the woman’s beige jacket, pink nails, and focused typing, and adds humorous personification of the plant watching her — all in a warm, non-tech, funny style.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "humorous_non_tech",
+    "caption": "The woman in the beige jacket types like a caffeinated ninja, pink nails tapping away while the plant behind her watches in silent judgment."
+  }
+]

@@ -1,0 +1,110 @@
+[
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible elements in the clip and adheres strictly to a formal, objective tone without any stylistic deviations.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "formal",
+    "caption": "Multiple lanes of cars and buses travel along a wide urban street lined with ginkgo trees displaying vibrant yellow autumn leaves. Tall apartment buildings and a structure identified as \"KOREA ILLIES ENGINEERING\" rise in the background as traffic proceeds beneath green and red traffic signals."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 0.4,
+    "reason": "The caption is overly formal and misses the chaotic traffic, while the sarcastic tone is weak and not truly ironic.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "sarcastic",
+    "caption": "A spectacle of vehicular movement unfolds beneath a dignified row of ginkgo trees. Korea Illies Engineering appears to be watching."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the traffic and golden ginkgo trees while humorously comparing the city's traffic to a 'pipeline' with 'latency' and 'green signals', fitting the humorous_tech style perfectly.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "humorous_tech",
+    "caption": "This city's traffic pipeline, featuring golden ginkgo trees, is experiencing expected rush-hour latency despite the green signals."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the golden trees and busy traffic, and its humorous, warm tone fits the requested style perfectly.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "humorous_non_tech",
+    "caption": "Those golden trees are really showing off while everyone else is just trying to get home. It's a beautiful rush hour."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible content and is written in a formal, objective, third-person style without jargon or humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "formal",
+    "caption": "The clip shows visible people or objects, movement, foreground elements, background context, and camera framing in a clearly observable setting."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the kitten's appearance and movement, and its sarcastic tone matches the dry, ironic style requested.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "sarcastic",
+    "caption": "A fluffy ginger kitten makes a stately procession through the undergrowth, clearly judging our filming technique. It's a performance, naturally."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the kitten's action and uses a clear tech reference (critical path test, latency) with a funny punchline about testing foliage.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "humorous_tech",
+    "caption": "This fluffy ginger kitten is performing a critical path test of the garden's foliage pipeline, ensuring zero latency on approach."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the ginger kitten's serious expression and upright tail, and the humor is warm and non-tech as requested.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "humorous_non_tech",
+    "caption": "This ginger kitten is on a very important mission - to supervise gardening. Judging by the tail, it's a highly critical inspection."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes all visible elements in the frames and adheres strictly to a formal, objective, third-person style without any jokes or jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "formal",
+    "caption": "A woman with dark curly hair in a high bun sits at a white desk in a modern office, typing on a black keyboard and using a mouse. She focuses on a silver computer monitor while wearing a beige button-up shirt over an orange ribbed top, accented by small stud earrings and a silver necklace."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the scene with dry sarcasm, noting the tidy desk and the plant's indifference, while matching the requested sarcastic tone without overstatement or inappropriate content.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "sarcastic",
+    "caption": "A person methodically engages with a computer, bravely facing the day from a remarkably tidy white desk. The potted plant remains unimpressed."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the woman typing and humorously references her pink nails and curly hair as a server caching problem, matching the humorous tech style with a clear tech pun.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "humorous_tech",
+    "caption": "The woman's focused typing belies the frantic server struggling to cache all those pink nails and curly hair details."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the woman's focused typing and includes the plant as a visual element, matching the scene. The humorous tone and everyday humor fit the requested style perfectly.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "humorous_non_tech",
+    "caption": "That moment when you're pretending to look busy while secretly online shopping during the workday. The plant is judging."
+  }
+]
