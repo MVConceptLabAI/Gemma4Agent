@@ -276,16 +276,51 @@ async def _rewrite_humour(
     tech = style == "humorous_tech"
     prompt = (
         "You are editing ONE " + style + " video caption. Rewrite the candidate using only the "
-        "verified evidence below. It must begin with a visible setup and land a small playful payoff "
-        "tied to a visible contrast, action, or transition. "
-        + ("Use exactly ONE natural technology comparison; do not use 'too many tabs', 'glitchy cache', or 'random'. " if tech else "Use a fresh everyday comparison and never use technical vocabulary, 'mixed bag', 'scrapbook', 'watching paint dry', 'watching grass grow', 'nothing happens', or 'the only thing of interest'. ")
+        "verified evidence below. It must begin with one precise verified subject-action setup and land a "
+        "distinct, clearly figurative comic consequence tied to that setup. Never force an unrelated second "
+        "visible detail into the joke. The payoff must add a comic turn, not merely restate the comparison. "
+        + ("Use exactly ONE natural technology comparison that explains a visible fact; do not use 'too many tabs', 'glitchy cache', 'random', a jargon list, 'X feels like Y, except', or 'the only thing'. " if tech else "Use one fresh familiar everyday situation, no technology vocabulary, and never use 'mixed bag', 'scrapbook', 'watching paint dry', 'watching grass grow', 'nothing happens', 'X is like Y, except', or 'the only thing'. ")
+        + "Never claim that something is absent, still, unchanged, loading, or malfunctioning unless the evidence explicitly proves it. "
+        + "Preserve exact subject-action-object-location relationships; never relocate an action onto another visible object or surface. "
         + "Never invent identity, speech, brands, intent, backstory, audience, profession, or unseen events. "
-        "Keep it to one sentence. Return ONLY JSON: {\"caption\":\"...\"}.\n\nVERIFIED EVIDENCE:\n"
+        "Keep it to one sentence of 24-42 words. Return ONLY JSON: {\"caption\":\"...\"}.\n\nVERIFIED EVIDENCE:\n"
         + evidence + "\n\nCURRENT CANDIDATE:\n" + candidate
     )
     result = _json_object(await _ask(client, [{"type": "text", "text": prompt}], 300))
     caption = result.get("caption")
     return caption.strip() if isinstance(caption, str) and caption.strip() else candidate
+
+
+async def _polish_humour(
+    client: httpx.AsyncClient, evidence: str, captions: dict[str, str]
+) -> dict[str, str]:
+    prompt = (
+        "You are the final comedy editor for TWO grounded video captions. Return ONLY valid JSON with "
+        "exactly these string keys: humorous_tech and humorous_non_tech. Judge each candidate independently. "
+        "Keep it verbatim only if it has (1) one precise verified subject-action setup, (2) one clear comparison "
+        "appropriate to its style, and (3) a distinct, clearly figurative comic consequence tied to that setup. "
+        "Otherwise rewrite it. Never force an unrelated second visible detail into a joke. The tech caption must use "
+        "exactly one natural technology comparison. The non-tech caption must contain no technology vocabulary "
+        "and use one familiar everyday situation. Never use 'X feels/is like Y, except', 'the only thing', a "
+        "loose jargon list, or a generic description with no comic turn. Never invent literal absence, stillness, "
+        "failure, identity, intent, speech, brands, backstory, viewer circumstances, or unseen events. Preserve "
+        "exact subject-action-object-location relationships; never relocate an action onto another visible object "
+        "or surface. Facts listed separately must remain parallel facts; never say that one approaches, passes, "
+        "touches, or affects another unless the evidence explicitly states that relationship. Preserve montage order when "
+        "relevant. Each caption must be one sentence of 24-42 words.\n\nVERIFIED EVIDENCE:\n"
+        + evidence
+        + "\n\nCANDIDATES:\n"
+        + json.dumps({
+            "humorous_tech": captions["humorous_tech"],
+            "humorous_non_tech": captions["humorous_non_tech"],
+        })
+    )
+    value = _json_object(await _ask(client, [{"type": "text", "text": prompt}], 600))
+    return {
+        style: value[style].strip() if isinstance(value.get(style), str) and value[style].strip()
+        else captions[style]
+        for style in ("humorous_tech", "humorous_non_tech")
+    }
 
 
 async def _verify(client: httpx.AsyncClient, evidence: str, captions: dict[str, str], styles: list[str]) -> dict[str, str]:
@@ -296,7 +331,10 @@ async def _verify(client: httpx.AsyncClient, evidence: str, captions: dict[str, 
         "candidate VERBATIM. Otherwise change ONLY the smallest risky clause; preserve supported visual "
         "nouns, actions, sequence details, style, humour and length. Never summarize or simplify a "
         "detailed caption. Remove claims about frames, sampling, prompts, models or analysis. A tech or "
-        "everyday comparison may remain only as a figurative joke anchored to a visible fact.\n\n"
+        "everyday comparison may remain only as a figurative joke anchored to a visible fact. Preserve exact "
+        "subject-action-object-location relationships. Facts listed separately are not interacting: remove any "
+        "claim that one approaches, passes, touches, or affects another unless the evidence explicitly states it. "
+        "When uncertain, remove only the unsupported relationship and keep the joke.\n\n"
         "VERIFIED EVIDENCE:\n" + evidence + "\n\nCANDIDATE CAPTIONS:\n" + json.dumps(captions)
     )
     reviewed = _captions(
@@ -377,4 +415,8 @@ async def caption_demo(video_url: str, styles: list[str]) -> dict[str, str]:
             for style, rewrite in zip(("humorous_tech", "humorous_non_tech"), rewrites):
                 if isinstance(rewrite, str) and rewrite:
                     captions[style] = rewrite
+            try:
+                captions.update(await _polish_humour(client, grounded_record, captions))
+            except (httpx.HTTPError, ValueError, KeyError):
+                log.warning("V18 humour quality pass unavailable; keeping grounded rewrites")
             return await _verify(client, grounded_record, captions, styles)
