@@ -6,5 +6,6 @@ pydantic==2.9.2
 python-dotenv==1.0.1     # For LOCAL dev only — do NOT bundle a .env in the image
 Pillow==11.0.0
 numpy==2.1.3
+Flask==3.1.2             # secured asynchronous demo API for the GPU instance
 # faster-whisper is optional (audio). Uncomment if you ship Whisper local:
 # faster-whisper==1.1.0
