@@ -201,6 +201,8 @@ Copy `.env.example` to `.env` for local development. Do not commit real keys.
 | `OPENROUTER_JUDGE_MODEL` | `qwen/qwen3-vl-8b-instruct` | OpenRouter judge fallback. |
 | `NUM_FRAMES` | `8` | Target number of keyframes. |
 | `FRAME_MAX_EDGE` | `720` | Max frame edge before upload. |
+| `AUDIO_ANALYSIS_ENABLED` | `1` | Sends compact audio evidence to an audio-capable OpenRouter observer when a track exists. |
+| `AUDIO_ANALYSIS_MODEL` | `google/gemini-3.1-flash-lite` | Audio observer; its facts are passed to the Gemma 4 writer. |
 | `SCENE_DETECT_ENABLED` | `1` | Enable scene-change sampling before uniform fill. |
 | `MAX_CONCURRENCY` | `3` | Parallel clips. |
 | `PER_TASK_TIMEOUT_S` | `25` | Per-clip hard timeout. |

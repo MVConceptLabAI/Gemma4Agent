@@ -16,6 +16,7 @@ import base64
 import json
 import logging
 import os
+import subprocess
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -62,6 +63,12 @@ EXEMPLARS = os.environ.get("STYLE_EXEMPLARS", "0") != "0"
 # catches temporal actions and changes frames miss. The Track 2 leader feeds
 # Gemini actual video; Gemini via OpenRouter accepts data:video/mp4 input.
 VIDEO_OBSERVER = os.environ.get("VIDEO_OBSERVER", "")  # e.g. google/gemini-3.1-pro-preview
+AUDIO_ANALYSIS_ENABLED = os.environ.get("AUDIO_ANALYSIS_ENABLED", "1") != "0"
+AUDIO_ANALYSIS_MODEL = os.environ.get(
+    "AUDIO_ANALYSIS_MODEL", "google/gemini-3.1-flash-lite"
+)
+AUDIO_ANALYSIS_MAX_SECONDS = int(os.environ.get("AUDIO_ANALYSIS_MAX_SECONDS", "135"))
+AUDIO_ANALYSIS_MAX_BYTES = int(os.environ.get("AUDIO_ANALYSIS_MAX_BYTES", "1500000"))
 # Some writers (Gemini) default to terse captions; long rich ones score better
 # with the official judge (measured 0.89 long vs 0.84 concise). Optional hint.
 WRITER_LENGTH_HINT = os.environ.get("WRITER_LENGTH_HINT", "")
@@ -246,8 +253,64 @@ def _compress_for_video_observer(video: Path, workdir: Path) -> str | None:
         return None
 
 
+def _prepare_audio_for_analysis(video: Path, workdir: Path) -> str | None:
+    """Create a compact whole-clip MP3 for a model that supports audio input."""
+    if not P._has_audio_stream(video):
+        return None
+    out = workdir / "audio_evidence.mp3"
+    try:
+        subprocess.run(
+            [
+                "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+                "-i", str(video), "-vn", "-t", str(AUDIO_ANALYSIS_MAX_SECONDS),
+                "-ac", "1", "-ar", "16000", "-c:a", "libmp3lame", "-b:a", "32k",
+                str(out),
+            ],
+            check=True, timeout=90,
+        )
+        raw = out.read_bytes()
+        if not raw or len(raw) > AUDIO_ANALYSIS_MAX_BYTES:
+            return None
+        return base64.b64encode(raw).decode("ascii")
+    except Exception as exc:  # noqa: BLE001
+        log.warning("audio preparation failed: %s", exc)
+        return None
+
+
+async def _audio_evidence(video: Path, workdir: Path) -> str:
+    """Return cautious audio facts; Gemma uses them only as supporting evidence."""
+    if not AUDIO_ANALYSIS_ENABLED or not OR_KEY:
+        return ""
+    audio_b64 = await asyncio.to_thread(_prepare_audio_for_analysis, video, workdir)
+    if not audio_b64:
+        return ""
+    content = [
+        {
+            "type": "text",
+            "text": (
+                "Listen to this video's audio. Return 3-8 short factual bullets only: "
+                "clearly audible speech topic (paraphrase, never quote uncertain words), "
+                "music, notable sound effects, or silence. Do not infer speaker identity, "
+                "location, intent, or any visual detail."
+            ),
+        },
+        {"type": "input_audio", "input_audio": {"data": audio_b64, "format": "mp3"}},
+    ]
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
+            return (await _call(
+                client, AUDIO_ANALYSIS_MODEL,
+                "You are a precise audio analyst. Return only concise factual bullets.",
+                content, 450, temperature=0.0,
+            )).strip()
+    except Exception as exc:  # noqa: BLE001
+        log.warning("audio analysis failed: %s", exc)
+        return ""
+
+
 async def caption_ensemble_frames(
-    frames: list[Path], styles: list[str], video_b64: str | None = None
+    frames: list[Path], styles: list[str], video_b64: str | None = None,
+    audio_evidence: str = "",
 ) -> dict[str, str]:
     """Run the observe->cross-reference->write ensemble on already-extracted frames."""
     content = _frames_content(frames)
@@ -279,6 +342,11 @@ async def caption_ensemble_frames(
             f"### {m.split('/')[-1]} ({len(d)} details):\n" + "\n".join(f"- {x}" for x in d)
             for m, d in obs if d
         ]
+        if audio_evidence:
+            blocks.append(
+                "### Audio evidence (use only when clearly relevant; never turn it into "
+                "an unseen visual claim):\n" + audio_evidence
+            )
         if not blocks:
             raise RuntimeError("all ensemble observers failed")
         write_content = (
@@ -355,7 +423,8 @@ async def caption_ensemble(video_url: str, styles: list[str]) -> dict[str, str]:
         video_b64 = None
         if VIDEO_OBSERVER:
             video_b64 = await asyncio.to_thread(_compress_for_video_observer, vp, wd)
-        return await caption_ensemble_frames(frames, styles, video_b64)
+        audio_evidence = await _audio_evidence(vp, wd)
+        return await caption_ensemble_frames(frames, styles, video_b64, audio_evidence)
 
 
 async def caption_ensemble_file(video_path: Path, styles: list[str]) -> dict[str, str]:
@@ -368,4 +437,5 @@ async def caption_ensemble_file(video_path: Path, styles: list[str]) -> dict[str
         video_b64 = None
         if VIDEO_OBSERVER:
             video_b64 = await asyncio.to_thread(_compress_for_video_observer, video_path, wd)
-        return await caption_ensemble_frames(frames, styles, video_b64)
+        audio_evidence = await _audio_evidence(video_path, wd)
+        return await caption_ensemble_frames(frames, styles, video_b64, audio_evidence)
