@@ -23,7 +23,7 @@
           <label>Vision model<input id="model" type="text" value="google/gemma-4-31b-it" autocomplete="off"></label>
         </div>
         <label class="check"><input id="rememberKey" type="checkbox"> Remember this API key on this device</label>
-        <p class="privacy">The selected video never uploads to this site. The browser extracts twelve compressed frames locally and sends only those frames directly to OpenRouter. Settings and caption history are stored in this browser’s localStorage. Your OpenRouter key can be removed at any time.</p>
+        <p class="privacy">The selected video never uploads to this site. The browser extracts twenty-four 640×360-or-smaller frames locally and sends them one at a time directly to OpenRouter. Settings and caption history are stored in this browser’s localStorage. Your OpenRouter key can be removed at any time.</p>
         <div class="actions"><button id="forget" class="secondary" type="button">Forget local settings</button><button id="clearHistory" class="secondary" type="button">Clear caption history</button></div>
       </details>
     </section>
@@ -33,7 +33,7 @@
       <label>MP4, WebM or MOV<input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"></label>
       <video id="preview" class="preview" controls muted playsinline></video>
       <div id="videoMeta" class="video-meta"></div>
-      <div id="frames" class="facts" aria-label="Twelve sampled video frames"></div>
+      <div id="frames" class="facts" aria-label="Twenty-four sampled video frames"></div>
       <button id="caption" type="button">2. Create four captions with Gemma 4</button>
       <div id="status" class="status" aria-live="polite"></div>
       <div id="results" class="result-grid" aria-live="polite"></div>
@@ -51,11 +51,13 @@
     const SETTINGS_KEY = 'gemma4-scene-gate-demo-settings-v2';
     const HISTORY_KEY = 'gemma4-scene-gate-demo-history-v2';
     const REQUIRED_STYLES = ['formal', 'sarcastic', 'humorous_tech', 'humorous_non_tech'];
-    // The browser cannot change an OpenRouter key's server-side ceiling, so the
-    // visual request is deliberately kept below this conservative input target.
-    const MAX_PROMPT_TOKEN_TARGET = 3600;
-    const FRAME_EDGE_STEPS = [192, 160, 128];
-    const FACTS_PER_BATCH = 6;
+    // The browser cannot change an OpenRouter key's server-side ceiling. Each
+    // vision request contains only one bounded frame to stay under this budget.
+    const MAX_PROMPT_TOKEN_TARGET = 3000;
+    const FRAME_COUNT = 24;
+    const FRAME_BOX_STEPS = [{ width: 640, height: 360 }, { width: 512, height: 288 }, { width: 384, height: 216 }];
+    const FACTS_PER_FRAME = 2;
+    const FACT_MAX_CHARS = 96;
     const $ = id => document.getElementById(id);
     const apiKey = $('apiKey'), model = $('model'), rememberKey = $('rememberKey');
     const videoFile = $('videoFile'), preview = $('preview'), frames = $('frames');
@@ -94,22 +96,21 @@
       video.currentTime = Math.max(0, Math.min(seconds, Math.max(0, video.duration - 0.01)));
       await done;
     }
-    function frameData(video, maxEdge) {
-      // Keep the direct browser request below common OpenRouter per-key token
-      // ceilings while preserving a spread across the full clip.
-      const scale = Math.min(1, maxEdge / Math.max(video.videoWidth, video.videoHeight));
+    function frameData(video, box) {
+      // Preserve the aspect ratio while bounding every frame to a 16:9 box.
+      const scale = Math.min(1, box.width / video.videoWidth, box.height / video.videoHeight);
       const canvas = document.createElement('canvas');
       canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
       canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
       canvas.getContext('2d', { alpha: false }).drawImage(video, 0, 0, canvas.width, canvas.height);
       return canvas.toDataURL('image/jpeg', 0.78);
     }
-    async function sampleFrames(video, maxEdge) {
-      const count = 12, samples = [];
+    async function sampleFrames(video, box) {
+      const count = FRAME_COUNT, samples = [];
       frames.replaceChildren();
       for (let index = 1; index <= count; index += 1) {
         await seek(video, video.duration * index / (count + 1));
-        const data = frameData(video, maxEdge);
+        const data = frameData(video, box);
         samples.push(data);
         const image = new Image();
         image.src = data;
@@ -189,44 +190,44 @@
       const start = text.indexOf('['), end = text.lastIndexOf(']');
       if (start >= 0 && end > start) {
         const list = JSON.parse(text.slice(start, end + 1));
-        if (Array.isArray(list)) return list.map(item => String(item).trim().slice(0, 180)).filter(Boolean).slice(0, FACTS_PER_BATCH);
+        if (Array.isArray(list)) return list.map(item => String(item).trim().slice(0, FACT_MAX_CHARS)).filter(Boolean).slice(0, FACTS_PER_FRAME);
       }
-      return text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '').trim().slice(0, 180)).filter(Boolean).slice(0, FACTS_PER_BATCH);
+      return text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '').trim().slice(0, FACT_MAX_CHARS)).filter(Boolean).slice(0, FACTS_PER_FRAME);
     }
-    async function observeBatch(sampled, label) {
-      setStatus(`Analysing ${label} three frames with ${model.value.trim()}…`);
-      const prompt = `You are a precise visual analyst. These THREE images are sequential frames from ONE video. Return ONLY a JSON array of at most SIX short facts clearly visible in this batch: subjects, actions, objects, setting, motion and lighting. Do not infer identity, intent, speech, brands, unreadable text, exact counts, or off-screen events.`;
-      const content = [{ type: 'text', text: prompt }, ...sampled.map(url => ({ type: 'image_url', image_url: { url } }))];
-      return cleanFactList(await askGemma(content, 300));
+    async function observeFrame(sample, index) {
+      setStatus(`Analysing frame ${index} of ${FRAME_COUNT} with ${model.value.trim()}…`);
+      const prompt = `You are a precise visual analyst. This is ONE frame from a video. Return ONLY a JSON array of at most TWO very short, clearly visible facts: subjects, actions, objects, setting, motion or lighting. Do not infer identity, intent, speech, brands, unreadable text, exact counts, chronology, or off-screen events.`;
+      const content = [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: sample } }];
+      return cleanFactList(await askGemma(content, 180));
     }
-    function evidenceFrom(batchFacts) {
-      return batchFacts.map((facts, index) => `FRAMES ${index * 3 + 1}-${index * 3 + 3}:\n- ${facts.slice(0, FACTS_PER_BATCH).map(fact => String(fact).slice(0, 180)).join('\n- ')}`).join('\n\n');
+    function evidenceFrom(frameFacts) {
+      return frameFacts.map((facts, index) => `FRAME ${index + 1} OF ${FRAME_COUNT}:\n- ${facts.slice(0, FACTS_PER_FRAME).map(fact => String(fact).slice(0, FACT_MAX_CHARS)).join('\n- ')}`).join('\n\n');
     }
     function isPromptLimitError(error) {
       return Boolean(error?.isPromptLimit) || /prompt tokens limit exceeded/i.test(String(error?.message || ''));
     }
-    async function observeAllBatches(video) {
+    async function observeAllFrames(video) {
       let lastError;
-      for (const [attempt, maxEdge] of FRAME_EDGE_STEPS.entries()) {
-        setStatus(`Sampling all twelve frames locally at ${maxEdge}px for the ${MAX_PROMPT_TOKEN_TARGET}-token budgetâ€¦`);
-        const sampled = await sampleFrames(video, maxEdge);
-        const batches = [sampled.slice(0, 3), sampled.slice(3, 6), sampled.slice(6, 9), sampled.slice(9, 12)];
+      for (const [attempt, box] of FRAME_BOX_STEPS.entries()) {
+        setStatus(`Sampling ${FRAME_COUNT} local frames at up to ${box.width}×${box.height}; one frame per request under the ${MAX_PROMPT_TOKEN_TARGET}-token budget…`);
+        const sampled = await sampleFrames(video, box);
         const observations = [];
         try {
-          for (const [index, batch] of batches.entries()) observations.push(await observeBatch(batch, `batch ${index + 1} of 4`));
-          return { observations, maxEdge };
+          for (const [index, frame] of sampled.entries()) observations.push(await observeFrame(frame, index + 1));
+          return { observations, box };
         } catch (error) {
           lastError = error;
-          if (!isPromptLimitError(error) || attempt === FRAME_EDGE_STEPS.length - 1) throw error;
-          setStatus(`This key reached its prompt limit; retrying all twelve frames at ${FRAME_EDGE_STEPS[attempt + 1]}pxâ€¦`, 'warning');
+          if (!isPromptLimitError(error) || attempt === FRAME_BOX_STEPS.length - 1) throw error;
+          const nextBox = FRAME_BOX_STEPS[attempt + 1];
+          setStatus(`This key reached its prompt limit; retrying all ${FRAME_COUNT} frames at ${nextBox.width}×${nextBox.height}…`, 'warning');
         }
       }
       throw lastError;
     }
     async function writeCaptions(evidence) {
-      setStatus('Reconciling all twelve frames into four captions…');
-      const prompt = `You are a careful video-captioning writer. Four visual analyses describe consecutive parts of ONE video. Cross-check them. The clip may be a montage: when scenes differ, describe their sequence instead of pretending they happen in one physical scene. Keep only facts supported by the records; omit conflicts and do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. formal is objective and factual. sarcastic is dry and lightly mocking with no technology jargon. humorous_tech uses one natural technology analogy tied to visible facts. humorous_non_tech uses warm everyday humour with no technology jargon.\n\n${evidence}`;
-      return validateCaptions(cleanJson(await askGemma([{ type: 'text', text: prompt }], 1200)));
+      setStatus(`Reconciling ${FRAME_COUNT} grounded observations into four captions…`);
+      const prompt = `You are a careful video-captioning writer. ${FRAME_COUNT} single-frame observations describe consecutive parts of ONE video. Cross-check them. The clip may be a montage: when scenes differ, describe their sequence instead of pretending they happen in one physical scene. Keep only facts supported by the records; omit conflicts and do not invent identity, intent, speech, brands, unreadable text, exact counts, or off-screen events. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. formal is objective and factual. sarcastic is dry and lightly mocking with no technology jargon. humorous_tech uses one natural technology analogy tied to visible facts. humorous_non_tech uses warm everyday humour with no technology jargon.\n\n${evidence}`;
+      return validateCaptions(cleanJson(await askGemma([{ type: 'text', text: prompt }], 900)));
     }
     async function rewriteHumorousTech(evidence, candidate) {
       setStatus('Giving the humorous-tech caption a real punchline…');
@@ -241,13 +242,13 @@
       if (!file) throw new Error('Choose a video first.');
       if (!apiKey.value.trim()) throw new Error('Enter an OpenRouter key in Local inference settings.');
       if (!model.value.trim()) throw new Error('Enter a vision-capable model slug.');
-      const { observations, maxEdge } = await observeAllBatches(preview);
+      const { observations, box } = await observeAllFrames(preview);
       const evidence = evidenceFrom(observations);
       currentCaptions = await writeCaptions(evidence);
       try { currentCaptions.humorous_tech = await rewriteHumorousTech(evidence, currentCaptions.humorous_tech); }
       catch (error) { setStatus('Tech caption rewrite was unavailable; keeping the grounded first draft.', 'warning'); }
       renderCaptions(currentCaptions); saveHistory(file, currentCaptions);
-      setStatus(`Done — all twelve frames were used at ${maxEdge}px and the original video stayed in this browser.`);
+      setStatus(`Done — all ${FRAME_COUNT} frames were used at up to ${box.width}×${box.height}, and the original video stayed in this browser.`);
     }
 
     restoreSettings(); renderHistory();
