@@ -301,7 +301,11 @@ async def _write(client: httpx.AsyncClient, evidence: str, styles: list[str]) ->
         "'glitchy cache', or 'random' subject. humorous_non_tech is one warm everyday joke with a "
         "concrete playful payoff; never invent a school, event, profession, intent, or unseen setting, "
         "and never use 'mixed bag', 'scrapbook', 'watching paint dry', 'watching grass grow', "
-        "'nothing happens', or 'the only thing of interest'.\n\n"
+        "'nothing happens', or 'the only thing of interest'. Every creative caption must be one compact, "
+        "punchy sentence of 18-32 words: lead with a concrete visible subject and action, then land one "
+        "fresh turn. Do not open with generic words such as scene, sequence, or moment. Never use a "
+        "viewer point of view (I, we, you) or invent a duration, waiting time, commute, or off-screen "
+        "consequence.\n\n"
         + evidence
     )
     return _captions(await _ask_json_object(client, [{"type": "text", "text": prompt}], 800), styles)
@@ -321,7 +325,8 @@ async def _rewrite_humour(
         + "Never claim that something is absent, still, unchanged, loading, or malfunctioning unless the evidence explicitly proves it. "
         + "Preserve exact subject-action-object-location relationships; never relocate an action onto another visible object or surface. "
         + "Never invent identity, speech, brands, intent, backstory, audience, profession, or unseen events. "
-        "Keep it to one sentence of 24-42 words. Return ONLY JSON: {\"caption\":\"...\"}.\n\nVERIFIED EVIDENCE:\n"
+        "Never use a viewer point of view (I, we, you) or invent a duration, waiting time, commute, or "
+        "off-screen consequence. Keep it to one compact sentence of 18-32 words. Return ONLY JSON: {\"caption\":\"...\"}.\n\nVERIFIED EVIDENCE:\n"
         + evidence + "\n\nCURRENT CANDIDATE:\n" + candidate
     )
     result = await _ask_json_object(client, [{"type": "text", "text": prompt}], 300)
@@ -347,7 +352,8 @@ async def _rewrite_sarcastic(
         "sampling, prompts, models, analysis, "
         "or processing. Do not invent absence, stillness, failure, identity, intent, speech, brands, an "
         "audience, backstory, or unseen events. Preserve exact sequence and subject-action-object-location "
-        "relationships. Use one sentence of 22-38 words. Return ONLY JSON: {\"caption\":\"...\"}."
+        "relationships. Never use a viewer point of view (I, we, you) or invent a duration, waiting time, "
+        "commute, or off-screen consequence. Use one compact sentence of 18-32 words. Return ONLY JSON: {\"caption\":\"...\"}."
         "\n\nVERIFIED EVIDENCE:\n" + evidence + "\n\nCURRENT CANDIDATE:\n" + candidate
     )
     result = await _ask_json_object(client, [{"type": "text", "text": prompt}], 320)
@@ -378,7 +384,9 @@ async def _polish_humour(
         "relevant. Avoid recycled comedy templates: tech must not use 'high-end GPU', 'high-end processor', "
         "'fiber-optic cable/connection', 'speed of a modern', 'crashed tablet', 'human statues', or "
         "'overclocking'; non-tech must not use 'toddler', 'last slice of pizza', 'with such intensity', "
-        "'frantic energy of', or 'energy of someone trying'. Each caption must be one sentence of 24-42 words.\n\nVERIFIED EVIDENCE:\n"
+        "'frantic energy of', or 'energy of someone trying'. Never use a viewer point of view (I, we, you) "
+        "or invent a duration, waiting time, commute, or off-screen consequence. Each caption must be one compact "
+        "sentence of 18-32 words.\n\nVERIFIED EVIDENCE:\n"
         + evidence
         + "\n\nCANDIDATES:\n"
         + json.dumps({
@@ -495,6 +503,20 @@ def _has_generic_humour(style: str, value: str) -> bool:
     ))
 
 
+def _has_unsupported_viewer_or_duration(style: str, value: str) -> bool:
+    """Reject comedy that turns an observed clip into an invented viewer story."""
+    if style not in {"sarcastic", "humorous_tech", "humorous_non_tech"}:
+        return False
+    if re.search(r"\b(?:i|me|my|mine|we|us|our|ours|you|your|yours)\b", value, re.IGNORECASE):
+        return True
+    return bool(re.search(
+        r"\b(?:one|two|three|four|five|ten|fifteen|twenty|\d+)\s+"
+        r"(?:seconds?|minutes?|hours?|days?)\b",
+        value,
+        re.IGNORECASE,
+    ))
+
+
 def _has_speed_inversion(style: str, evidence: str, value: str) -> bool:
     if style != "humorous_tech":
         return False
@@ -524,6 +546,7 @@ def _has_caption_quality_risk(evidence: str, value: str, style: str = "") -> boo
         _has_lexical_corruption(value, evidence)
         or _has_unsupported_absolute(evidence, value)
         or _has_generic_humour(style, value)
+        or _has_unsupported_viewer_or_duration(style, value)
         or _has_speed_inversion(style, evidence, value)
         or _has_stale_comedy_template(style, value)
         or _has_process_leak(value)
@@ -626,7 +649,8 @@ async def _repair_caption_quality(
         "verified evidence does not explicitly support them. If the evidence contains motion, the repaired joke "
         "must use the visible motion or pace rather than a freeze or stillness metaphor. Replace generic non-tech "
         "fallbacks with a joke that names a verified subject and action. A fast visible action must not be compared "
-        "to dial-up, loading, buffering, latency, lag, or a slow process. Do not add, remove, or "
+        "to dial-up, loading, buffering, latency, lag, or a slow process. Do not use I, we, you, an invented "
+        "duration, waiting time, commute, or off-screen consequence. Do not add, remove, or "
         "reuse these stale templates: masterclass, truly monumental, truly majestic, groundbreaking, a display of immense, "
         "a sweeping epic of, high-end GPU, high-end processor, fiber-optic cable, speed of a modern, crashed tablet, "
         "human statues, overclocking, toddler, last slice of pizza, with such intensity, frantic energy of, or energy of someone trying. "
@@ -649,7 +673,8 @@ async def _repair_caption_quality(
             "repaired joke in that motion or its pace. For humorous_non_tech, explicitly name the verified subject "
             "and action instead of a generic sequence or family-album template. For humorous_tech, preserve the "
             "direction of visible speed and never compare fast action to dial-up, loading, buffering, latency, lag, "
-            "or another slow process. Avoid masterclass, truly monumental, truly majestic, groundbreaking, high-end GPU, "
+            "or another slow process. Do not use I, we, you, an invented duration, waiting time, commute, or off-screen "
+            "consequence. Avoid masterclass, truly monumental, truly majestic, groundbreaking, high-end GPU, "
             "high-end processor, fiber-optic cable, speed of a modern, crashed tablet, human statues, overclocking, toddler, "
             "last slice of pizza, with such intensity, frantic energy of, and energy of someone trying. Do not add facts. "
             "Return ONLY JSON: {\"caption\":\"...\"}."

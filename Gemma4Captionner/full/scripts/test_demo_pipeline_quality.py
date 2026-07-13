@@ -10,6 +10,7 @@ from app.demo_pipeline import (
     _has_process_leak,
     _has_speed_inversion,
     _has_stale_comedy_template,
+    _has_unsupported_viewer_or_duration,
     _safe_caption,
     _video_facts,
 )
@@ -66,6 +67,18 @@ def main() -> None:
         "Vehicles enter the tunnel like a family squeezing every suitcase into one car.",
     )
     assert "Vehicles travel along a multi-lane road" in _safe_caption("humorous_non_tech", traffic_evidence)
+    assert _has_unsupported_viewer_or_duration(
+        "humorous_non_tech",
+        "I spent twenty minutes in traffic to see yellow pillars and a tunnel.",
+    )
+    assert _has_unsupported_viewer_or_duration(
+        "sarcastic",
+        "We are treated to cars entering the tunnel with remarkable confidence.",
+    )
+    assert not _has_unsupported_viewer_or_duration(
+        "humorous_non_tech",
+        "Cars enter the tunnel like a family squeezing every suitcase into one car.",
+    )
 
     running_evidence = "- People run quickly along a paved race route toward the camera."
     assert _has_speed_inversion(
