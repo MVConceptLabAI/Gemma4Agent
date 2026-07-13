@@ -26,6 +26,11 @@ FAST_TIMEOUT_S = float(os.environ.get("HYBRID_FAST_TIMEOUT_S", "185"))
 RECOVERY_TIMEOUT_S = float(os.environ.get("HYBRID_RECOVERY_TIMEOUT_S", "220"))
 BATCH_RECOVERY_TIMEOUT_S = float(os.environ.get("HYBRID_BATCH_RECOVERY_TIMEOUT_S", "200"))
 BATCH_RECOVERY_MAX = int(os.environ.get("HYBRID_BATCH_RECOVERY_MAX", "2"))
+# A V18 recovery fans out into many model calls.  It is a safety net, not a
+# second default pipeline: more than one recovery per batch can starve the
+# remaining videos and force static captions at the end of the run.
+RECOVERY_MAX_PER_RUN = int(os.environ.get("HYBRID_RECOVERY_MAX_PER_RUN", "1"))
+_recovery_claims = 0
 
 log = logging.getLogger("track2.gemma_hybrid")
 
@@ -46,6 +51,29 @@ _CONTENT_STOPWORDS = {
     "that", "their", "there", "these", "they", "this", "through", "under", "very",
     "while", "with", "would", "video", "scene", "shows", "showing",
 }
+
+
+def _claim_recovery_slot() -> bool:
+    """Reserve the batch's scarce V18 path without awaiting between check/set."""
+    global _recovery_claims
+    if _recovery_claims >= max(0, RECOVERY_MAX_PER_RUN):
+        return False
+    _recovery_claims += 1
+    return True
+
+
+def _reset_recovery_slots() -> None:
+    """Test hook; a contest invocation uses one fresh Python process."""
+    global _recovery_claims
+    _recovery_claims = 0
+
+
+def _requires_deep_recovery(reasons: list[str]) -> bool:
+    """Reserve expensive visual re-analysis for broken, not merely imperfect, output."""
+    return any(
+        reason.endswith(("missing-or-too-short", "generic-fallback", "pipeline-leak", "lexical-corruption"))
+        for reason in reasons
+    )
 
 
 def _weak_formal_grounding(formal: str, style: str, value: str) -> bool:
@@ -149,6 +177,9 @@ async def caption_gemma_hybrid(video_url: str, styles: list[str]) -> dict[str, s
     except Exception as exc:  # noqa: BLE001
         # Keep this broad by design: provider HTTP errors, malformed model JSON,
         # download/FFmpeg failures and timeouts all need the same grounded route.
+        if not _claim_recovery_slot():
+            log.warning("V20 fast path failed but the batch recovery quota is spent (%s)", type(exc).__name__)
+            return normalize_captions(_fallbacks(""), styles)
         return normalize_captions(
             await _recover(video_url, styles, RECOVERY_TIMEOUT_S, type(exc).__name__),
             styles,
@@ -158,6 +189,15 @@ async def caption_gemma_hybrid(video_url: str, styles: list[str]) -> dict[str, s
     if not risks:
         log.info("V20 accepted the Gemma Fast result")
         return fast
+    # Most risks are a style or calibration issue in an otherwise usable
+    # single-call result.  Repair them against its visible formal anchors
+    # locally instead of turning every quality signal into a 24-frame V18 run.
+    if not _requires_deep_recovery(risks):
+        log.info("V20 repaired fast style risks locally: %s", ", ".join(risks))
+        return _repair_fast_after_failed_recovery(fast, styles, risks)
+    if not _claim_recovery_slot():
+        log.warning("V20 deep recovery quota spent; repairing fast result locally: %s", ", ".join(risks))
+        return _repair_fast_after_failed_recovery(fast, styles, risks)
     try:
         return normalize_captions(
             await _recover(video_url, styles, RECOVERY_TIMEOUT_S, ", ".join(risks)),

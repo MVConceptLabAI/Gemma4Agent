@@ -20,6 +20,7 @@ async def test_fast_acceptance_and_recovery() -> None:
     original_fast = hybrid.caption_gemma_fast
     original_demo = hybrid.caption_demo
     original_timeout = hybrid.FAST_TIMEOUT_S
+    original_recovery_limit = hybrid.RECOVERY_MAX_PER_RUN
     calls = {"fast": 0, "demo": 0}
 
     async def good_fast(video_url: str, styles: list[str]) -> dict[str, str]:
@@ -31,6 +32,8 @@ async def test_fast_acceptance_and_recovery() -> None:
         return captions("A black dog crosses a field")
 
     try:
+        hybrid._reset_recovery_slots()
+        hybrid.RECOVERY_MAX_PER_RUN = 3
         hybrid.caption_gemma_fast = good_fast
         hybrid.caption_demo = good_demo
         result = await hybrid.caption_gemma_hybrid("https://example.test/video.mp4", list(hybrid.REQUIRED_STYLES))
@@ -61,7 +64,9 @@ async def test_fast_acceptance_and_recovery() -> None:
         result = await hybrid.caption_gemma_hybrid("https://example.test/video.mp4", list(hybrid.REQUIRED_STYLES))
         assert "spending a fortune" not in result["sarcastic"]
         assert "black car drives along a multi-lane city road" in result["sarcastic"].lower()
-        assert calls["demo"] == 2
+        # A value claim is repaired locally; it must not fan out into a V18
+        # re-analysis when the fast formal already grounds the scene.
+        assert calls["demo"] == 1
         hybrid.caption_demo = good_demo
 
         async def slow_fast(video_url: str, styles: list[str]) -> dict[str, str]:
@@ -72,11 +77,73 @@ async def test_fast_acceptance_and_recovery() -> None:
         hybrid.FAST_TIMEOUT_S = 0.01
         result = await hybrid.caption_gemma_hybrid("https://example.test/video.mp4", list(hybrid.REQUIRED_STYLES))
         assert result["formal"].startswith("A black dog")
-        assert calls["demo"] == 3
+        assert calls["demo"] == 2
     finally:
         hybrid.caption_gemma_fast = original_fast
         hybrid.caption_demo = original_demo
         hybrid.FAST_TIMEOUT_S = original_timeout
+        hybrid.RECOVERY_MAX_PER_RUN = original_recovery_limit
+        hybrid._reset_recovery_slots()
+
+
+async def test_style_risks_do_not_spend_deep_recovery() -> None:
+    original_fast = hybrid.caption_gemma_fast
+    original_demo = hybrid.caption_demo
+    original_recovery_limit = hybrid.RECOVERY_MAX_PER_RUN
+    calls = {"demo": 0}
+
+    async def risky_fast(video_url: str, styles: list[str]) -> dict[str, str]:
+        value = captions("Cars drive along a multi-lane city road")
+        value["sarcastic"] = "The cars provide a masterclass in the excitement of commuting."
+        return value
+
+    async def should_not_run_demo(video_url: str, styles: list[str]) -> dict[str, str]:
+        calls["demo"] += 1
+        return captions("A replacement should not be needed")
+
+    try:
+        hybrid._reset_recovery_slots()
+        hybrid.RECOVERY_MAX_PER_RUN = 1
+        hybrid.caption_gemma_fast = risky_fast
+        hybrid.caption_demo = should_not_run_demo
+        result = await hybrid.caption_gemma_hybrid("https://example.test/video.mp4", list(hybrid.REQUIRED_STYLES))
+        assert calls == {"demo": 0}
+        assert "cars drive along a multi-lane city road" in result["sarcastic"].lower()
+    finally:
+        hybrid.caption_gemma_fast = original_fast
+        hybrid.caption_demo = original_demo
+        hybrid.RECOVERY_MAX_PER_RUN = original_recovery_limit
+        hybrid._reset_recovery_slots()
+
+
+async def test_only_one_deep_recovery_is_allowed_per_run() -> None:
+    original_fast = hybrid.caption_gemma_fast
+    original_demo = hybrid.caption_demo
+    original_recovery_limit = hybrid.RECOVERY_MAX_PER_RUN
+    calls = {"demo": 0}
+
+    async def broken_fast(video_url: str, styles: list[str]) -> dict[str, str]:
+        return {style: "" for style in styles}
+
+    async def recovered(video_url: str, styles: list[str]) -> dict[str, str]:
+        calls["demo"] += 1
+        return captions("A dog runs across a field")
+
+    try:
+        hybrid._reset_recovery_slots()
+        hybrid.RECOVERY_MAX_PER_RUN = 1
+        hybrid.caption_gemma_fast = broken_fast
+        hybrid.caption_demo = recovered
+        first = await hybrid.caption_gemma_hybrid("https://example.test/one.mp4", list(hybrid.REQUIRED_STYLES))
+        second = await hybrid.caption_gemma_hybrid("https://example.test/two.mp4", list(hybrid.REQUIRED_STYLES))
+        assert calls == {"demo": 1}
+        assert first["formal"].startswith("A dog runs")
+        assert second["formal"]
+    finally:
+        hybrid.caption_gemma_fast = original_fast
+        hybrid.caption_demo = original_demo
+        hybrid.RECOVERY_MAX_PER_RUN = original_recovery_limit
+        hybrid._reset_recovery_slots()
 
 
 async def test_recovery_keeps_evidence_first_creative_copy() -> None:
@@ -170,6 +237,8 @@ def test_quality_signals() -> None:
 def main() -> None:
     test_quality_signals()
     asyncio.run(test_fast_acceptance_and_recovery())
+    asyncio.run(test_style_risks_do_not_spend_deep_recovery())
+    asyncio.run(test_only_one_deep_recovery_is_allowed_per_run())
     asyncio.run(test_recovery_keeps_evidence_first_creative_copy())
     asyncio.run(test_batch_repetition_recovery())
     print("Gemma Hybrid V20 regressions: ok")

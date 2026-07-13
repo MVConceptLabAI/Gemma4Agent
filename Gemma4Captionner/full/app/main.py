@@ -49,6 +49,9 @@ MAX_CONCURRENCY = int(os.environ.get("MAX_CONCURRENCY", "3"))
 # and the submission was marked unscored). Tasks that would start or run past
 # this budget emit styled fallbacks instead.
 GLOBAL_BUDGET_S = float(os.environ.get("GLOBAL_BUDGET_S", "540"))
+# Keep time to serialize and validate every result rather than spending the
+# contest's last seconds on a single late clip.
+GLOBAL_BUDGET_RESERVE_S = float(os.environ.get("GLOBAL_BUDGET_RESERVE_S", "30"))
 # A bounded second path is far better than a generic caption when one ensemble
 # request stalls, provided the run still has enough time for later clips.
 ENSEMBLE_TIMEOUT_RECOVERY_S = float(
@@ -73,7 +76,9 @@ def _empty_caption_set(styles: list[str]) -> dict[str, str]:
     return {s: fallback_caption(s) for s in styles}
 
 
-async def _run_one(sem: asyncio.Semaphore, task: dict[str, Any]) -> dict[str, Any]:
+async def _run_one(
+    sem: asyncio.Semaphore, task: dict[str, Any], wave_timeout_s: float
+) -> dict[str, Any]:
     task_id = task.get("task_id", "?")
     styles = task.get("styles") or list(REQUIRED_STYLES)
     video_url = task.get("video_url", "")
@@ -82,7 +87,7 @@ async def _run_one(sem: asyncio.Semaphore, task: dict[str, Any]) -> dict[str, An
         t0 = time.perf_counter()
         # Never run past the global budget: shrink this task's timeout to what
         # is left, and skip straight to fallbacks when the budget is spent.
-        task_timeout = min(PER_TASK_TIMEOUT_S, _remaining_budget())
+        task_timeout = min(PER_TASK_TIMEOUT_S, wave_timeout_s, _remaining_budget() - GLOBAL_BUDGET_RESERVE_S)
         if task_timeout < 10:
             log.warning("[%s] global budget spent - emitting fallback captions", task_id)
             return {"task_id": task_id, "captions": normalize_captions(_empty_caption_set(styles), styles)}
@@ -202,7 +207,11 @@ async def _amain() -> int:
     log.info("Loaded %d task(s) from %s", len(tasks_in), INPUT_PATH)
 
     sem = asyncio.Semaphore(MAX_CONCURRENCY)
-    results = await asyncio.gather(*(_run_one(sem, t) for t in tasks_in))
+    # Allocate the wall-clock budget by concurrency wave. This prevents three
+    # early long clips from consuming the entire 10-minute contest allowance.
+    waves = max(1, (len(tasks_in) + max(1, MAX_CONCURRENCY) - 1) // max(1, MAX_CONCURRENCY))
+    wave_timeout_s = max(10.0, (GLOBAL_BUDGET_S - GLOBAL_BUDGET_RESERVE_S) / waves)
+    results = await asyncio.gather(*(_run_one(sem, t, wave_timeout_s) for t in tasks_in))
 
     if CAPTION_ENGINE == "gemma_hybrid":
         from app.gemma_hybrid import recover_batch_repetitions
