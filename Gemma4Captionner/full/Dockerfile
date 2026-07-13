@@ -30,19 +30,19 @@ COPY app/ ./app/
 
 # The harness mounts /input and /output at runtime and injects NO env vars,
 # so the submission profile is pinned here. Non-secret config is plain ENV.
-# V20.4: one bounded eight-frame request per video, leaving margin under the
+# V20.5: one bounded six-frame request per video, leaving margin under the
 # 30-second general response-time rule. Local repairs keep accepted visual
 # anchors; expensive recovery is disabled in this submission profile.
 ENV PYTHONPATH=/app \
     CAPTION_ENGINE=gemma_hybrid \
-    GEMMA_FAST_MODEL=google/gemma-4-31b-it \
-    GEMMA_FAST_MAX_TOKENS=500 \
-    DEMO_GEMMA_MODEL=google/gemma-4-31b-it \
+    GEMMA_FAST_MODEL=google/gemma-4-26b-a4b-it \
+    GEMMA_FAST_MAX_TOKENS=350 \
+    DEMO_GEMMA_MODEL=google/gemma-4-26b-a4b-it \
     DEMO_VIDEO_MODEL=google/gemma-4-26b-a4b-it \
     DEMO_OBSERVATION_CONCURRENCY=9 \
     VIDEO_CONTEXT_MAX_SECONDS=60 \
     VIDEO_CONTEXT_MAX_BYTES=12000000 \
-    HYBRID_FAST_TIMEOUT_S=24 \
+    HYBRID_FAST_TIMEOUT_S=26 \
     HYBRID_RECOVERY_TIMEOUT_S=0 \
     HYBRID_RECOVERY_MAX_PER_RUN=0 \
     HYBRID_BATCH_RECOVERY_TIMEOUT_S=0 \
@@ -51,7 +51,7 @@ ENV PYTHONPATH=/app \
     TIMESTAMP_FRAMES=0 \
     TRUST_GENERATED_HUMOROUS_TECH=1 \
     MAX_CAPTION_CHARS=500 \
-    NUM_FRAMES=8 \
+    NUM_FRAMES=6 \
     FRAME_MAX_EDGE=640 \
     MAX_CONCURRENCY=1 \
     PER_TASK_TIMEOUT_S=28 \

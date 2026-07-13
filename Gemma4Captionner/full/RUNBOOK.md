@@ -18,15 +18,15 @@ no exact duplicates, and total runtime below 540 seconds.
 ## Publish
 
 ```bash
-git tag gemma4-submission-v20.4
-git push origin gemma4-submission-v20.4
+git tag gemma4-submission-v20.5
+git push origin gemma4-submission-v20.5
 ```
 
 The root GitHub workflow publishes a public single-manifest `linux/amd64` image
 to GHCR and Docker Hub. Verify the exact mounted-I/O contract before submission:
 
 ```bash
-PUBLIC_IMAGE=mvconceptlab/gemma4-captioner:gemma4-submission-v20.4 \
+PUBLIC_IMAGE=mvconceptlab/gemma4-captioner:gemma4-submission-v20.5 \
   bash scripts/verify_public_image.sh
 ```
 

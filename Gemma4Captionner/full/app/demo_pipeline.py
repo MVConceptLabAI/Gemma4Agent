@@ -23,7 +23,7 @@ import httpx
 
 from app import pipeline as P
 
-MODEL = os.environ.get("DEMO_GEMMA_MODEL", "google/gemma-4-31b-it")
+MODEL = os.environ.get("DEMO_GEMMA_MODEL", "google/gemma-4-26b-a4b-it")
 VIDEO_MODEL = os.environ.get("DEMO_VIDEO_MODEL", "google/gemma-4-26b-a4b-it")
 API_KEY = "".join(os.environ.get("OPENROUTER_API_KEY", "").split())
 API_URL = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")

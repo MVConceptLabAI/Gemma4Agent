@@ -16,7 +16,7 @@ import httpx
 from app import pipeline as P
 from app.models import REQUIRED_STYLES, normalize_captions
 
-MODEL = os.environ.get("GEMMA_FAST_MODEL", "google/gemma-4-31b-it")
+MODEL = os.environ.get("GEMMA_FAST_MODEL", "google/gemma-4-26b-a4b-it")
 API_KEY = "".join(os.environ.get("OPENROUTER_API_KEY", "").split())
 API_URL = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 FRAME_COUNT = int(os.environ.get("NUM_FRAMES", "24"))

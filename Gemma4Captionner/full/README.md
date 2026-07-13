@@ -1,14 +1,14 @@
-# Gemma Hybrid V20.4
+# Gemma Hybrid V20.5
 
-V20.4 is a Gemma 4-only Track 2 pipeline that processes one video per bounded
+V20.5 is a Gemma 4-only Track 2 pipeline that processes one video per bounded
 Gemma request. It preserves a hard 28-second task budget while grounding local
 style repairs in the accepted formal visual caption.
 
 ## Architecture
 
-1. Download the clip and sample 8 uniformly spaced JPEG frames at a maximum
+1. Download the clip and sample 6 uniformly spaced JPEG frames at a maximum
    edge of 640 pixels.
-2. Send the ordered sequence to `google/gemma-4-31b-it` in one multimodal call.
+2. Send the ordered sequence to `google/gemma-4-26b-a4b-it` in one multimodal call.
 3. Parse and locally validate all four requested styles.
 4. Accept the fast result when it is complete, concrete, grammatically intact,
    stylistically distinct, and consistent with its formal factual anchor.
@@ -27,11 +27,11 @@ Every model request remains inside the Gemma 4 family.
 ```bash
 mkdir -p input output
 cp data/sample_tasks.json input/tasks.json
-docker pull mvconceptlab/gemma4-captioner:gemma4-submission-v20.4
+docker pull mvconceptlab/gemma4-captioner:gemma4-submission-v20.5
 docker run --rm \
   -v "$PWD/input:/input:ro" \
   -v "$PWD/output:/output" \
-  mvconceptlab/gemma4-captioner:gemma4-submission-v20.4
+  mvconceptlab/gemma4-captioner:gemma4-submission-v20.5
 python eval/self_check.py --results output/results.json
 ```
 
@@ -72,13 +72,13 @@ PowerShell uses the same variable names through `$env:NAME = 'value'`.
 | Variable | Value |
 | --- | --- |
 | `CAPTION_ENGINE` | `gemma_hybrid` |
-| `GEMMA_FAST_MODEL` | `google/gemma-4-31b-it` |
-| `DEMO_GEMMA_MODEL` | `google/gemma-4-31b-it` |
+| `GEMMA_FAST_MODEL` | `google/gemma-4-26b-a4b-it` |
+| `DEMO_GEMMA_MODEL` | `google/gemma-4-26b-a4b-it` |
 | `DEMO_VIDEO_MODEL` | `google/gemma-4-26b-a4b-it` |
-| `NUM_FRAMES` | `8` |
+| `NUM_FRAMES` | `6` |
 | `FRAME_MAX_EDGE` | `640` |
-| `GEMMA_FAST_MAX_TOKENS` | `500` |
-| `HYBRID_FAST_TIMEOUT_S` | `24` |
+| `GEMMA_FAST_MAX_TOKENS` | `350` |
+| `HYBRID_FAST_TIMEOUT_S` | `26` |
 | `HYBRID_RECOVERY_TIMEOUT_S` | `0` |
 | `HYBRID_RECOVERY_MAX_PER_RUN` | `0` |
 | `HYBRID_BATCH_RECOVERY_MAX` | `0` |
@@ -101,6 +101,6 @@ python -m compileall -q app scripts
 output recovery, cross-task repetition detection, and bounded batch recovery.
 The older V18 and V19 images remain immutable rollback candidates.
 
-The V20.4 submission profile completed a live 12-clip run in 134 seconds with
-48/48 captions. Every task completed in 6.4-22.2 seconds; this is a runtime
+The V20.5 submission profile completed a live 12-clip run in 145.6 seconds with
+48/48 captions. Every task completed in 6.7-21.3 seconds; this is a runtime
 smoke test, not a substitute for the hackathon's hidden-set judge score.
