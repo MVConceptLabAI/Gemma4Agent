@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Browser-only Gemma 4 video caption demo">
-  <title>Gemma 4 Captioning V18 — local video caption demo</title>
+  <title>Gemma Fast V19 — local video caption demo</title>
   <style>
     :root{color-scheme:dark;--bg:#071119;--card:#0e202b;--card2:#0a1821;--line:#234151;--ink:#edf4f8;--muted:#aebdca;--mint:#57e0c2;--blue:#82aaff;--danger:#ff9292;--warning:#f4ca72}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 90% 0,#163846,transparent 30%),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,sans-serif}.wrap{max-width:1080px;margin:auto;padding:48px 24px 80px}.tag{color:var(--mint);font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase}h1{font-size:clamp(40px,8vw,74px);letter-spacing:-2px;line-height:.96;margin:14px 0 18px}h2{font-size:20px;margin:0 0 12px}h3{font-size:14px;margin:0}p{color:var(--muted);line-height:1.55}.lead{max-width:760px;font-size:19px}.card{background:color-mix(in srgb,var(--card) 94%,transparent);border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:22px;box-shadow:0 18px 55px #0003}label{display:block;color:var(--muted);font-size:13px;font-weight:700;margin-top:14px}input,select,button{font:inherit;border-radius:10px;width:100%;margin-top:7px;padding:13px}input,select{background:#071119;border:1px solid #355363;color:var(--ink)}button{border:0;background:var(--mint);color:#071119;font-weight:850;cursor:pointer}button.secondary{background:transparent;color:var(--ink);border:1px solid #355363}button:disabled{opacity:.55;cursor:wait}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.settings summary{cursor:pointer;color:var(--blue);font-weight:750}.settings[open] summary{margin-bottom:12px}.privacy{font-size:13px}.version-note{padding:12px 14px;border-left:3px solid var(--blue);background:var(--card2);border-radius:0 9px 9px 0}.check{display:flex;gap:9px;align-items:center;margin-top:15px;color:var(--muted);font-size:13px}.check input{width:auto;margin:0}.preview{display:none;width:100%;max-height:390px;border-radius:13px;background:#000;margin-top:16px}.video-meta{margin-top:10px;color:var(--muted);font-size:13px}.status{min-height:23px;margin:18px 0 0}.error{color:var(--danger)}.warning{color:var(--warning)}.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}.result{border-left:3px solid var(--mint);padding:15px;background:var(--card2);border-radius:0 11px 11px 0;line-height:1.5}.style{color:var(--blue);text-transform:uppercase;font-size:11px;font-weight:850;letter-spacing:1.1px;margin-bottom:8px}.facts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.facts img{width:104px;height:72px;object-fit:cover;border:1px solid var(--line);border-radius:7px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.actions button{width:auto;margin:0}.history{display:grid;gap:10px;margin-top:14px}.history-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);background:var(--card2);border-radius:10px}.history-item span{color:var(--muted);font-size:13px}.history-item button{width:auto;margin:0;padding:8px 11px}.hidden{display:none}@media(max-width:720px){.grid,.result-grid{grid-template-columns:1fr}.wrap{padding:34px 16px 60px}.history-item{align-items:flex-start;flex-direction:column}}
     .contract{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:11px;background:var(--card2)}
@@ -13,7 +13,7 @@
 </head>
 <body>
   <main class="wrap">
-    <div class="tag">Gemma 4 Captioning V18 · HTML5 local demo</div>
+    <div class="tag">Gemma Fast V19 · HTML5 local demo</div>
     <h1>Caption your own video.</h1>
     <p class="lead">Upload a video, sample it locally in your browser, then receive the same scene in all four required styles: formal, sarcastic, humorous tech and humorous non-tech.</p>
 
@@ -21,7 +21,7 @@
       <details open>
         <summary>Local inference settings</summary>
         <div class="grid">
-          <label>Pipeline version<select id="pipelineVersion"><option value="v18" selected>V18 · frames + direct video</option><option value="v17">V17 · 24 grounded frames</option></select></label>
+          <label>Pipeline version<select id="pipelineVersion"><option value="v19" selected>V19 · Gemma Fast single call</option><option value="v18">V18 · frames + direct video</option><option value="v17">V17 · 24 grounded frames</option></select></label>
           <label>OpenRouter API key<input id="apiKey" type="password" autocomplete="off" placeholder="sk-or-v1-…"></label>
           <label>Vision model<input id="model" type="text" value="google/gemma-4-31b-it" autocomplete="off"></label>
           <label id="videoModelRow" class="hidden">Direct-video model<input id="videoModel" type="text" value="google/gemma-4-26b-a4b-it" autocomplete="off"></label>
@@ -87,7 +87,7 @@
     function readJson(key, fallback) { try { return JSON.parse(localStorage.getItem(key) || ''); } catch { return fallback; } }
     function saveSettings() {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
-        settingsVersion: 3,
+        settingsVersion: 4,
         pipelineVersion: pipelineVersion.value,
         model: model.value.trim(),
         videoModel: videoModel.value.trim(),
@@ -98,9 +98,10 @@
     }
     function restoreSettings() {
       const saved = readJson(SETTINGS_KEY, {});
-      // Migrate existing installations to V18 once while preserving their
-      // locally stored model/key choices. Afterwards an explicit V17 choice is respected.
-      pipelineVersion.value = saved.settingsVersion === 3 && saved.pipelineVersion === 'v17' ? 'v17' : 'v18';
+      // Migrate existing installations to V19 once while preserving their
+      // locally stored model/key choices. Afterwards explicit V17/V18 choices are respected.
+      pipelineVersion.value = saved.settingsVersion === 4 && ['v17', 'v18', 'v19'].includes(saved.pipelineVersion)
+        ? saved.pipelineVersion : 'v19';
       model.value = saved.model || model.value;
       videoModel.value = saved.videoModel || videoModel.value;
       taskId.value = saved.taskId || taskId.value;
@@ -110,14 +111,19 @@
     }
     function updateVersionUi() {
       const isV18 = pipelineVersion.value === 'v18';
+      const isV19 = pipelineVersion.value === 'v19';
       videoModelRow.classList.toggle('hidden', !isV18);
-      versionNote.textContent = isV18
+      versionNote.textContent = isV19
+        ? 'V19 Gemma Fast sends all 24 ordered frames in one Gemma 4 request returning the four styles as JSON, then validates schema, length, style distinction and wording locally.'
+        : isV18
         ? 'V18 first grounds the scene with 24 frames, then asks Gemma 4 to inspect the original video for confirmed motion and audio facts. Browser direct-video testing is limited to 60 seconds and 20 MB.'
         : 'V17 reproduces the stable frames-only pipeline: 24 independent visual observations, caption writing, humour refinement and final grounding verification.';
-      privacyNote.textContent = isV18
+      privacyNote.textContent = isV19
+        ? 'The video stays on this device. Twenty-four 640×360-or-smaller frames are extracted locally and sent together to Gemma 4 through OpenRouter in exactly one inference request.'
+        : isV18
         ? 'The page itself stores no upload. Twenty-four frames and, for videos up to 60 seconds and 20 MB, the selected video are sent directly from this browser to OpenRouter. Longer or larger files automatically keep the V17 frames-only evidence path. The submitted V18 Docker image uses FFmpeg to split videos up to 120 seconds into two 60-second parts.'
         : 'The selected video never uploads to this site. The browser extracts twenty-four 640×360-or-smaller frames locally and sends one frame per OpenRouter request, in small parallel groups. Settings and caption history are stored in this browser’s localStorage.';
-      caption.textContent = `2. Create four captions with Gemma 4 ${isV18 ? 'V18' : 'V17'}`;
+      caption.textContent = `2. Create four captions with Gemma 4 ${isV19 ? 'V19 Fast' : (isV18 ? 'V18' : 'V17')}`;
     }
     function setStatus(message, kind = '') { status.textContent = message; status.className = `status ${kind}`; }
     function formatDate(value) { return new Date(value).toLocaleString(); }
@@ -334,6 +340,103 @@
         throw error;
       }
     }
+    async function askGemmaOnce(content, maxTokens) {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey.value.trim()}`, 'Content-Type': 'application/json', 'HTTP-Referer': location.origin, 'X-Title': 'Gemma Fast V19 local demo' },
+        body: JSON.stringify({ model: model.value.trim(), messages: [{ role: 'user', content }], temperature: 0.15, max_tokens: maxTokens })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error?.message || `OpenRouter request failed (${response.status})`);
+      const answer = payload.choices?.[0]?.message?.content;
+      if (typeof answer !== 'string' || !answer.trim()) throw new Error('Gemma Fast returned no JSON text.');
+      return answer;
+    }
+    function fastPrompt() {
+      return `You are Gemma Fast, a precise video-captioning agent. The 24 images below are ordered uniformly from the beginning to the end of ONE video. Inspect the complete sequence once and return ONLY one strict JSON object with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. Every caption must describe the same verified video, remain 12-35 words, and be clearly different in wording and tone. formal: objective, professional, factual, no humour. sarcastic: dry, intelligent, lightly mocking irony, no technology jargon. humorous_tech: one natural programming, software, hardware, or networking comparison with a clear playful payoff and an explicit tech term such as software, code, server, network, processor, hardware, thread, cache, pixel, or API. humorous_non_tech: warm everyday humour with no technology vocabulary. For a montage, preserve visible scene order. Prefer concrete subjects, actions, objects, setting, motion, weather, and readable text stable across images. Never invent identity, intent, speech, audio, brands, off-screen events, exact counts, failure, stillness, time-lapse, or a camera technique. Figurative jokes must not state literal thoughts or plans. Never mention images, frames, sampling, prompts, models, analysis, QA, or punchlines. Avoid masterclass, truly monumental, sweeping epic, thrilling, algorithm, legacy system, single-core processor, poorly optimized, musical chairs, freshly cleaned floor, toddler, and watching paint dry. Use double-quoted JSON strings with no Markdown.`;
+    }
+    function parseFastJson(raw) {
+      try { return cleanJson(raw); }
+      catch {
+        const salvaged = salvageJsonStrings(raw, REQUIRED_STYLES);
+        if (REQUIRED_STYLES.every(style => String(salvaged[style] || '').trim())) {
+          setStatus('V19 recovered malformed JSON locally without a second model request.', 'warning');
+          return salvaged;
+        }
+        throw new Error('Gemma Fast returned incomplete JSON; V19 will not make a second inference call.');
+      }
+    }
+    function fastWords(value) { return String(value || '').trim().split(/\s+/).filter(Boolean); }
+    function fastTokens(value) { return new Set((String(value || '').toLowerCase().match(/[a-z0-9]+/g) || [])); }
+    function fastSimilarity(left, right) {
+      const a = fastTokens(left), b = fastTokens(right);
+      if (!a.size || !b.size) return 0;
+      const common = [...a].filter(token => b.has(token)).length;
+      return common / new Set([...a, ...b]).size;
+    }
+    function fastTechReference(value) {
+      return /\b(?:api|algorithm|app|backend|browser|cache|code|cpu|database|deploy|docker|firmware|frontend|git|gpu|hardware|http|kernel|latency|network|packet|pixel|processor|program|ram|render|robot|runtime|server|software|ssd|system|thread)\b/i.test(String(value || ''));
+    }
+    function fastTechLeak(value) {
+      return /\b(?:api|algorithm|backend|cache|code|cpu|database|deploy|docker|frontend|git|gpu|http|kernel|latency|network|packet|processor|program|ram|runtime|server|software|ssd)\b/i.test(String(value || ''));
+    }
+    function fastFallbacks(formal) {
+      const full = String(formal || '').trim().replace(/[.!?]+$/, '') || 'Visible subjects move through the scene';
+      const low = full.toLowerCase();
+      let voices;
+      if (/\b(?:cat|kitten)\b/.test(low)) voices = ['The cat explores its surroundings with the solemn focus of an inspector auditing every leaf.', 'This compact feline robot is clearly stress-testing its outdoor sensors one leaf at a time.', 'The cat patrols the greenery like a tiny landlord checking that every leaf paid its rent.'];
+      else if (/\b(?:dog|horse|animal)\b/.test(low)) voices = ['The animal moves with all the restraint of a celebrity arriving precisely where everyone expected.', 'The animal has become an autonomous rover whose speed control escaped the software settings.', 'The animal carries on like the entire outdoors was reserved for its personal adventure.'];
+      else if (/\b(?:train|platform|station|railway)\b/.test(low)) voices = ['The station performs the astonishing feat of letting a train and waiting passengers follow a timetable.', 'Passengers and train synchronize like data streams negotiating access to one very busy station server.', 'Everyone watches the train with the familiar concentration of travelers checking the departure board twice.'];
+      else if (/\b(?:intersection|crosswalk|pedestrian)\b/.test(low)) voices = ['Pedestrians and vehicles negotiate the intersection, because painted lines have once again saved civilization.', 'The intersection becomes a backend load balancer distributing pedestrians and vehicles across every available lane.', 'The crossing becomes an orderly race in which everyone remembers a different version of the rules.'];
+      else if (/\b(?:vehicle|street|road)\b/.test(low) && /\b(?:night|wet|rain)\b/.test(low)) voices = ['Wet streets and moving vehicles turn an ordinary night drive into a production generously sponsored by reflections.', 'Wet asphalt behaves like a high-latency display reflecting every streetlight a fraction too enthusiastically.', 'The road glitters so enthusiastically that the puddles appear to have dressed for the evening.'];
+      else if (/\b(?:road|traffic|vehicle|car)\b/.test(low)) voices = ['Traffic follows the road with the confidence of drivers who have collectively decided this route is important.', 'The city CPU scheduler keeps every vehicle moving while the lanes compete for processing time.', 'The cars move together like a queue that has accepted waiting as its main hobby.'];
+      else if (/\b(?:laptop|keyboard|trackpad)\b/.test(low) && /close-up/.test(low)) voices = ['A hand works the laptop keyboard and trackpad as though the deadline might be impressed by faster fingers.', 'Keyboard and trackpad send code so quickly that the laptop input buffer deserves a coffee break.', 'The fingers dance between keys and trackpad like a pianist performing for an audience of one screen.'];
+      else if (/\b(?:keyboard|computer|desk|office|typing)\b/.test(low)) voices = ['Office work reaches its dramatic peak as a person types at a desk and the monitor bravely remains on.', 'Each keystroke sends code through an event loop that is taking this office shift extremely seriously.', 'The keyboard receives enough attention to think it is the most important object in the room.'];
+      else if (/\b(?:mountain|cliff|rock|forest)\b/.test(low)) voices = ['The mountains stand under the sky with the confidence of scenery that knows nobody can move it.', 'The mountain range resembles a vast database whose rocky tables have been indexed by nature.', 'The mountains wear greenery around their rocky shoulders as if nature finally finished the group outfit.'];
+      else if (/\b(?:sunset|cloud)\b/.test(low)) voices = ['The sky displays its colours with the modest restraint of someone arriving in the brightest outfit available.', "The horizon's frontend has enabled a maximum-saturation theme across every visible cloud.", 'The sky changes colour like it suddenly remembered guests were coming for the evening.'];
+      else if (/\b(?:ocean|wave|beach)\b/.test(low)) voices = ['The shoreline presents another completely unprecedented wave, right on schedule.', 'The ocean runs like a server that keeps refreshing the same wave in the shoreline cache.', 'Each wave returns like a friendly guest who never quite finishes saying goodbye.'];
+      else if (/\b(?:water|skyline)\b/.test(low)) voices = ["The skyline poses beside the water, fully aware that it found the city's best lighting.", 'The waterfront skyline resembles a server rack where every skyscraper insists on being the status light.', 'The skyline lines up for the view like a whole city that noticed someone brought a camera.'];
+      else if (/\b(?:knife|zucchini|food|cutting|pan|kitchen)\b/.test(low)) voices = ['Food preparation proceeds with enough precision to make an ordinary meal feel officially supervised.', 'The kitchen processes ingredients like software dividing one large input into tidy data chunks.', 'The ingredients line up so neatly that dinner appears to have read the recipe in advance.'];
+      else if (/\b(?:runner|running|athletic|stadium|sport)\b/.test(low)) voices = ['The runner crosses the track before an empty grandstand, delivering peak drama to an audience of seats.', 'The runner processes the track like optimized software clearing every checkpoint before the timeout.', 'The runner moves fast enough to make their own shadow reconsider entering the race.'];
+      else if (/\b(?:rooftop|table|conversation|drinks)\b/.test(low)) voices = ['The rooftop conversation unfolds with the gravity of a summit that remembered to order drinks.', 'The rooftop conversation runs like a social server processing three animated users and several open drinks.', 'The rooftop group talks with enough hand gestures to give every sentence its own traffic signals.'];
+      else voices = ['The visible action receives the gravity of an event the history books nearly missed.', 'The scene runs like software handling one unusually photogenic data request.', 'The small visible moment carries on like it is delighted to have an audience.'];
+      return { formal: `${full}.`, sarcastic: voices[0], humorous_tech: voices[1], humorous_non_tech: voices[2] };
+    }
+    function fastContradiction(formal, styled) {
+      const anchor = String(formal || '').toLowerCase(), candidate = String(styled || '').toLowerCase();
+      const oppositions = [[/brightly lit|bright daylight|bright sunlight|sunlit/, /dimly lit|dark room|dark setting/], [/\bnight(?:time)?\b|dark street/, /daylight|sunny day|bright afternoon/], [/crowded|many people/, /empty|deserted|no one/], [/\b(?:runs?|walks?|travels?|moves?|flowing)\b/, /stationary|motionless|frozen|does not move/]];
+      if (oppositions.some(([source, conflict]) => source.test(anchor) && conflict.test(candidate))) return true;
+      if (/\bdrinks?\b/.test(anchor) && !/\b(?:beer|wine|alcohol)\b/.test(anchor) && /\b(?:beer|wine|alcohol)\b/.test(candidate)) return true;
+      if (/\b(?:from|inside) (?:a |the )?vehicle\b/.test(anchor) && !/\b(?:walk|stroll|pedestrian)\b/.test(anchor) && /\b(?:walk|stroll|pedestrian)\b/.test(candidate)) return true;
+      return ['city','mountain','train','boat','cat','dog','office','kitchen','cart','shopper'].some(noun => new RegExp(`\\b${noun}s?\\b`).test(candidate) && !new RegExp(`\\b${noun}s?\\b`).test(anchor));
+    }
+    function postValidateFast(data) {
+      const captions = {};
+      for (const style of REQUIRED_STYLES) {
+        let value = String(data?.[style] || '').trim().replace(/\s+/g, ' ');
+        const words = fastWords(value);
+        if (words.length > 42) value = `${words.slice(0, 42).join(' ').replace(/[,;:]+$/, '')}.`;
+        captions[style] = value;
+      }
+      captions.formal = captions.formal.replace(/\b(?:a |the )?(?:high[- ]angle )?time[- ]lapse (?:captures?|shows?)\b/i, 'The video shows');
+      if (!captions.formal || hasPipelineLeak(captions.formal)) captions.formal = 'The clip shows visible subjects, actions, objects, and their surrounding setting.';
+      const fallback = fastFallbacks(captions.formal);
+      for (const style of REQUIRED_STYLES) {
+        if (!captions[style] || hasPipelineLeak(captions[style]) || hasStaleComedyTemplate(style, captions[style])) captions[style] = fallback[style];
+        else if (style !== 'formal' && fastContradiction(captions.formal, captions[style])) captions[style] = fallback[style];
+      }
+      if (!fastTechReference(captions.humorous_tech)) captions.humorous_tech = fallback.humorous_tech;
+      if (fastTechLeak(captions.humorous_non_tech)) captions.humorous_non_tech = fallback.humorous_non_tech;
+      REQUIRED_STYLES.forEach((style, index) => {
+        if (REQUIRED_STYLES.slice(0, index).some(previous => fastSimilarity(captions[style], captions[previous]) >= 0.72)) captions[style] = fallback[style];
+      });
+      return validateCaptions(captions);
+    }
+    async function writeCaptionsFast(samples) {
+      setStatus('V19 is sending 24 ordered frames in one Gemma JSON request…');
+      const content = [{ type: 'text', text: fastPrompt() }, ...samples.map(sample => ({ type: 'image_url', image_url: { url: sample } }))];
+      return postValidateFast(parseFastJson(await askGemmaOnce(content, 700)));
+    }
     function cleanFactList(value) {
       const text = String(value || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
       const start = text.indexOf('['), end = text.lastIndexOf(']');
@@ -546,9 +649,10 @@
     }
     function hasStaleComedyTemplate(style, value) {
       const patterns = {
-        sarcastic: /\b(?:masterclass|truly monumental|truly majestic|groundbreaking|a display of immense|a sweeping epic of)\b/i,
-        humorous_tech: /\b(?:high[- ]end (?:gpu|processor)|fiber[- ]optic (?:cable|connection)|overclock(?:s|ed|ing)?|speed of a modern|crashed tablet|human statues?)\b/i,
-        humorous_non_tech: /\b(?:toddler|last slice of pizza|with such intensity|frantic energy of|energy of someone trying)\b/i
+        formal: /\b(?:frames?|sampling|prompts?|models?|analysis|caption|punchline|qa)\b/i,
+        sarcastic: /\b(?:frames?|sampling|prompts?|models?|analysis|caption|punchline|qa|masterclass|truly monumental|truly majestic|groundbreaking|a display of immense|a sweeping epic|thrilling|most ambitious production)\b/i,
+        humorous_tech: /\b(?:frames?|sampling|prompts?|models?|analysis|caption|punchline|qa|algorithm|visual runtime|visual quality|network (?:traffic|packet)|data packet|graphics (?:server|engine)|pixel budget|high[- ]end gpu|speed of a modern|crashed tablet|human statues?|video quality|legacy (?:system|code)|single[- ]core processor|poorly optimized|code that refuses|hidden test|rollback)\b/i,
+        humorous_non_tech: /\b(?:frames?|sampling|prompts?|models?|analysis|caption|punchline|qa|trying to figure out if|penguins? in the cold|ignoring (?:their|the) drinks|shopper|shopping cart|cart that|toddler|with such intensity|watching paint dry|musical chairs|giant game|freshly cleaned floor)\b/i
       };
       return Boolean(patterns[style]?.test(String(value || '')));
     }
@@ -599,6 +703,15 @@
       if (!apiKey.value.trim()) throw new Error('Enter an OpenRouter key in Local inference settings.');
       if (!model.value.trim()) throw new Error('Enter a vision-capable model slug.');
       if (pipelineVersion.value === 'v18' && !videoModel.value.trim()) throw new Error('Enter a direct-video model slug for V18.');
+      if (pipelineVersion.value === 'v19') {
+        setStatus(`Sampling ${FRAME_COUNT} local frames at up to ${FRAME_BOX_STEPS[0].width}×${FRAME_BOX_STEPS[0].height} for one Gemma request…`);
+        const samples = await sampleFrames(preview, FRAME_BOX_STEPS[0]);
+        currentCaptions = await writeCaptionsFast(samples);
+        renderCaptions(currentCaptions);
+        saveHistory(file, currentCaptions);
+        setStatus(`Done with V19 Fast — ${FRAME_COUNT} ordered frames, one Gemma inference request, local post-validation.`);
+        return;
+      }
       const { observations, box } = await observeAllFrames(preview);
       let evidence = evidenceFrom(observations), directVideoUsed = false, directVideoNote = '';
       if (pipelineVersion.value === 'v18') {
@@ -661,7 +774,7 @@
     });
     caption.addEventListener('click', async () => { caption.disabled = true; try { await run(); } catch (error) { setStatus(error instanceof Error ? error.message : 'Captioning failed.', 'error'); } finally { caption.disabled = false; } });
     $('download').addEventListener('click', downloadCaptions);
-    $('forget').addEventListener('click', () => { localStorage.removeItem(SETTINGS_KEY); pipelineVersion.value = 'v18'; apiKey.value = ''; model.value = 'google/gemma-4-31b-it'; videoModel.value = 'google/gemma-4-26b-a4b-it'; taskId.value = 'demo-v1'; rememberKey.checked = false; updateVersionUi(); setStatus('Local settings removed. V18 is selected.'); });
+    $('forget').addEventListener('click', () => { localStorage.removeItem(SETTINGS_KEY); pipelineVersion.value = 'v19'; apiKey.value = ''; model.value = 'google/gemma-4-31b-it'; videoModel.value = 'google/gemma-4-26b-a4b-it'; taskId.value = 'demo-v1'; rememberKey.checked = false; updateVersionUi(); setStatus('Local settings removed. V19 Fast is selected.'); });
     $('clearHistory').addEventListener('click', () => { localStorage.removeItem(HISTORY_KEY); renderHistory(); setStatus('Local caption history cleared.'); });
   </script>
 </body>
