@@ -281,6 +281,7 @@ async def _rewrite_humour(
         "distinct, clearly figurative comic consequence tied to that setup. Never force an unrelated second "
         "visible detail into the joke. The payoff must add a comic turn, not merely restate the comparison. "
         + ("Use exactly ONE natural technology comparison that explains a visible fact; do not use 'too many tabs', 'glitchy cache', 'random', a jargon list, 'X feels like Y, except', or 'the only thing'. " if tech else "Use one fresh familiar everyday situation, no technology vocabulary, and never use 'mixed bag', 'scrapbook', 'watching paint dry', 'watching grass grow', 'nothing happens', 'X is like Y, except', or 'the only thing'. ")
+        + ("The comparison must preserve visible speed and intensity: a runner, racing vehicle, or other fast action must not be compared to dial-up, loading, buffering, latency, lag, or a slow process. " if tech else "Name the concrete visible subject and action in the first clause; never replace them with 'the visible sequence', 'grounded moments', or a family-photo-album template. ")
         + "Never claim that something is absent, still, unchanged, loading, or malfunctioning unless the evidence explicitly proves it. "
         + "Preserve exact subject-action-object-location relationships; never relocate an action onto another visible object or surface. "
         + "Never invent identity, speech, brands, intent, backstory, audience, profession, or unseen events. "
@@ -328,7 +329,11 @@ async def _polish_humour(
         "exactly one natural technology comparison. The non-tech caption must contain no technology vocabulary "
         "and use one familiar everyday situation. Never use 'X feels/is like Y, except', 'the only thing', a "
         "loose jargon list, or a generic description with no comic turn. Never invent literal absence, stillness, "
-        "failure, identity, intent, speech, brands, backstory, viewer circumstances, or unseen events. Preserve "
+        "failure, identity, intent, speech, brands, backstory, viewer circumstances, or unseen events. A fast visible "
+        "action must remain fast in the tech comparison: never compare running, sprinting, racing, or rapid movement "
+        "to dial-up, loading, buffering, latency, lag, or another slow process. The non-tech caption must explicitly "
+        "name a verified subject and action, never 'the visible sequence', 'grounded moments', or a family photo album. "
+        "Preserve "
         "exact subject-action-object-location relationships; never relocate an action onto another visible object "
         "or surface. Facts listed separately must remain parallel facts; never say that one approaches, passes, "
         "touches, or affects another unless the evidence explicitly states that relationship. Preserve montage order when "
@@ -438,16 +443,65 @@ def _has_unsupported_absolute(evidence: str, value: str) -> bool:
     )
 
 
-def _has_caption_quality_risk(evidence: str, value: str) -> bool:
-    return _has_lexical_corruption(value, evidence) or _has_unsupported_absolute(evidence, value)
+def _has_generic_humour(style: str, value: str) -> bool:
+    if style != "humorous_non_tech":
+        return False
+    return bool(re.search(
+        r"\b(?:the visible sequence|grounded moments?|each grounded|family photo album|"
+        r"own little entrance|everyday moment arriving)\b",
+        value,
+        re.IGNORECASE,
+    ))
 
 
-def _safe_caption(style: str) -> str:
+def _has_speed_inversion(style: str, evidence: str, value: str) -> bool:
+    if style != "humorous_tech":
+        return False
+    fast_evidence = re.search(
+        r"\b(?:run(?:s|ning)?|race(?:s|d|ing)?|sprint(?:s|ing)?|rapid(?:ly)?|quick(?:ly)?|"
+        r"fast|speed(?:s|ing)?|rush(?:es|ing)?|swift(?:ly)?)\b",
+        evidence,
+        re.IGNORECASE,
+    )
+    slow_metaphor = re.search(
+        r"\b(?:dial[- ]?up|latency|buffer(?:s|ed|ing)?|load(?:s|ed|ing)?|lag(?:s|ged|ging)?|"
+        r"slow(?:ly)?|glacial|snail|crawl(?:s|ed|ing)?|lifelong)\b",
+        value,
+        re.IGNORECASE,
+    )
+    explicitly_faster = re.search(
+        r"\b(?:faster than|quicker than|outpaces?|leaves? .{0,24} behind|higher frame rate than|"
+        r"without (?:a |any )?(?:buffer|lag)|low[- ]latency|zero latency|minimal latency)\b",
+        value,
+        re.IGNORECASE,
+    )
+    return bool(fast_evidence and slow_metaphor and not explicitly_faster)
+
+
+def _has_caption_quality_risk(evidence: str, value: str, style: str = "") -> bool:
+    return (
+        _has_lexical_corruption(value, evidence)
+        or _has_unsupported_absolute(evidence, value)
+        or _has_generic_humour(style, value)
+        or _has_speed_inversion(style, evidence, value)
+    )
+
+
+def _first_evidence_fact(evidence: str) -> str:
+    for line in evidence.splitlines():
+        fact = re.sub(r"^-\s+", "", line.strip()).strip().rstrip(".!?")
+        if line.strip().startswith("- ") and fact:
+            return fact
+    return "Visible subjects move through the scene"
+
+
+def _safe_caption(style: str, evidence: str) -> str:
+    fact = _first_evidence_fact(evidence)
     return {
-        "formal": "The video presents a sequence of visible subjects, actions, and settings.",
-        "sarcastic": "The visible sequence gives its ordinary events a remarkably serious presentation, ensuring that no modest moment escapes the full documentary treatment.",
-        "humorous_tech": "The visible sequence unfolds like a carefully queued system update, giving each grounded scene its own turn before the final result.",
-        "humorous_non_tech": "The visible sequence arrives like a family photo album passed around the table, giving each grounded moment its own little entrance.",
+        "formal": f"The video shows {fact}.",
+        "sarcastic": f"{fact}, presented with the importance of a remarkably ambitious documentary milestone.",
+        "humorous_tech": f"{fact}, moving like a well-tuned process that finally cleared its queue without dropping the visible action.",
+        "humorous_non_tech": f"{fact}, with the determined energy of someone carrying every grocery bag in one trip.",
     }[style]
 
 
@@ -457,7 +511,7 @@ async def _repair_caption_quality(
     captions: dict[str, str],
     styles: list[str],
 ) -> dict[str, str]:
-    affected = [style for style in styles if _has_caption_quality_risk(evidence, captions[style])]
+    affected = [style for style in styles if _has_caption_quality_risk(evidence, captions[style], style)]
     if not affected:
         return captions
     log.warning("detected caption wording or grounding risk in styles: %s", ", ".join(affected))
@@ -468,7 +522,9 @@ async def _repair_caption_quality(
         "malformed words, accidental letter runs, duplicated fragments, and broken grammar. Also remove or "
         "replace absolute claims such as stationary, frozen, permanent, never moving, or unchanged when the "
         "verified evidence does not explicitly support them. If the evidence contains motion, the repaired joke "
-        "must use the visible motion or pace rather than a freeze or stillness metaphor. Do not add, remove, or "
+        "must use the visible motion or pace rather than a freeze or stillness metaphor. Replace generic non-tech "
+        "fallbacks with a joke that names a verified subject and action. A fast visible action must not be compared "
+        "to dial-up, loading, buffering, latency, lag, or a slow process. Do not add, remove, or "
         "reinterpret factual claims. Do not add commentary.\n\nVERIFIED EVIDENCE:\n" + evidence
         + "\n\nCAPTIONS TO CHECK:\n" + json.dumps(captions)
     )
@@ -478,14 +534,17 @@ async def _repair_caption_quality(
         )
     except (httpx.HTTPError, ValueError, KeyError):
         log.warning("combined lexical repair unavailable; retrying affected styles")
-    affected = [style for style in styles if _has_caption_quality_risk(evidence, captions[style])]
+    affected = [style for style in styles if _has_caption_quality_risk(evidence, captions[style], style)]
 
     async def repair_one(style: str) -> str:
         prompt = (
             f"Repair ONLY the quality defect in this {style} video caption. Preserve every supported fact, "
             "the style, and the joke. Remove malformed text and any claim of stillness, freezing, permanence, "
             "no movement, or no change that is unsupported by the evidence. When motion is verified, anchor the "
-            "repaired joke in that motion or its pace. Do not add facts. Return ONLY JSON: {\"caption\":\"...\"}."
+            "repaired joke in that motion or its pace. For humorous_non_tech, explicitly name the verified subject "
+            "and action instead of a generic sequence or family-album template. For humorous_tech, preserve the "
+            "direction of visible speed and never compare fast action to dial-up, loading, buffering, latency, lag, "
+            "or another slow process. Do not add facts. Return ONLY JSON: {\"caption\":\"...\"}."
             "\n\nEVIDENCE:\n" + evidence + "\n\nCAPTION:\n" + captions[style]
         )
         result = _json_object(await _ask(client, [{"type": "text", "text": prompt}], 320))
@@ -498,9 +557,9 @@ async def _repair_caption_quality(
             if isinstance(repaired, str):
                 captions[style] = repaired
     for style in styles:
-        if _has_caption_quality_risk(evidence, captions[style]):
+        if _has_caption_quality_risk(evidence, captions[style], style):
             log.error("caption quality risk persisted for %s; using safe complete fallback", style)
-            captions[style] = _safe_caption(style)
+            captions[style] = _safe_caption(style, evidence)
     return _captions(captions, styles)
 
 
