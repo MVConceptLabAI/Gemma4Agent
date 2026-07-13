@@ -98,6 +98,31 @@ async def _ask(
     raise ValueError("Gemma returned no text content after retry")
 
 
+async def _ask_json_object(
+    client: httpx.AsyncClient,
+    content: list[dict[str, Any]],
+    max_tokens: int,
+    *,
+    temperature: float = 0.2,
+) -> dict[str, Any]:
+    """Request strict JSON and retry once when Gemma returns pseudo-JSON."""
+    raw = await _ask(client, content, max_tokens, temperature=temperature)
+    try:
+        return _json_object(raw)
+    except (json.JSONDecodeError, ValueError):
+        log.warning("Gemma returned invalid JSON; retrying once with a strict JSON reminder")
+    retry_content = [*content, {
+        "type": "text",
+        "text": (
+            "Your previous response was not valid JSON. Try again from the original evidence. "
+            "Return exactly one strict JSON object: double-quoted keys and string values, no "
+            "single quotes, comments, Markdown fences, trailing commas, or explanatory text."
+        ),
+    }]
+    retry_raw = await _ask(client, retry_content, max_tokens, temperature=0.0)
+    return _json_object(retry_raw)
+
+
 def _video_duration(video: Path) -> float:
     result = subprocess.run(
         [
@@ -268,7 +293,7 @@ async def _write(client: httpx.AsyncClient, evidence: str, styles: list[str]) ->
         "'nothing happens', or 'the only thing of interest'.\n\n"
         + evidence
     )
-    return _captions(_json_object(await _ask(client, [{"type": "text", "text": prompt}], 800)), styles)
+    return _captions(await _ask_json_object(client, [{"type": "text", "text": prompt}], 800), styles)
 
 
 async def _rewrite_humour(
@@ -288,7 +313,7 @@ async def _rewrite_humour(
         "Keep it to one sentence of 24-42 words. Return ONLY JSON: {\"caption\":\"...\"}.\n\nVERIFIED EVIDENCE:\n"
         + evidence + "\n\nCURRENT CANDIDATE:\n" + candidate
     )
-    result = _json_object(await _ask(client, [{"type": "text", "text": prompt}], 300))
+    result = await _ask_json_object(client, [{"type": "text", "text": prompt}], 300)
     caption = result.get("caption")
     return caption.strip() if isinstance(caption, str) and caption.strip() else candidate
 
@@ -312,7 +337,7 @@ async def _rewrite_sarcastic(
         "relationships. Use one sentence of 22-38 words. Return ONLY JSON: {\"caption\":\"...\"}."
         "\n\nVERIFIED EVIDENCE:\n" + evidence + "\n\nCURRENT CANDIDATE:\n" + candidate
     )
-    result = _json_object(await _ask(client, [{"type": "text", "text": prompt}], 320))
+    result = await _ask_json_object(client, [{"type": "text", "text": prompt}], 320)
     caption = result.get("caption")
     return caption.strip() if isinstance(caption, str) and caption.strip() else candidate
 
@@ -345,7 +370,7 @@ async def _polish_humour(
             "humorous_non_tech": captions["humorous_non_tech"],
         })
     )
-    value = _json_object(await _ask(client, [{"type": "text", "text": prompt}], 600))
+    value = await _ask_json_object(client, [{"type": "text", "text": prompt}], 600)
     return {
         style: value[style].strip() if isinstance(value.get(style), str) and value[style].strip()
         else captions[style]
@@ -368,7 +393,7 @@ async def _verify(client: httpx.AsyncClient, evidence: str, captions: dict[str, 
         "VERIFIED EVIDENCE:\n" + evidence + "\n\nCANDIDATE CAPTIONS:\n" + json.dumps(captions)
     )
     reviewed = _captions(
-        _json_object(await _ask(client, [{"type": "text", "text": prompt}], 800)), styles
+        await _ask_json_object(client, [{"type": "text", "text": prompt}], 800), styles
     )
     # Match the demo's detail-preservation guard: a verifier may be correct but
     # over-cautiously replace a rich grounded sentence with a generic summary.
@@ -530,7 +555,7 @@ async def _repair_caption_quality(
     )
     try:
         captions = _captions(
-            _json_object(await _ask(client, [{"type": "text", "text": prompt}], 800)), styles
+            await _ask_json_object(client, [{"type": "text", "text": prompt}], 800), styles
         )
     except (httpx.HTTPError, ValueError, KeyError):
         log.warning("combined lexical repair unavailable; retrying affected styles")
@@ -547,7 +572,7 @@ async def _repair_caption_quality(
             "or another slow process. Do not add facts. Return ONLY JSON: {\"caption\":\"...\"}."
             "\n\nEVIDENCE:\n" + evidence + "\n\nCAPTION:\n" + captions[style]
         )
-        result = _json_object(await _ask(client, [{"type": "text", "text": prompt}], 320))
+        result = await _ask_json_object(client, [{"type": "text", "text": prompt}], 320)
         caption = result.get("caption")
         return caption.strip() if isinstance(caption, str) and caption.strip() else captions[style]
 

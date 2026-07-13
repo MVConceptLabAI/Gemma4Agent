@@ -1,6 +1,9 @@
 """Offline regressions for the Gemma demo caption quality guard."""
 
+import asyncio
+
 from app.demo_pipeline import (
+    _ask_json_object,
     _has_caption_quality_risk,
     _has_generic_humour,
     _has_lexical_corruption,
@@ -9,7 +12,28 @@ from app.demo_pipeline import (
 )
 
 
+async def _test_invalid_json_retry() -> None:
+    from app import demo_pipeline
+
+    responses = iter([
+        "{'formal': 'not strict JSON'}",
+        '{"formal":"valid strict JSON"}',
+    ])
+    original = demo_pipeline._ask
+
+    async def fake_ask(*_args, **_kwargs):
+        return next(responses)
+
+    demo_pipeline._ask = fake_ask
+    try:
+        value = await _ask_json_object(None, [{"type": "text", "text": "test"}], 100)
+    finally:
+        demo_pipeline._ask = original
+    assert value == {"formal": "valid strict JSON"}
+
+
 def main() -> None:
+    asyncio.run(_test_invalid_json_retry())
     evidence = (
         "The digital display counts down from 08.40 to 00.00. "
         "The display briefly shows 'BUKD3' and then changes to 'ERROR' in red text."
