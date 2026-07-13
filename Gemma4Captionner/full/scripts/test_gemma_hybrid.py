@@ -59,7 +59,8 @@ async def test_fast_acceptance_and_recovery() -> None:
         hybrid.caption_gemma_fast = pricey_fast
         hybrid.caption_demo = failed_demo
         result = await hybrid.caption_gemma_hybrid("https://example.test/video.mp4", list(hybrid.REQUIRED_STYLES))
-        assert "spending a fortune" in result["sarcastic"]
+        assert "spending a fortune" not in result["sarcastic"]
+        assert "black car drives along a multi-lane city road" in result["sarcastic"].lower()
         assert calls["demo"] == 2
         hybrid.caption_demo = good_demo
 
@@ -150,6 +151,20 @@ def test_quality_signals() -> None:
     race["sarcastic"] = "The expensive racing machine finally performs the radical act of entering the circuit."
     reasons = hybrid.caption_risks(race, list(hybrid.REQUIRED_STYLES))
     assert "sarcastic:unsupported-value-claim" not in reasons
+
+    generic = captions("A black car drives along a multi-lane city road, under an overpass and through a tunnel")
+    generic["humorous_tech"] = (
+        "The traffic flow behaves like a poorly managed server, where every car is a request waiting for the processor."
+    )
+    generic["humorous_non_tech"] = (
+        "This commute is like a slow-motion parade where the only prize is another traffic jam."
+    )
+    reasons = hybrid.caption_risks(generic, list(hybrid.REQUIRED_STYLES))
+    assert "humorous_tech:weak-formal-grounding" in reasons
+    assert "humorous_non_tech:weak-formal-grounding" in reasons
+    repaired = hybrid._repair_fast_after_failed_recovery(generic, list(hybrid.REQUIRED_STYLES), reasons)
+    assert "black car drives along a multi-lane city road" in repaired["humorous_tech"].lower()
+    assert "black car drives along a multi-lane city road" in repaired["humorous_non_tech"].lower()
 
 
 def main() -> None:

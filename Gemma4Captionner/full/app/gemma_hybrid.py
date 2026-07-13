@@ -8,9 +8,15 @@ import os
 import re
 from typing import Any, Callable
 
-from app.demo_pipeline import caption_demo, _has_lexical_corruption, _has_process_leak
+from app.demo_pipeline import (
+    _creative_anchor_count,
+    _has_lexical_corruption,
+    _has_process_leak,
+    caption_demo,
+)
 from app.gemma_fast import (
     _contradicts_formal,
+    _fallbacks,
     _too_similar,
     caption_gemma_fast,
 )
@@ -42,6 +48,49 @@ _CONTENT_STOPWORDS = {
 }
 
 
+def _weak_formal_grounding(formal: str, style: str, value: str) -> bool:
+    """Use the verified fast formal caption to reject category-only jokes."""
+    if style not in {"sarcastic", "humorous_tech", "humorous_non_tech"}:
+        return False
+    return _creative_anchor_count(formal, value) < 3
+
+
+def _creative_recovery_fallbacks(formal: str) -> dict[str, str]:
+    """Ground a bounded recovery fallback in the exact accepted formal caption."""
+    anchor = formal.strip().rstrip(".!?") or "Visible subjects move through the scene"
+    words = anchor.split()
+    if len(words) > 24:
+        anchor = " ".join(words[:24]).rstrip(",;:")
+    return {
+        "sarcastic": (
+            f"{anchor}, receiving the level of ceremony normally reserved for a state occasion."
+        ),
+        "humorous_tech": (
+            f"{anchor}, moving like a network routing service keeping every visible path in order."
+        ),
+        "humorous_non_tech": (
+            f"{anchor}, like guests finding their way through one crowded doorway without losing their place."
+        ),
+    }
+
+
+def _repair_fast_after_failed_recovery(
+    captions: dict[str, str], styles: list[str], reasons: list[str]
+) -> dict[str, str]:
+    """Never return a risky fast joke merely because the richer path timed out."""
+    repaired = dict(captions)
+    fallbacks = _creative_recovery_fallbacks(repaired.get("formal", ""))
+    risky_styles = {
+        reason.split(":", 1)[0]
+        for reason in reasons
+        if ":" in reason
+    }
+    for style in risky_styles:
+        if style in fallbacks and style in styles:
+            repaired[style] = fallbacks[style]
+    return normalize_captions(repaired, styles)
+
+
 def caption_risks(captions: dict[str, str], styles: list[str]) -> list[str]:
     """Return high-confidence reasons that justify the expensive V18 recovery."""
     reasons: list[str] = []
@@ -62,6 +111,8 @@ def caption_risks(captions: dict[str, str], styles: list[str]) -> list[str]:
         if style != "formal" and formal and captions.get(style):
             if _contradicts_formal(formal, captions[style]):
                 reasons.append(f"{style}:unsupported-scene-noun")
+            if _weak_formal_grounding(formal, style, captions[style]):
+                reasons.append(f"{style}:weak-formal-grounding")
             if (
                 _UNSUPPORTED_VALUE.search(captions[style])
                 and not re.search(r"\b(?:race|racing|supercar|luxury)\b", formal, re.I)
@@ -113,11 +164,10 @@ async def caption_gemma_hybrid(video_url: str, styles: list[str]) -> dict[str, s
             styles,
         )
     except Exception as exc:  # noqa: BLE001
-        # A complete fast result is always preferable to the generic contract
-        # fallback. Recovery is an upgrade attempt, not permission to discard
-        # already valid captions when a provider stalls near the global limit.
-        log.warning("V20 evidence recovery failed (%s); retaining validated fast result", exc)
-        return fast
+        # Keep the formal caption, but do not leak a risky creative draft just
+        # because the richer V18 pass reached its bounded timeout.
+        log.warning("V20 evidence recovery failed (%s); grounding risky fast creative captions", exc)
+        return _repair_fast_after_failed_recovery(fast, styles, risks)
 
 
 def _meaningful_ngrams(value: str, size: int = 5) -> set[str]:
