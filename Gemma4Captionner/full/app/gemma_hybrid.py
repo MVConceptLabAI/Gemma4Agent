@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
 import os
 import re
@@ -84,21 +85,39 @@ def _weak_formal_grounding(formal: str, style: str, value: str) -> bool:
 
 
 def _creative_recovery_fallbacks(formal: str) -> dict[str, str]:
-    """Ground a bounded recovery fallback in the exact accepted formal caption."""
+    """Ground bounded style repairs in the accepted formal caption.
+
+    Select a deterministic wording variant from the visual anchor.  This keeps
+    a retry-free repair from turning an entire batch into the same joke while
+    remaining reproducible for a given clip.
+    """
     anchor = formal.strip().rstrip(".!?") or "Visible subjects move through the scene"
     words = anchor.split()
-    if len(words) > 24:
-        anchor = " ".join(words[:24]).rstrip(",;:")
+    if len(words) > 32:
+        anchor = " ".join(words[:32]).rstrip(",;:")
+    variant = int(hashlib.sha256(anchor.encode("utf-8")).hexdigest()[:8], 16)
+    sarcastic = (
+        "because apparently ordinary movement now requires a ceremonial announcement.",
+        "an impressively serious treatment for something perfectly ordinary.",
+        "naturally elevated to the day's least urgent spectacle.",
+        "clearly the routine has been promoted to headline status.",
+    )
+    tech = (
+        "as if the scene's network routing logic has decided every visible path needs monitoring.",
+        "running like a live system whose traffic report is somehow the main event.",
+        "with the practical coordination of a small production service.",
+        "as though a backend load balancer were carefully assigning every visible movement.",
+    )
+    non_tech = (
+        "like a well-rehearsed everyday moment pretending it has an audience.",
+        "with the gentle fuss of people trying not to block the only doorway.",
+        "like the sort of routine scene that accidentally becomes a parade.",
+        "with everyone treating the ordinary moment as a carefully scheduled occasion.",
+    )
     return {
-        "sarcastic": (
-            f"{anchor}, receiving the level of ceremony normally reserved for a state occasion."
-        ),
-        "humorous_tech": (
-            f"{anchor}, moving like a network routing service keeping every visible path in order."
-        ),
-        "humorous_non_tech": (
-            f"{anchor}, like guests finding their way through one crowded doorway without losing their place."
-        ),
+        "sarcastic": f"{anchor}, {sarcastic[variant % len(sarcastic)]}",
+        "humorous_tech": f"{anchor}, {tech[(variant >> 2) % len(tech)]}",
+        "humorous_non_tech": f"{anchor}, {non_tech[(variant >> 4) % len(non_tech)]}",
     }
 
 
