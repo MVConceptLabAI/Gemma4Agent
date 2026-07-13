@@ -1,238 +1,94 @@
-# Gemma 4 Captioning V18
+# Gemma Fast V19
 
-Grounded multi-style video captioning for AMD Developer Hackathon Track 2,
-powered exclusively by Gemma 4 models.
+V19 is a deliberately compact Gemma-only Track 2 pipeline based on the common
+architecture of two public 0.91 submissions: 24 bounded frames, one coherent
+multimodal request returning all four styles, then strict local validation.
 
-V18 reads tasks from `/input/tasks.json`, analyses each video, and writes valid
-results to `/output/results.json` before exiting. Every requested style is
-normalized and validated so a single provider or model-formatting failure does
-not corrupt the complete submission file.
+## Architecture
 
-## Public submission image
+1. Download the clip and sample 24 uniformly spaced JPEG frames at a maximum
+   edge of 640 pixels.
+2. Send the ordered frame sequence to `google/gemma-4-31b-it` in exactly one
+   OpenRouter request.
+3. Ask for one strict JSON object containing `formal`, `sarcastic`,
+   `humorous_tech`, and `humorous_non_tech` captions of 12-35 words.
+4. Parse or salvage the response locally; no JSON-repair model call is made.
+5. Locally enforce schema, non-empty styles, English/style filters, caption
+   length, technology presence, style distinction, process-leak bans, and
+   recycled-comedy bans.
+6. Write validated `/output/results.json`.
+
+Unlike V18, V19 does not make 24 independent observation requests, send the MP4
+directly, consolidate evidence, or call separate humour/verifier stages. This
+is an A/B variant, not an assertion that less grounding is always better.
+
+## Docker
 
 ```bash
-docker pull ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v18
+docker pull ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v19
 docker run --rm \
-  -v /absolute/path/to/input:/input \
-  -v /absolute/path/to/output:/output \
-  ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v18
+  -v "$PWD/in:/input:ro" \
+  -v "$PWD/out:/output" \
+  ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v19
 ```
 
-Published properties:
+The published image contains the temporary judging key because the contest
+injects no runtime environment variables. Rotate that key after judging.
 
-- public OCI image
-- `linux/amd64`
-- approximately 242 MiB compressed
-- command: `python -u -m app.main`
-- global runtime budget: 540 seconds
-- maximum parallel videos: 3
-
-## V18 architecture
-
-The Docker submission uses `CAPTION_ENGINE=gemma_demo`. Every inference request
-stays within the Gemma 4 family:
-
-- `google/gemma-4-31b-it` observes frames, consolidates evidence, writes
-  captions, rewrites styles, and verifies grounding.
-- `google/gemma-4-26b-a4b-it` receives a compact MP4 and adds only temporal or
-  audible facts that agree with the frame evidence.
-
-Processing sequence:
-
-1. Download the MP4 with retries.
-2. Extract 24 representative frames with FFmpeg, at up to 640 pixels per edge.
-3. Analyse frames independently through nine bounded parallel Gemma 4 requests.
-4. Compress the MP4 to one frame per second for direct video inspection. A clip
-   up to 60 seconds uses one segment; a clip up to two minutes uses two segments
-   covering its beginning and end.
-5. Consolidate only supported subjects, actions, objects, setting, motion,
-   lighting, sequence, and clearly confirmed audio.
-6. Generate `formal`, `sarcastic`, `humorous_tech`, and
-   `humorous_non_tech` captions.
-7. Rewrite sarcasm and both humour styles with evidence-locked prompts.
-8. Verify every literal claim and preserve supported visual detail.
-9. Repair malformed text, duplicated fragments, unsupported absolutes, OCR
-   false positives, generic jokes, and speed-inverting metaphors.
-10. Retry once when Gemma returns pseudo-JSON instead of strict JSON, then
-    normalize and validate the complete output contract.
-
-V18 does not use GPT, Claude, Gemini, Qwen, Groq, or Fireworks models.
-
-## Track 2 contract
-
-Input file: `/input/tasks.json`
-
-```json
-[
-  {
-    "task_id": "v1",
-    "video_url": "https://example.com/video.mp4",
-    "styles": [
-      "formal",
-      "sarcastic",
-      "humorous_tech",
-      "humorous_non_tech"
-    ]
-  }
-]
-```
-
-Output file: `/output/results.json`
-
-```json
-[
-  {
-    "task_id": "v1",
-    "captions": {
-      "formal": "...",
-      "sarcastic": "...",
-      "humorous_tech": "...",
-      "humorous_non_tech": "..."
-    }
-  }
-]
-```
-
-The process exits with code 0 after successfully writing results. Invalid input
-or a fatal startup failure returns a non-zero code. Individual inference errors
-are isolated per task so the remaining clips and requested styles are still
-written.
-
-## Local inference
-
-Install the pinned dependencies and provide an OpenRouter key:
+## Local run
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-export OPENROUTER_API_KEY=sk-or-v1-...
-export CAPTION_ENGINE=gemma_demo
+export OPENROUTER_API_KEY='...'
+export CAPTION_ENGINE=gemma_fast
 export INPUT_PATH=data/official_tasks.json
-export OUTPUT_PATH=out/results.json
+export OUTPUT_PATH=out/results-v19.json
 python -u -m app.main
+python eval/self_check.py --results out/results-v19.json
+python scripts/repetition_audit.py out/results-v19.json --fail-on-exact
+python scripts/audit_results_gemma.py out/results-v19.json --output out/gemma-audit-v19.json
 ```
 
-On Windows PowerShell:
+PowerShell uses the same variable names through `$env:NAME = 'value'`.
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-$env:OPENROUTER_API_KEY = 'sk-or-v1-...'
-$env:CAPTION_ENGINE = 'gemma_demo'
-$env:INPUT_PATH = 'data\official_tasks.json'
-$env:OUTPUT_PATH = 'out\results.json'
-python -u -m app.main
-```
+## V19 profile
 
-Do not commit `.env` files or API keys. The hackathon does not inject runtime
-credentials, so the publication workflow injects a temporary OpenRouter key
-from the protected GitHub environment while building the submission image.
+| Variable | Value |
+| --- | --- |
+| `CAPTION_ENGINE` | `gemma_fast` |
+| `GEMMA_FAST_MODEL` | `google/gemma-4-31b-it` |
+| `GEMMA_FAST_MAX_TOKENS` | `700` |
+| `NUM_FRAMES` | `24` |
+| `FRAME_MAX_EDGE` | `640` |
+| `SCENE_DETECT_ENABLED` | `0` |
+| `MAX_CONCURRENCY` | `3` |
+| `PER_TASK_TIMEOUT_S` | `120` |
+| `GLOBAL_BUDGET_S` | `480` |
 
-## Docker profile
-
-The submitted Dockerfile pins these values:
-
-| Variable | V18 value | Purpose |
-|---|---:|---|
-| `CAPTION_ENGINE` | `gemma_demo` | Select the Gemma-only pipeline |
-| `DEMO_GEMMA_MODEL` | `google/gemma-4-31b-it` | Frame observer and caption writer |
-| `DEMO_VIDEO_MODEL` | `google/gemma-4-26b-a4b-it` | Direct MP4 observer |
-| `NUM_FRAMES` | `24` | Representative frames per clip |
-| `FRAME_MAX_EDGE` | `640` | Maximum frame edge |
-| `DEMO_OBSERVATION_CONCURRENCY` | `9` | Parallel frame requests |
-| `MAX_CONCURRENCY` | `3` | Parallel videos |
-| `VIDEO_CONTEXT_MAX_SECONDS` | `60` | Duration per direct-video segment |
-| `VIDEO_CONTEXT_MAX_BYTES` | `12000000` | Maximum encoded segment size |
-| `PER_TASK_TIMEOUT_S` | `220` | Per-video timeout |
-| `GLOBAL_BUDGET_S` | `540` | Margin below the 10-minute limit |
-
-## Validation evidence
-
-### Full AMD-hosted 15-task set
-
-Input: [`data/official_tasks.json`](data/official_tasks.json)
-
-The final V18 profile completed the entire set on 2026-07-13:
-
-- 15 tasks and 60 requested captions written
-- valid JSON and exit code 0
-- total runtime: 406.0 seconds
-- no task timeout or missing style
-- zero exact duplicate captions across the batch
-
-The accompanying `scripts/repetition_audit.py` also reports shared n-grams for
-manual review. Common sentence fragments are warnings rather than automatic
-failures because eliminating ordinary phrasing can reduce factual accuracy.
-
-### AMD-hosted 12-task set
-
-Input: [`data/official_new12.json`](data/official_new12.json)
-
-Measured on the V18 source profile:
-
-- 12 tasks loaded from AMD-hosted clip URLs
-- 48 requested captions written
-- valid `/output/results.json`
-- exit code 0
-- total runtime: 340.7 seconds
-- no task timeout
-
-The run exposed one invalid pseudo-JSON writer response on task `6023186`.
-The pipeline still completed with safe captions. V18 now retries malformed JSON
-once with strict double-quoted-object instructions. A targeted rerun of
-`6023186` completed in 69.9 seconds and produced grounded captions describing
-people on a station platform beside a stopped yellow-and-white train.
-
-### Diverse 30-second stress set
-
-A separate 12-video set covering nature, urban traffic, animals, people,
-sports, food, weather, and technology completed in 248.2 seconds with 48/48
-captions and no missing styles. Two weak humour cases found by that run were
-converted into permanent regression checks for generic non-tech fallbacks and
-technology metaphors that invert visible speed.
-
-## Offline checks
+## Tests
 
 ```bash
+PYTHONPATH=. python scripts/test_gemma_fast.py
 PYTHONPATH=. python scripts/test_demo_pipeline_quality.py
-python -m compileall -q app scripts/test_demo_pipeline_quality.py
 python scripts/contract_test.py
-python scripts/preflight.py
+python -m compileall -q app scripts
 ```
 
-The quality regression test covers:
+`test_gemma_fast.py` verifies that one clip produces exactly one HTTP request
+whose content is one prompt plus 24 images. It also tests malformed-JSON salvage,
+style distinction, technology presence, and stale-template replacement.
 
-- legitimate OCR such as `ERROR` and `BUKD3`
-- malformed letter runs and duplicated words
-- unsupported stillness and permanence
-- generic humorous non-tech fallbacks
-- slow technology metaphors applied to fast visible action
-- malformed pseudo-JSON followed by a strict-JSON retry
-- duplicate direct-video facts, recycled comedy templates and process leakage
+`audit_results_gemma.py` is an offline promotion gate, not part of the submitted
+runtime. It gives the complete final JSON to Gemma 4 to flag shared clichés,
+semantic repetition, style failures, grammar defects, and facts introduced by a
+styled caption but absent from its formal factual anchor.
 
-## Publish
+## Validated V19 result
 
-The GitHub workflow publishes on tags matching `gemma4-submission-*`:
-
-```bash
-git tag -f gemma4-submission-v18
-git push origin refs/tags/gemma4-submission-v18 --force
-```
-
-The workflow builds a single `linux/amd64` manifest without provenance or SBOM
-side manifests, then verifies the image with Docker Buildx.
-
-## Repository layout
-
-- `app/main.py` - Track 2 entry point and runtime budgeting
-- `app/demo_pipeline.py` - Gemma-only evidence and caption pipeline
-- `app/models.py` - task parsing, normalization, fallbacks, validation
-- `data/official_new12.json` - AMD-hosted 12-task validation input
-- `data/official_tasks.json` - full AMD-hosted 15-task validation input
-- `docs/` - browser demo and presentation material
-- `scripts/test_demo_pipeline_quality.py` - V18 regression checks
-- `scripts/repetition_audit.py` - exact-duplicate and shared-phrase audit
-- `Dockerfile` - public submission image profile
-- `SUBMISSION.md` - hackathon submission copy
+The full V19 run processed the 15 tasks in `data/official_tasks.json` in 161.4
+seconds, wrote 60/60 captions, and produced no exact duplicates. The equivalent
+V18 run took 406.0 seconds, so the single-call path was about 60% faster in this
+test. An offline full-batch Gemma 4 review passed the promotion candidate with
+0.90 style quality, 0.90 diversity, 0.00 accuracy risk, no shared patterns, and
+no reported issues.
+The audit checks cross-caption consistency against each formal factual anchor;
+it complements rather than replaces visual grounding from the 24 input frames.

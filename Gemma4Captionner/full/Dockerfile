@@ -3,7 +3,7 @@
 # Base slim + FFmpeg. Build for linux/amd64 explicitly (judging VM runs amd64).
 #
 #   docker buildx build --platform linux/amd64 \
-#     --tag ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v18 --push .
+#     --tag ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v19 --push .
 # =============================================================================
 FROM python:3.11-slim-bookworm
 
@@ -30,24 +30,21 @@ COPY app/ ./app/
 
 # The harness mounts /input and /output at runtime and injects NO env vars,
 # so the submission profile is pinned here. Non-secret config is plain ENV.
-# Submission engine = the public Gemma 4 HTML5 demo flow: independent frame
-# observations, evidence consolidation, humour polish, and final grounding.
-# Every inference request stays inside the Gemma 4 family through OpenRouter.
-# Gemma 4 31B handles frames and captions; Gemma 4 26B A4B inspects the MP4.
+# V19 Gemma Fast: 24 ordered frames enter one Gemma multimodal JSON request.
+# Schema, style, similarity, length, safety, and repetition checks are local.
 ENV PYTHONPATH=/app \
-    CAPTION_ENGINE=gemma_demo \
-    DEMO_GEMMA_MODEL=google/gemma-4-31b-it \
-    DEMO_VIDEO_MODEL=google/gemma-4-26b-a4b-it \
-    DEMO_OBSERVATION_CONCURRENCY=9 \
-    VIDEO_CONTEXT_MAX_SECONDS=60 \
-    VIDEO_CONTEXT_MAX_BYTES=12000000 \
+    CAPTION_ENGINE=gemma_fast \
+    GEMMA_FAST_MODEL=google/gemma-4-31b-it \
+    GEMMA_FAST_MAX_TOKENS=700 \
+    SCENE_DETECT_ENABLED=0 \
+    TIMESTAMP_FRAMES=0 \
     TRUST_GENERATED_HUMOROUS_TECH=1 \
-    MAX_CAPTION_CHARS=1600 \
+    MAX_CAPTION_CHARS=500 \
     NUM_FRAMES=24 \
     FRAME_MAX_EDGE=640 \
     MAX_CONCURRENCY=3 \
-    PER_TASK_TIMEOUT_S=220 \
-    GLOBAL_BUDGET_S=540
+    PER_TASK_TIMEOUT_S=120 \
+    GLOBAL_BUDGET_S=480
 # Judging VM = 2 vCPU / 4 GB RAM (Participant Guide p.5). Scene-detection
 # decodes the ENTIRE UHD clip per video and three parallel ffmpeg passes
 # thrash 2 cores into the 10-minute wall - uniform -ss seeks are near-free.

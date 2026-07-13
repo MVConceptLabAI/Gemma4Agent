@@ -139,6 +139,13 @@ async def _run_one(sem: asyncio.Semaphore, task: dict[str, Any]) -> dict[str, An
                     caption_demo(video_url=video_url, styles=styles),
                     timeout=task_timeout,
                 )
+            elif CAPTION_ENGINE == "gemma_fast":
+                from app.gemma_fast import caption_gemma_fast
+
+                captions = await asyncio.wait_for(
+                    caption_gemma_fast(video_url=video_url, styles=styles),
+                    timeout=task_timeout,
+                )
             elif CAPTION_ENGINE == "qwen_direct":
                 # Opt-in experimental path. Lazy import keeps the default and
                 # legacy v36 paths unchanged unless explicitly selected.

@@ -5,7 +5,7 @@ set -euo pipefail
 : "${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required to publish a judge-ready image}"
 
 if [[ -z "${PUBLIC_IMAGE:-}" ]]; then
-    echo "PUBLIC_IMAGE is required, e.g. ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v18" >&2
+    echo "PUBLIC_IMAGE is required, e.g. ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v19" >&2
     exit 2
 fi
 
