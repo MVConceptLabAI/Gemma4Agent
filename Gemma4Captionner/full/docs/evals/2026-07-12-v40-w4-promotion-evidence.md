@@ -1,5 +1,7 @@
 # v40 W4 promotion evidence - 2026-07-12
 
+> Historical V40 experiment, not the active Gemma 4 Captioning V18 submission.
+
 ## Decision
 
 Promote the W4 per-style writer profile only after the final resource-capped
@@ -99,4 +101,3 @@ evidence. Repeat this exact capped run after funding before tagging the release.
 - [ ] Exact release image passes 12 clips under 2 CPU / 4 GB in under ten minutes.
 - [ ] Public GHCR digest and anonymous contract run verified.
 - [ ] Lablab resubmission confirmation captured.
-

@@ -3,7 +3,7 @@
 set -euo pipefail
 
 if [[ -z "${PUBLIC_IMAGE:-}" ]]; then
-    echo "PUBLIC_IMAGE is required, e.g. ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v2" >&2
+    echo "PUBLIC_IMAGE is required, e.g. ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v18" >&2
     exit 2
 fi
 
@@ -23,7 +23,7 @@ docker run --rm \
     -v "$(pwd)/${WORK}/in:/input:ro" \
     -v "$(pwd)/${WORK}/out:/output" \
     -e PER_TASK_TIMEOUT_S=1 \
-    -e FIREWORKS_API_KEY= \
+    -e OPENROUTER_API_KEY= \
     "${PUBLIC_IMAGE}"
 
 python eval/self_check.py --results "${WORK}/out/results.json"

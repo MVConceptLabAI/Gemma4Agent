@@ -1,5 +1,8 @@
 # Quality Research: Prompts, Skills, Plugins
 
+> Historical pre-V18 research. It is retained for provenance; use `README.md`
+> and `RUNBOOK.md` for the active Gemma 4-only submission.
+
 Last updated: 2026-07-08.
 
 ## Objective

@@ -7,8 +7,11 @@ from app.demo_pipeline import (
     _has_caption_quality_risk,
     _has_generic_humour,
     _has_lexical_corruption,
+    _has_process_leak,
     _has_speed_inversion,
+    _has_stale_comedy_template,
     _safe_caption,
+    _video_facts,
 )
 
 
@@ -85,6 +88,21 @@ def main() -> None:
         "The runners move with the processing speed of a dial-up modem.",
         "humorous_tech",
     )
+
+    assert _has_stale_comedy_template("sarcastic", "A masterclass in standing around.")
+    assert _has_stale_comedy_template("humorous_tech", "It runs like a high-end GPU.")
+    assert _has_stale_comedy_template("humorous_non_tech", "The toddler watches with such intensity.")
+    assert not _has_stale_comedy_template(
+        "humorous_non_tech", "The gardener carries the pots like a waiter balancing a crowded tray."
+    )
+    assert _has_stale_comedy_template("sarcastic", "A sweeping epic of traffic.")
+    assert _has_stale_comedy_template("humorous_tech", "It moves at the speed of a modern SSD.")
+    assert _has_stale_comedy_template("humorous_non_tech", "They have the frantic energy of shoppers.")
+    assert _has_process_leak("The waves repeat twenty-four times.")
+    assert _video_facts('["A dog runs.", "a dog runs!", "A horse appears."]') == [
+        "A dog runs.",
+        "A horse appears.",
+    ]
 
     print("demo pipeline quality regressions: ok")
 

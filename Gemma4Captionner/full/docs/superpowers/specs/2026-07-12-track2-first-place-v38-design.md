@@ -1,5 +1,7 @@
 # Track 2 v38 First-Place Design
 
+> Historical V38 design, not the active Gemma 4 Captioning V18 submission.
+
 Date: 2026-07-12
 Project: Verified Scene Gate / Mvconceptlab
 Objective: exceed the current Track 2 leader score of 0.9217 without sacrificing the proven 0.9133 floor, the ten-minute batch limit, or output reliability.

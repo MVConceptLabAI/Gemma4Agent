@@ -1,5 +1,7 @@
 # Track 2 v38 MI300X and Independent Evaluation Implementation Plan
 
+> Historical V38 plan, not the active Gemma 4 Captioning V18 submission.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan one task at a time. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Select a v38 arm only when it beats the exact v36 baseline under a reproducible, position-balanced, multi-judge evaluation and a zero-Fireworks MI300X factual benchmark.

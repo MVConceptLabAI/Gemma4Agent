@@ -18,7 +18,7 @@ accurate, style-matched English captions for hidden video clips while avoiding
 elimination gates: malformed JSON, missing styles, timeout, wrong Docker
 architecture, inaccessible image, or leaked credentials. Success means a
 repeatable Docker run, strong real-inference quality, visible proof, and a clear
-path to final Fireworks judging and public image submission.
+path to final OpenRouter-hosted Gemma 4 inference and public image submission.
 
 ## Brand Personality
 

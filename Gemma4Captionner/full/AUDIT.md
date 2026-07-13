@@ -1,5 +1,8 @@
 # Competitive Audit
 
+> Historical pre-V18 audit. It does not describe the active `gemma_demo`
+> submission. See `README.md` and `RUNBOOK.md` for current V18 behavior.
+
 Last audit: 2026-07-08.
 
 ## Goal

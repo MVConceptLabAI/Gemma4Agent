@@ -1,30 +1,13 @@
 #!/usr/bin/env bash
-# Run the container locally on data/sample_tasks.json.
 set -euo pipefail
 
-IMAGE="${IMAGE:-gemma4-captioner:dev}"
-
-if [[ -z "${FIREWORKS_API_KEY:-}" ]]; then
-    echo "FIREWORKS_API_KEY is not set. Export it before running." >&2
-    exit 1
-fi
-
+: "${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required}"
+IMAGE="${IMAGE:-gemma4-captioner:v18-dev}"
 mkdir -p in out
-cp data/sample_tasks.json in/tasks.json
+cp "${TASKS_FILE:-data/sample_tasks.json}" in/tasks.json
 
-echo ">>> Running ${IMAGE}"
-time docker run --rm \
-    -v "$(pwd)/in:/input:ro" \
-    -v "$(pwd)/out:/output" \
-    -e FIREWORKS_API_KEY \
-    -e FIREWORKS_BASE_URL \
-    -e VLM_MODEL \
-    -e STYLE_MODEL \
-    "${IMAGE}"
-
-echo ">>> results.json:"
-if command -v jq >/dev/null; then
-    jq . out/results.json
-else
-    cat out/results.json
-fi
+docker run --rm \
+  -e OPENROUTER_API_KEY \
+  -v "$(pwd)/in:/input:ro" \
+  -v "$(pwd)/out:/output" \
+  "$IMAGE"

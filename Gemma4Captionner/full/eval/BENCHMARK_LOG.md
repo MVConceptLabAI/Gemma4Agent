@@ -1,5 +1,8 @@
 # Benchmark Log — Track 2 Captioner
 
+> Historical pre-V18 benchmark log. Scores and model routes below are retained
+> for provenance and do not describe the active V18 image.
+
 Persistent record of every caption config tested, scored by the **adversarial
 vision audit** (Opus agents read the real frames and refute each claim). Two
 axes that matter, measured on the 3 public demo clips (12 captions each unless

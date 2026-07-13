@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 import json
 import logging
 import os
@@ -189,7 +190,17 @@ def _video_facts(text: str) -> list[str]:
         value = []
     if not isinstance(value, list):
         return []
-    return [str(item).strip()[:180] for item in value if str(item).strip()][:8]
+    unique: list[str] = []
+    seen: set[str] = set()
+    for item in value:
+        fact = str(item).strip()[:180]
+        key = re.sub(r"\W+", " ", fact).strip().casefold()
+        if fact and key not in seen:
+            unique.append(fact)
+            seen.add(key)
+        if len(unique) == 8:
+            break
+    return unique
 
 
 async def _direct_video_evidence(
@@ -331,7 +342,9 @@ async def _rewrite_sarcastic(
         "a simple scene, contrast the ordinary visible action with the grand importance assigned to it. The "
         "sentence must still work as an accurate caption when the irony is removed. Never use technology jargon. Never use the "
         "stale openings 'thrilling footage', 'thrilling tour', 'exhilarating experience', 'we are treated to', "
-        "'apparently', or 'because apparently'. Do not mention frames, sampling, prompts, models, analysis, "
+        "'apparently', 'because apparently', 'masterclass', 'truly monumental', 'truly majestic', "
+        "'groundbreaking', 'a display of immense', or 'a sweeping epic of'. Do not mention frames, "
+        "sampling, prompts, models, analysis, "
         "or processing. Do not invent absence, stillness, failure, identity, intent, speech, brands, an "
         "audience, backstory, or unseen events. Preserve exact sequence and subject-action-object-location "
         "relationships. Use one sentence of 22-38 words. Return ONLY JSON: {\"caption\":\"...\"}."
@@ -362,7 +375,10 @@ async def _polish_humour(
         "exact subject-action-object-location relationships; never relocate an action onto another visible object "
         "or surface. Facts listed separately must remain parallel facts; never say that one approaches, passes, "
         "touches, or affects another unless the evidence explicitly states that relationship. Preserve montage order when "
-        "relevant. Each caption must be one sentence of 24-42 words.\n\nVERIFIED EVIDENCE:\n"
+        "relevant. Avoid recycled comedy templates: tech must not use 'high-end GPU', 'high-end processor', "
+        "'fiber-optic cable/connection', 'speed of a modern', 'crashed tablet', 'human statues', or "
+        "'overclocking'; non-tech must not use 'toddler', 'last slice of pizza', 'with such intensity', "
+        "'frantic energy of', or 'energy of someone trying'. Each caption must be one sentence of 24-42 words.\n\nVERIFIED EVIDENCE:\n"
         + evidence
         + "\n\nCANDIDATES:\n"
         + json.dumps({
@@ -509,24 +525,85 @@ def _has_caption_quality_risk(evidence: str, value: str, style: str = "") -> boo
         or _has_unsupported_absolute(evidence, value)
         or _has_generic_humour(style, value)
         or _has_speed_inversion(style, evidence, value)
+        or _has_stale_comedy_template(style, value)
+        or _has_process_leak(value)
     )
 
 
+def _has_stale_comedy_template(style: str, value: str) -> bool:
+    patterns = {
+        "sarcastic": (
+            r"\b(?:masterclass|truly monumental|truly majestic|groundbreaking|"
+            r"a display of immense|a sweeping epic of)\b"
+        ),
+        "humorous_tech": (
+            r"\b(?:high[- ]end (?:gpu|processor)|fiber[- ]optic (?:cable|connection)|"
+            r"overclock(?:s|ed|ing)?|speed of a modern|crashed tablet|human statues?)\b"
+        ),
+        "humorous_non_tech": (
+            r"\b(?:toddler|last slice of pizza|with such intensity|frantic energy of|"
+            r"energy of someone trying)\b"
+        ),
+    }
+    pattern = patterns.get(style)
+    return bool(pattern and re.search(pattern, value, re.IGNORECASE))
+
+
+def _has_process_leak(value: str) -> bool:
+    return bool(re.search(
+        r"\b(?:frames?|sampling|prompts?|models?|analysis|twenty[- ]four times|24 times)\b",
+        value,
+        re.IGNORECASE,
+    ))
+
+
 def _first_evidence_fact(evidence: str) -> str:
+    candidates: list[str] = []
     for line in evidence.splitlines():
         fact = re.sub(r"^-\s+", "", line.strip()).strip().rstrip(".!?")
         if line.strip().startswith("- ") and fact:
+            candidates.append(fact)
+    action = re.compile(
+        r"\b(?:is|are|walks?|runs?|rides?|moves?|drives?|types?|sits?|stands?|cuts?|chops?|"
+        r"crosses?|crashes?|shows?|features?|holds?|uses?|looks?|floats?|travels?)\b",
+        re.IGNORECASE,
+    )
+    for fact in candidates:
+        if len(fact.split()) >= 4 and action.search(fact):
             return fact
+    if candidates:
+        return candidates[0]
     return "Visible subjects move through the scene"
 
 
 def _safe_caption(style: str, evidence: str) -> str:
     fact = _first_evidence_fact(evidence)
+    seed = int(hashlib.sha256(fact.encode("utf-8")).hexdigest()[:8], 16)
+    variants = {
+        "sarcastic": [
+            "presented with the ceremony normally reserved for a state occasion",
+            "given exactly the level of gravitas this everyday moment was clearly missing",
+            "treated as though the history books had been waiting for it",
+            "framed with admirable confidence in its own importance",
+        ],
+        "humorous_tech": [
+            "moving like a tidy process that cleared its queue on the first try",
+            "behaving like a clean deployment that somehow skipped the emergency rollback",
+            "running like code that passed review before anyone found the surprise branch",
+            "operating like a server that remembered to stay awake during the demo",
+        ],
+        "humorous_non_tech": [
+            "with the focus of someone trying to carry a full cup across a bumpy room",
+            "with the confidence of a cook pretending the recipe always meant to look that way",
+            "with the determination of someone closing an overpacked suitcase",
+            "with the concentration of a shopper choosing the one cart that does not squeak",
+        ],
+    }
     return {
         "formal": f"The video shows {fact}.",
-        "sarcastic": f"{fact}, presented with the importance of a remarkably ambitious documentary milestone.",
-        "humorous_tech": f"{fact}, moving like a well-tuned process that finally cleared its queue without dropping the visible action.",
-        "humorous_non_tech": f"{fact}, with the determined energy of someone carrying every grocery bag in one trip.",
+        "sarcastic": f"{fact}, {variants['sarcastic'][seed % len(variants['sarcastic'])]}.",
+        "humorous_tech": f"{fact}, {variants['humorous_tech'][seed % len(variants['humorous_tech'])]}.",
+        "humorous_non_tech": f"{fact}, {variants['humorous_non_tech'][seed % len(variants['humorous_non_tech'])]}.",
     }[style]
 
 
@@ -550,6 +627,9 @@ async def _repair_caption_quality(
         "must use the visible motion or pace rather than a freeze or stillness metaphor. Replace generic non-tech "
         "fallbacks with a joke that names a verified subject and action. A fast visible action must not be compared "
         "to dial-up, loading, buffering, latency, lag, or a slow process. Do not add, remove, or "
+        "reuse these stale templates: masterclass, truly monumental, truly majestic, groundbreaking, a display of immense, "
+        "a sweeping epic of, high-end GPU, high-end processor, fiber-optic cable, speed of a modern, crashed tablet, "
+        "human statues, overclocking, toddler, last slice of pizza, with such intensity, frantic energy of, or energy of someone trying. "
         "reinterpret factual claims. Do not add commentary.\n\nVERIFIED EVIDENCE:\n" + evidence
         + "\n\nCAPTIONS TO CHECK:\n" + json.dumps(captions)
     )
@@ -569,7 +649,10 @@ async def _repair_caption_quality(
             "repaired joke in that motion or its pace. For humorous_non_tech, explicitly name the verified subject "
             "and action instead of a generic sequence or family-album template. For humorous_tech, preserve the "
             "direction of visible speed and never compare fast action to dial-up, loading, buffering, latency, lag, "
-            "or another slow process. Do not add facts. Return ONLY JSON: {\"caption\":\"...\"}."
+            "or another slow process. Avoid masterclass, truly monumental, truly majestic, groundbreaking, high-end GPU, "
+            "high-end processor, fiber-optic cable, speed of a modern, crashed tablet, human statues, overclocking, toddler, "
+            "last slice of pizza, with such intensity, frantic energy of, and energy of someone trying. Do not add facts. "
+            "Return ONLY JSON: {\"caption\":\"...\"}."
             "\n\nEVIDENCE:\n" + evidence + "\n\nCAPTION:\n" + captions[style]
         )
         result = await _ask_json_object(client, [{"type": "text", "text": prompt}], 320)

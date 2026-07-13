@@ -49,9 +49,7 @@ PY
 
 python eval/self_check.py --results out/results.json
 
-echo "[4/4] Optional: local judge (needs FIREWORKS_API_KEY)"
-python eval/local_judge.py \
-    --results out/results.json \
-    --clips eval/clips.json || true
+echo "[4/4] Repetition audit"
+python scripts/repetition_audit.py out/results.json --fail-on-exact
 
 echo "SMOKE TEST DONE."

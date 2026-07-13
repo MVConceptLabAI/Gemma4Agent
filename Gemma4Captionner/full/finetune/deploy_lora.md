@@ -1,5 +1,7 @@
 # Deploying your Gemma LoRA on Fireworks
 
+> Historical experiment, not part of the active V18 runtime or image.
+
 Fireworks lets you upload a LoRA adapter and route inference to it via a
 custom model id. The pipeline (`app/pipeline.py`) already reads `STYLE_LORA`
 from env — set it to your deployed adapter id and the 4 style calls will

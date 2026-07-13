@@ -1,4 +1,7 @@
-# Gemma 4 SceneGate public demo
+# Optional Gemma 4 Captioning GPU Worker demo
+
+> Optional deployment adapter. The V18 hackathon container and the static
+> `docs/demo.html` page do not require this Worker.
 
 The Cloudflare Worker serves the public page and proxies job requests to the
 GPU-only Flask API. It never exposes JupyterLab, its token, or provider keys.
@@ -16,7 +19,6 @@ On the GPU, run the Gemma 4 Full checkout and set secrets in that shell only:
 ```bash
 export DEMO_ORIGIN_TOKEN='generate-a-long-random-value'
 export OPENROUTER_API_KEY='your-provider-key'
-export FIREWORKS_API_KEY='optional-fallback-key'
 chmod +x scripts/start_cloud_demo.sh
 ./scripts/start_cloud_demo.sh
 ```

@@ -1,5 +1,7 @@
 # Track 2 v38 Leader-Parity Engine Implementation Plan
 
+> Historical V38 plan, not the active Gemma 4 Captioning V18 submission.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan one task at a time. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Implement reversible v38 causal profiles that restore factual recall and style strength while preserving the controlled C0 source fallback, immutable R0 whole-run rollback, and Track 2 contract.

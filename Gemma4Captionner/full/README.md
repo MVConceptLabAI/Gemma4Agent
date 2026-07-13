@@ -108,7 +108,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 export OPENROUTER_API_KEY=sk-or-v1-...
 export CAPTION_ENGINE=gemma_demo
-export INPUT_PATH=data/official_new12.json
+export INPUT_PATH=data/official_tasks.json
 export OUTPUT_PATH=out/results.json
 python -u -m app.main
 ```
@@ -121,7 +121,7 @@ python -m venv .venv
 pip install -r requirements.txt
 $env:OPENROUTER_API_KEY = 'sk-or-v1-...'
 $env:CAPTION_ENGINE = 'gemma_demo'
-$env:INPUT_PATH = 'data\official_new12.json'
+$env:INPUT_PATH = 'data\official_tasks.json'
 $env:OUTPUT_PATH = 'out\results.json'
 python -u -m app.main
 ```
@@ -149,6 +149,22 @@ The submitted Dockerfile pins these values:
 | `GLOBAL_BUDGET_S` | `540` | Margin below the 10-minute limit |
 
 ## Validation evidence
+
+### Full AMD-hosted 15-task set
+
+Input: [`data/official_tasks.json`](data/official_tasks.json)
+
+The final V18 profile completed the entire set on 2026-07-13:
+
+- 15 tasks and 60 requested captions written
+- valid JSON and exit code 0
+- total runtime: 406.0 seconds
+- no task timeout or missing style
+- zero exact duplicate captions across the batch
+
+The accompanying `scripts/repetition_audit.py` also reports shared n-grams for
+manual review. Common sentence fragments are warnings rather than automatic
+failures because eliminating ordinary phrasing can reduce factual accuracy.
 
 ### AMD-hosted 12-task set
 
@@ -194,6 +210,7 @@ The quality regression test covers:
 - generic humorous non-tech fallbacks
 - slow technology metaphors applied to fast visible action
 - malformed pseudo-JSON followed by a strict-JSON retry
+- duplicate direct-video facts, recycled comedy templates and process leakage
 
 ## Publish
 
@@ -213,7 +230,9 @@ side manifests, then verifies the image with Docker Buildx.
 - `app/demo_pipeline.py` - Gemma-only evidence and caption pipeline
 - `app/models.py` - task parsing, normalization, fallbacks, validation
 - `data/official_new12.json` - AMD-hosted 12-task validation input
+- `data/official_tasks.json` - full AMD-hosted 15-task validation input
 - `docs/` - browser demo and presentation material
 - `scripts/test_demo_pipeline_quality.py` - V18 regression checks
+- `scripts/repetition_audit.py` - exact-duplicate and shared-phrase audit
 - `Dockerfile` - public submission image profile
 - `SUBMISSION.md` - hackathon submission copy

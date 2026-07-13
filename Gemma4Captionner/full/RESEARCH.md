@@ -1,5 +1,8 @@
 # Research Notes
 
+> Historical pre-V18 research. It does not describe the active `gemma_demo`
+> submission. See `README.md` and `RUNBOOK.md` for current V18 behavior.
+
 Last updated: 2026-07-08.
 
 ## Local Archive Sweep

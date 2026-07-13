@@ -34,12 +34,12 @@ submission path.
 
 ## Verified results
 
-The current pipeline processed the 12-task AMD-hosted validation set in
-`full/data/official_new12.json` in 340.7 seconds and wrote a valid 48-caption
-result file with exit code 0. That run exposed one malformed model JSON response
-on task `6023186`; V18 now retries strict JSON once. The corrected task was then
-retested successfully in 69.9 seconds with four grounded captions and no task
-fallback.
+The final pipeline processed the full 15-task AMD-hosted set in
+`full/data/official_tasks.json` in 406.0 seconds and wrote 60 valid captions with
+exit code 0, no missing style, no timeout, and zero exact duplicate captions.
+V18 retries malformed model JSON once, removes duplicate direct-video facts,
+repairs recurring comedy templates, and reports shared batch phrases for manual
+review.
 
 See [`full/README.md`](full/README.md) for commands, configuration, contract,
 architecture, and reproducible validation details.
