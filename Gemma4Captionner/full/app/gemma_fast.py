@@ -1,4 +1,4 @@
-"""Gemma Fast V19: 24 ordered frames, one multimodal call, local validation."""
+"""Gemma Fast V19: ordered frames, one multimodal call, local validation."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ log = logging.getLogger("track2.gemma_fast")
 
 def _prompt() -> str:
     return (
-        "You are Gemma Fast, a precise video-captioning agent. The 24 images below are ordered "
+        f"You are Gemma Fast, a precise video-captioning agent. The {FRAME_COUNT} images below are ordered "
         "uniformly from the beginning to the end of ONE video. Inspect the complete sequence once "
         "and return ONLY one strict JSON object with exactly these string keys: formal, sarcastic, "
         "humorous_tech, humorous_non_tech. Every caption must describe the same verified video, remain "

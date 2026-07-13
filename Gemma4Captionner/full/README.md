@@ -1,23 +1,23 @@
-# Gemma Hybrid V20.3
+# Gemma Hybrid V20.4
 
-V20.3 is a Gemma 4-only Track 2 pipeline that combines the speed of V19 with
-bounded V18 evidence recovery. It attempts one coherent 24-frame Gemma request
-first and spends the additional V18 calls only when the fast result is unsafe.
+V20.4 is a Gemma 4-only Track 2 pipeline that processes one video per bounded
+Gemma request. It preserves a hard 28-second task budget while grounding local
+style repairs in the accepted formal visual caption.
 
 ## Architecture
 
-1. Download the clip and sample 24 uniformly spaced JPEG frames at a maximum
+1. Download the clip and sample 8 uniformly spaced JPEG frames at a maximum
    edge of 640 pixels.
 2. Send the ordered sequence to `google/gemma-4-31b-it` in one multimodal call.
 3. Parse and locally validate all four requested styles.
 4. Accept the fast result when it is complete, concrete, grammatically intact,
    stylistically distinct, and consistent with its formal factual anchor.
-5. On provider failure, malformed output, generic fallback, process leak, or
-   lexical corruption, use one bounded V18 evidence recovery for the batch.
-   Other grounding and style risks are repaired locally from the accepted
-   formal caption, preserving capacity for later videos.
-6. The submission disables batch reruns so the global ten-minute budget remains
-   available for every input task.
+5. Local checks reject malformed output, generic fallback, process leaks,
+   lexical corruption and unsupported style claims; repairs retain the accepted
+   formal visual anchor.
+6. Deep and batch recovery reruns are disabled in the submission profile, so
+   every video remains within the 28-second per-task guard and the full batch
+   remains below the ten-minute limit.
 7. Validate and write `/output/results.json`.
 
 Every model request remains inside the Gemma 4 family.
@@ -27,11 +27,11 @@ Every model request remains inside the Gemma 4 family.
 ```bash
 mkdir -p input output
 cp data/sample_tasks.json input/tasks.json
-docker pull mvconceptlab/gemma4-captioner:gemma4-submission-v20.3
+docker pull mvconceptlab/gemma4-captioner:gemma4-submission-v20.4
 docker run --rm \
   -v "$PWD/input:/input:ro" \
   -v "$PWD/output:/output" \
-  mvconceptlab/gemma4-captioner:gemma4-submission-v20.3
+  mvconceptlab/gemma4-captioner:gemma4-submission-v20.4
 python eval/self_check.py --results output/results.json
 ```
 
@@ -75,15 +75,15 @@ PowerShell uses the same variable names through `$env:NAME = 'value'`.
 | `GEMMA_FAST_MODEL` | `google/gemma-4-31b-it` |
 | `DEMO_GEMMA_MODEL` | `google/gemma-4-31b-it` |
 | `DEMO_VIDEO_MODEL` | `google/gemma-4-26b-a4b-it` |
-| `NUM_FRAMES` | `24` |
+| `NUM_FRAMES` | `8` |
 | `FRAME_MAX_EDGE` | `640` |
 | `GEMMA_FAST_MAX_TOKENS` | `500` |
-| `HYBRID_FAST_TIMEOUT_S` | `55` |
-| `HYBRID_RECOVERY_TIMEOUT_S` | `45` |
-| `HYBRID_RECOVERY_MAX_PER_RUN` | `1` |
+| `HYBRID_FAST_TIMEOUT_S` | `24` |
+| `HYBRID_RECOVERY_TIMEOUT_S` | `0` |
+| `HYBRID_RECOVERY_MAX_PER_RUN` | `0` |
 | `HYBRID_BATCH_RECOVERY_MAX` | `0` |
-| `MAX_CONCURRENCY` | `3` |
-| `PER_TASK_TIMEOUT_S` | `100` |
+| `MAX_CONCURRENCY` | `1` |
+| `PER_TASK_TIMEOUT_S` | `28` |
 | `GLOBAL_BUDGET_S` | `540` |
 | `GLOBAL_BUDGET_RESERVE_S` | `30` |
 
@@ -101,7 +101,6 @@ python -m compileall -q app scripts
 output recovery, cross-task repetition detection, and bounded batch recovery.
 The older V18 and V19 images remain immutable rollback candidates.
 
-The V20 promotion corpus completed eight 30-79 second category clips in 327.1
-seconds with 32/32 captions. The final weak-case replay passed the Gemma 4 batch
-audit with 0.90 style quality, 0.90 diversity, 0.10 accuracy risk, no shared
-patterns, no exact duplicates, and no repeated four-word spans.
+The V20.4 submission profile completed a live 12-clip run in 134 seconds with
+48/48 captions. Every task completed in 6.4-22.2 seconds; this is a runtime
+smoke test, not a substitute for the hackathon's hidden-set judge score.

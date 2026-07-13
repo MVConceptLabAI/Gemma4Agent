@@ -2,7 +2,7 @@
 set -euo pipefail
 
 : "${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required}"
-IMAGE="${IMAGE:-mvconceptlab/gemma4-captioner:gemma4-submission-v20.3}"
+IMAGE="${IMAGE:-mvconceptlab/gemma4-captioner:gemma4-submission-v20.4}"
 mkdir -p in out
 cp "${TASKS_FILE:-data/sample_tasks.json}" in/tasks.json
 

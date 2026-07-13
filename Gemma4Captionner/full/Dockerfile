@@ -30,9 +30,9 @@ COPY app/ ./app/
 
 # The harness mounts /input and /output at runtime and injects NO env vars,
 # so the submission profile is pinned here. Non-secret config is plain ENV.
-# V20 Hybrid: try the V19 24-frame request first. A timed-out, malformed,
-# generic, contradictory, or repeated result is recovered through the grounded
-# V18 evidence pipeline. Every inference request remains inside Gemma 4.
+# V20.4: one bounded eight-frame request per video, leaving margin under the
+# 30-second general response-time rule. Local repairs keep accepted visual
+# anchors; expensive recovery is disabled in this submission profile.
 ENV PYTHONPATH=/app \
     CAPTION_ENGINE=gemma_hybrid \
     GEMMA_FAST_MODEL=google/gemma-4-31b-it \
@@ -42,19 +42,19 @@ ENV PYTHONPATH=/app \
     DEMO_OBSERVATION_CONCURRENCY=9 \
     VIDEO_CONTEXT_MAX_SECONDS=60 \
     VIDEO_CONTEXT_MAX_BYTES=12000000 \
-    HYBRID_FAST_TIMEOUT_S=55 \
-    HYBRID_RECOVERY_TIMEOUT_S=45 \
-    HYBRID_RECOVERY_MAX_PER_RUN=1 \
+    HYBRID_FAST_TIMEOUT_S=24 \
+    HYBRID_RECOVERY_TIMEOUT_S=0 \
+    HYBRID_RECOVERY_MAX_PER_RUN=0 \
     HYBRID_BATCH_RECOVERY_TIMEOUT_S=0 \
     HYBRID_BATCH_RECOVERY_MAX=0 \
     SCENE_DETECT_ENABLED=0 \
     TIMESTAMP_FRAMES=0 \
     TRUST_GENERATED_HUMOROUS_TECH=1 \
     MAX_CAPTION_CHARS=500 \
-    NUM_FRAMES=24 \
+    NUM_FRAMES=8 \
     FRAME_MAX_EDGE=640 \
-    MAX_CONCURRENCY=3 \
-    PER_TASK_TIMEOUT_S=100 \
+    MAX_CONCURRENCY=1 \
+    PER_TASK_TIMEOUT_S=28 \
     GLOBAL_BUDGET_S=540 \
     GLOBAL_BUDGET_RESERVE_S=30
 # Judging VM = 2 vCPU / 4 GB RAM (Participant Guide p.5). Scene-detection
