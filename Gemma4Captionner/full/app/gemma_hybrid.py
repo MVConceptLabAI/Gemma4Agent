@@ -11,7 +11,6 @@ from typing import Any, Callable
 from app.demo_pipeline import caption_demo, _has_lexical_corruption, _has_process_leak
 from app.gemma_fast import (
     _contradicts_formal,
-    _post_validate,
     _too_similar,
     caption_gemma_fast,
 )
@@ -81,7 +80,12 @@ async def _recover(video_url: str, styles: list[str], timeout: float, reason: st
         caption_demo(video_url=video_url, styles=styles),
         timeout=timeout,
     )
-    return _post_validate(recovered, styles)
+    # V18 already writes, rewrites, verifies, and quality-checks each creative
+    # caption against its evidence record.  Running V19's fast-path repair here
+    # used to replace that richer copy with a generic category fallback (for
+    # example, the traffic CPU-scheduler template).  Keep the evidence-first
+    # result and use only the contract/style normalizer at this boundary.
+    return normalize_captions(recovered, styles)
 
 
 async def caption_gemma_hybrid(video_url: str, styles: list[str]) -> dict[str, str]:

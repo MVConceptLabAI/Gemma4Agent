@@ -78,6 +78,32 @@ async def test_fast_acceptance_and_recovery() -> None:
         hybrid.FAST_TIMEOUT_S = original_timeout
 
 
+async def test_recovery_keeps_evidence_first_creative_copy() -> None:
+    original_demo = hybrid.caption_demo
+
+    async def rich_demo(video_url: str, styles: list[str]) -> dict[str, str]:
+        return {
+            "formal": "Cars and motorcycles drive beneath concrete overpasses and through a tunnel.",
+            "sarcastic": "Cars and motorcycles pass beneath concrete overpasses, because apparently a tunnel commute deserved this much architectural suspense.",
+            "humorous_tech": "Cars and motorcycles route through concrete tunnels like data packets following a very determined network path.",
+            "humorous_non_tech": "Cars and motorcycles squeeze through the concrete tunnel like guests leaving a party through one determined doorway.",
+        }
+
+    try:
+        hybrid.caption_demo = rich_demo
+        result = await hybrid._recover(
+            "https://example.test/video.mp4",
+            list(hybrid.REQUIRED_STYLES),
+            10,
+            "test",
+        )
+        assert "architectural suspense" in result["sarcastic"]
+        assert "data packets" in result["humorous_tech"]
+        assert "one determined doorway" in result["humorous_non_tech"]
+    finally:
+        hybrid.caption_demo = original_demo
+
+
 async def test_batch_repetition_recovery() -> None:
     first = captions("A dog runs across a grassy field")
     second = captions("Players run across a football field")
@@ -129,6 +155,7 @@ def test_quality_signals() -> None:
 def main() -> None:
     test_quality_signals()
     asyncio.run(test_fast_acceptance_and_recovery())
+    asyncio.run(test_recovery_keeps_evidence_first_creative_copy())
     asyncio.run(test_batch_repetition_recovery())
     print("Gemma Hybrid V20 regressions: ok")
 

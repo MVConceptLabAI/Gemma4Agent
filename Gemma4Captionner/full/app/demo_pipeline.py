@@ -495,6 +495,46 @@ def _has_generic_humour(style: str, value: str) -> bool:
     ))
 
 
+_CREATIVE_ANCHOR_STOPWORDS = {
+    "about", "after", "along", "another", "around", "because", "before", "being",
+    "clearly", "could", "despite", "every", "first", "from", "into", "itself",
+    "other", "rather", "scene", "shows", "still", "their", "there", "these", "they",
+    "this", "through", "under", "video", "visible", "while", "with", "would",
+}
+
+
+def _anchor_token(token: str) -> str:
+    """Use a tiny plural normalizer for evidence/caption grounding checks."""
+    if len(token) > 4 and token.endswith("ies"):
+        return token[:-3] + "y"
+    if len(token) > 4 and token.endswith("es"):
+        return token[:-2]
+    if len(token) > 3 and token.endswith("s"):
+        return token[:-1]
+    return token
+
+
+def _creative_anchor_count(evidence: str, value: str) -> int:
+    evidence_tokens = {
+        _anchor_token(token)
+        for token in re.findall(r"[a-z]+", evidence.casefold())
+        if len(token) >= 4 and token not in _CREATIVE_ANCHOR_STOPWORDS
+    }
+    caption_tokens = {
+        _anchor_token(token)
+        for token in re.findall(r"[a-z]+", value.casefold())
+        if len(token) >= 4 and token not in _CREATIVE_ANCHOR_STOPWORDS
+    }
+    return len(evidence_tokens & caption_tokens)
+
+
+def _has_weak_creative_grounding(style: str, evidence: str, value: str) -> bool:
+    """Reject jokes that describe a category, not this particular video."""
+    if style not in {"sarcastic", "humorous_tech", "humorous_non_tech"}:
+        return False
+    return _creative_anchor_count(evidence, value) < 3
+
+
 def _has_speed_inversion(style: str, evidence: str, value: str) -> bool:
     if style != "humorous_tech":
         return False
@@ -524,6 +564,7 @@ def _has_caption_quality_risk(evidence: str, value: str, style: str = "") -> boo
         _has_lexical_corruption(value, evidence)
         or _has_unsupported_absolute(evidence, value)
         or _has_generic_humour(style, value)
+        or _has_weak_creative_grounding(style, evidence, value)
         or _has_speed_inversion(style, evidence, value)
         or _has_stale_comedy_template(style, value)
         or _has_process_leak(value)
@@ -630,7 +671,9 @@ async def _repair_caption_quality(
         "reuse these stale templates: masterclass, truly monumental, truly majestic, groundbreaking, a display of immense, "
         "a sweeping epic of, high-end GPU, high-end processor, fiber-optic cable, speed of a modern, crashed tablet, "
         "human statues, overclocking, toddler, last slice of pizza, with such intensity, frantic energy of, or energy of someone trying. "
-        "reinterpret factual claims. Do not add commentary.\n\nVERIFIED EVIDENCE:\n" + evidence
+        "Each sarcastic or humorous caption must retain at least three concrete words or short phrases from the verified evidence, "
+        "including a visible subject, action, object, or setting; never replace them with broad labels such as commute, traffic, or routine. "
+        "Do not reinterpret factual claims. Do not add commentary.\n\nVERIFIED EVIDENCE:\n" + evidence
         + "\n\nCAPTIONS TO CHECK:\n" + json.dumps(captions)
     )
     try:
@@ -651,7 +694,8 @@ async def _repair_caption_quality(
             "direction of visible speed and never compare fast action to dial-up, loading, buffering, latency, lag, "
             "or another slow process. Avoid masterclass, truly monumental, truly majestic, groundbreaking, high-end GPU, "
             "high-end processor, fiber-optic cable, speed of a modern, crashed tablet, human statues, overclocking, toddler, "
-            "last slice of pizza, with such intensity, frantic energy of, and energy of someone trying. Do not add facts. "
+            "last slice of pizza, with such intensity, frantic energy of, and energy of someone trying. Preserve at least three concrete "
+            "evidence anchors, including a visible subject and action; do not collapse them into a generic commute, traffic, or routine. Do not add facts. "
             "Return ONLY JSON: {\"caption\":\"...\"}."
             "\n\nEVIDENCE:\n" + evidence + "\n\nCAPTION:\n" + captions[style]
         )
