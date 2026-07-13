@@ -33,20 +33,25 @@ def _prompt() -> str:
         "and return ONLY one strict JSON object with exactly these string keys: formal, sarcastic, "
         "humorous_tech, humorous_non_tech. Every caption must describe the same verified video, remain "
         "12-35 words, and be clearly different in wording and tone. formal: objective, professional, "
-        "factual, no humour. sarcastic: dry, intelligent, lightly mocking irony, no technology jargon. "
+        "factual, no humour. sarcastic: sharp dry irony built around one visible contrast or status mismatch, "
+        "with one concise punchline and no technology jargon; do not merely restate the formal caption and add 'because'. "
         "humorous_tech: one natural programming, software, hardware, or networking comparison with a "
         "clear playful payoff; it MUST explicitly contain at least one of: software, code, server, network, "
-        "data, processor, hardware, thread, cache, pixel, or API. humorous_non_tech: warm everyday humour with no technology vocabulary. "
+        "data, processor, hardware, thread, cache, pixel, or API. humorous_non_tech: a genuinely funny everyday analogy "
+        "or situation tied to a specific visible subject and action, ending with a clear punchline and using no technology vocabulary; "
+        "a compliment, beauty judgment, or claim that something steals the spotlight is not enough. "
         "For a montage, preserve the visible scene order. Prefer concrete subjects, actions, objects, "
         "setting, motion, weather, and readable text that is stable across images. Use a generic city or "
-        "landmark description unless its exact name is directly readable and repeated. Never invent identity, "
+        "landmark description unless its exact name is directly readable and repeated. The formal caption must never invent identity, "
         "intent, speech, audio, brands, off-screen events, exact counts, failure, stillness, time-lapse, "
-        "or a camera technique. Figurative jokes must not state a subject's literal thoughts or plans. Never "
+        "or a camera technique. Styled captions may use clearly figurative, context-supported common-sense inference, "
+        "but must not assert unseen events or private thoughts as facts. Never "
         "mention images, frames, sampling, prompts, models, or analysis. Avoid stock phrases including "
         "masterclass, truly monumental, a sweeping epic, thrilling time, thrilling footage, high-end GPU, "
         "speed of a modern, legacy system, single-core processor, poorly optimized, code that refuses, "
         "musical chairs, freshly cleaned floor, ordinary moment ceremony, toddler, with such intensity, "
-        "and watching paint dry. Use double-quoted JSON strings with no Markdown."
+        "watching paint dry, looks great, stealing the spotlight, just wants to go fast, and a very demanding way to spend the day. "
+        "Use double-quoted JSON strings with no Markdown."
     )
 
 
@@ -124,8 +129,8 @@ def _unsafe_template(style: str, value: str) -> bool:
     common = r"\b(?:frames?|sampling|prompts?|models?|analysis|caption|punchline|qa|masterclass|truly monumental|truly majestic|groundbreaking|a display of immense|a sweeping epic|thrilling)\b"
     patterns = {
         "humorous_tech": common + r"|\b(?:algorithm|visual runtime|visual quality|network (?:traffic|packet)|data packet|graphics (?:server|engine)|pixel budget|high[- ]end gpu|speed of a modern|crashed tablet|human statues?|video quality|legacy (?:system|code)|single[- ]core processor|poorly optimized|code that refuses|hidden test|rollback)\b",
-        "humorous_non_tech": common + r"|\b(?:trying to figure out if|penguins? in the cold|ignoring (?:their|the) drinks|shopper|shopping cart|cart that|toddler|with such intensity|watching paint dry|musical chairs|giant game|freshly cleaned floor)\b",
-        "sarcastic": common + r"|\b(?:most ambitious production|ceremony this ordinary moment|ordinary moment was apparently missing)\b",
+        "humorous_non_tech": common + r"|\b(?:looks (?:great|good|beautiful|nice)|steal(?:s|ing) the spotlight|just wants? to go fast|trying to figure out if|penguins? in the cold|ignoring (?:their|the) drinks|shopper|shopping cart|cart that|toddler|with such intensity|watching paint dry|musical chairs|giant game|freshly cleaned floor)\b",
+        "sarcastic": common + r"|\b(?:spends? (?:her|his|their) day|grueling schedule|schedule of (?:standing|sitting|talking)|very demanding way to spend|because (?:that|this) is (?:a )?(?:very )?(?:demanding|exciting|interesting)|most ambitious production|ceremony this ordinary moment|ordinary moment was apparently missing)\b",
         "formal": common,
     }
     return bool(re.search(patterns[style], value, re.IGNORECASE))
@@ -158,6 +163,12 @@ def _fallbacks(formal: str) -> dict[str, str]:
             "Pedestrians and vehicles negotiate the intersection, because painted lines have once again saved civilization.",
             "The intersection becomes a backend load balancer distributing pedestrians and vehicles across every available lane.",
             "The crossing becomes an orderly race in which everyone remembers a different version of the rules.",
+        )
+    elif re.search(r"\b(?:race|racing|racecar|race car|circuit|driver|pit lane|motorsport)\b", lower):
+        voices = (
+            "The racing scene advances from pit-lane talk to cockpit and track; apparently standing beside the red car was far too pedestrian.",
+            "The race sequence shifts from interview to cockpit and circuit like software promoting its fastest process into production.",
+            "The woman moves from talking beside the red cars to sitting in one, like someone who stopped window-shopping and chose the loudest test drive available.",
         )
     elif re.search(r"\b(?:vehicle|street|road)\b", lower) and re.search(r"\b(?:night|wet|rain)\b", lower):
         voices = (

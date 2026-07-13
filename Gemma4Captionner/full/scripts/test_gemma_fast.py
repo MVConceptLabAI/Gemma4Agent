@@ -64,6 +64,17 @@ def test_local_json_and_validation() -> None:
     assert "punchline" not in meta["humorous_tech"].lower()
     assert "here," not in meta["humorous_tech"].lower()
 
+    racing = gemma_fast._post_validate({
+        "formal": "A woman presents a racing event, speaks with a man beside a red race car, sits in a race car, and the car drives onto the circuit.",
+        "sarcastic": "A woman spends her day near expensive red cars, because that is a very demanding way to spend an afternoon.",
+        "humorous_tech": "The race sequence runs like software promoting its fastest process into production.",
+        "humorous_non_tech": "She looks great, but the red cars are stealing the spotlight while the driver just wants to go fast.",
+    }, list(gemma_fast.REQUIRED_STYLES))
+    assert "demanding way" not in racing["sarcastic"].lower()
+    assert "looks great" not in racing["humorous_non_tech"].lower()
+    assert "stealing the spotlight" not in racing["humorous_non_tech"].lower()
+    assert "window-shopping" in racing["humorous_non_tech"].lower()
+
     malformed = (
         'formal: "A cat walks through leaves.", '
         '"sarcastic":"A cat conducts a very serious garden inspection.", '
