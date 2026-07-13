@@ -21,7 +21,7 @@
       <details open>
         <summary>Local inference settings</summary>
         <div class="grid">
-          <label>Pipeline version<select id="pipelineVersion"><option value="v17">V17 · 24 grounded frames</option><option value="v18">V18 · frames + direct video</option></select></label>
+          <label>Pipeline version<select id="pipelineVersion"><option value="v18" selected>V18 · frames + direct video</option><option value="v17">V17 · 24 grounded frames</option></select></label>
           <label>OpenRouter API key<input id="apiKey" type="password" autocomplete="off" placeholder="sk-or-v1-…"></label>
           <label>Vision model<input id="model" type="text" value="google/gemma-4-31b-it" autocomplete="off"></label>
           <label id="videoModelRow" class="hidden">Direct-video model<input id="videoModel" type="text" value="google/gemma-4-26b-a4b-it" autocomplete="off"></label>
@@ -87,6 +87,7 @@
     function readJson(key, fallback) { try { return JSON.parse(localStorage.getItem(key) || ''); } catch { return fallback; } }
     function saveSettings() {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        settingsVersion: 3,
         pipelineVersion: pipelineVersion.value,
         model: model.value.trim(),
         videoModel: videoModel.value.trim(),
@@ -97,7 +98,9 @@
     }
     function restoreSettings() {
       const saved = readJson(SETTINGS_KEY, {});
-      pipelineVersion.value = saved.pipelineVersion === 'v18' ? 'v18' : 'v17';
+      // Migrate existing installations to V18 once while preserving their
+      // locally stored model/key choices. Afterwards an explicit V17 choice is respected.
+      pipelineVersion.value = saved.settingsVersion === 3 && saved.pipelineVersion === 'v17' ? 'v17' : 'v18';
       model.value = saved.model || model.value;
       videoModel.value = saved.videoModel || videoModel.value;
       taskId.value = saved.taskId || taskId.value;
@@ -211,12 +214,35 @@
       const facts = String(evidence || '').split(/\n+/)
         .filter(line => /^-\s+/.test(line)).map(line => line.replace(/^-\s+/, '').trim().replace(/[.!?]+$/, ''))
         .filter(Boolean).slice(0, 3);
+      const actionPattern = /\b(?:is|are|walks?|runs?|rides?|moves?|drives?|types?|sits?|stands?|cuts?|chops?|crosses?|crashes?|shows?|features?|holds?|uses?|looks?|floats?|travels?)\b/i;
+      const fact = facts.find(item => item.split(/\s+/).length >= 4 && actionPattern.test(item)) || facts[0] || 'Visible subjects move through the scene';
       const scene = facts.length ? facts.join('; ') : 'visible subjects, movement, and surrounding scenery';
+      const seed = [...fact].reduce((value, character) => ((value * 31) + character.charCodeAt(0)) >>> 0, 0);
+      const variants = {
+        sarcastic: [
+          'presented with the ceremony normally reserved for a state occasion',
+          'given exactly the gravitas this everyday moment was clearly missing',
+          'treated as though the history books had been waiting for it',
+          'framed with admirable confidence in its own importance'
+        ],
+        humorous_tech: [
+          'moving like a tidy process that cleared its queue on the first try',
+          'behaving like a clean deployment that skipped the emergency rollback',
+          'running like code that passed review before anyone found the surprise branch',
+          'operating like a server that remembered to stay awake during the demo'
+        ],
+        humorous_non_tech: [
+          'with the focus of someone carrying a full cup across a bumpy room',
+          'with the confidence of a cook pretending the recipe always meant to look that way',
+          'with the determination of someone closing an overpacked suitcase',
+          'with the concentration of a shopper choosing the one cart that does not squeak'
+        ]
+      };
       return {
         formal: `The video shows ${scene}.`,
-        sarcastic: `The scene presents ${scene}, because apparently this moment required the full documentary treatment.`,
-        humorous_tech: `The video shows ${facts[0] || scene}, moving like a well-tuned process that cleared its queue without dropping the visible action.`,
-        humorous_non_tech: `The video shows ${facts[0] || scene}, with the determined energy of someone carrying every grocery bag in one trip.`
+        sarcastic: `${fact}, ${variants.sarcastic[seed % variants.sarcastic.length]}.`,
+        humorous_tech: `${fact}, ${variants.humorous_tech[seed % variants.humorous_tech.length]}.`,
+        humorous_non_tech: `${fact}, ${variants.humorous_non_tech[seed % variants.humorous_non_tech.length]}.`
       };
     }
     function juryResultsPayload(captions) {
@@ -336,10 +362,20 @@
       if (start >= 0 && end > start) {
         try {
           const facts = JSON.parse(text.slice(start, end + 1));
-          if (Array.isArray(facts)) return [...new Set(facts.map(item => String(item).trim().slice(0, 140)).filter(Boolean))].slice(0, 8);
+          if (Array.isArray(facts)) return uniqueFacts(facts);
         } catch { /* fall through to conservative line recovery */ }
       }
-      return [...new Set(text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '').trim().slice(0, 140)).filter(Boolean))].slice(0, 8);
+      return uniqueFacts(text.split(/\n+/).map(line => line.replace(/^[-*]\s*/, '')));
+    }
+    function uniqueFacts(values) {
+      const output = [], seen = new Set();
+      for (const value of values) {
+        const fact = String(value || '').trim().slice(0, 140);
+        const key = fact.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        if (fact && !seen.has(key)) { output.push(fact); seen.add(key); }
+        if (output.length === 8) break;
+      }
+      return output;
     }
     function fileDataUrl(file) {
       return new Promise((resolve, reject) => {
@@ -416,7 +452,7 @@
     }
     async function rewriteSarcasticV18(evidence, candidate) {
       setStatus('V18 is sharpening the sarcastic caption…');
-      const prompt = `You are editing ONE sarcastic video caption. Rewrite it using only the verified evidence below. Produce dry, intelligent, lightly mocking irony—not loud comedy. Start with one precise verified subject, action, contrast or montage transition, then use understated praise or restrained overstatement, and finish with a short sting tied to that same evidence. The sting must expose a verified mismatch, abrupt juxtaposition or disproportion; generic praise alone is not sarcasm. For a montage, target the contrast between its verified scenes instead of merely listing them. For a simple scene, contrast the ordinary visible action with the grand importance assigned to it. The sentence must still work as an accurate caption when the irony is removed. Never use technology jargon. Never use the stale openings “thrilling footage”, “thrilling tour”, “exhilarating experience”, “we are treated to”, “apparently”, or “because apparently”. Do not mention frames, sampling, prompts, models, analysis or processing. Do not invent absence, stillness, failure, identity, intent, speech, brands, an audience, backstory or unseen events. Preserve exact sequence and subject-action-object-location relationships. Use one sentence of 22–38 words. Return ONLY JSON: {"caption":"..."}.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCURRENT CANDIDATE:\n${candidate}`;
+      const prompt = `You are editing ONE sarcastic video caption. Rewrite it using only the verified evidence below. Produce dry, intelligent, lightly mocking irony—not loud comedy. Start with one precise verified subject, action, contrast or montage transition, then use understated praise or restrained overstatement, and finish with a short sting tied to that same evidence. The sting must expose a verified mismatch, abrupt juxtaposition or disproportion; generic praise alone is not sarcasm. For a montage, target the contrast between its verified scenes instead of merely listing them. For a simple scene, contrast the ordinary visible action with the grand importance assigned to it. The sentence must still work as an accurate caption when the irony is removed. Never use technology jargon. Never use the stale openings “thrilling footage”, “thrilling tour”, “exhilarating experience”, “we are treated to”, “apparently”, “because apparently”, “masterclass”, “truly monumental”, “truly majestic”, “groundbreaking”, “a display of immense”, or “a sweeping epic of”. Do not mention frames, sampling, prompts, models, analysis or processing. Do not invent absence, stillness, failure, identity, intent, speech, brands, an audience, backstory or unseen events. Preserve exact sequence and subject-action-object-location relationships. Use one sentence of 22–38 words. Return ONLY JSON: {"caption":"..."}.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCURRENT CANDIDATE:\n${candidate}`;
       const raw = await askGemma([{ type: 'text', text: prompt }], 320);
       const result = await parseGemmaJson(raw, ['caption'], { caption: candidate });
       return String(result.caption || candidate).trim();
@@ -441,7 +477,7 @@
     }
     async function polishV18Humour(evidence, captions) {
       setStatus('V18 is checking that both jokes have a real grounded payoff…');
-      const prompt = `You are the final comedy editor for TWO grounded video captions. Return ONLY valid JSON with exactly these string keys: humorous_tech and humorous_non_tech. Judge each candidate independently. Keep it verbatim only if it has (1) one precise verified subject-action setup, (2) one clear comparison appropriate to its style, and (3) a distinct, clearly figurative comic consequence tied to that setup. Otherwise rewrite it. Never force an unrelated second visible detail into a joke. The tech caption must use exactly one natural technology comparison and preserve visible speed: running, sprinting, racing, or rapid movement must not be compared to dial-up, loading, buffering, latency, lag, or another slow process. The non-tech caption must contain no technology vocabulary, use one familiar everyday comparison, and explicitly name a verified subject and action rather than “the visible sequence”, “grounded moments”, or a family photo album. Never use “X feels/is like Y, except…”, “the only thing…”, a loose jargon list, or a generic description with no comic turn. Never invent literal absence, stillness, failure, identity, intent, speech, brands, backstory, viewer circumstances or unseen events. Preserve exact subject-action-object-location relationships: never relocate an action onto another visible object or surface. Facts listed separately must remain parallel facts; never say that one approaches, passes, touches or affects another unless the evidence explicitly states that relationship. Preserve montage order when relevant. Each caption must be one sentence of 24–42 words.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCANDIDATES:\n${JSON.stringify({ humorous_tech: captions.humorous_tech, humorous_non_tech: captions.humorous_non_tech })}`;
+      const prompt = `You are the final comedy editor for TWO grounded video captions. Return ONLY valid JSON with exactly these string keys: humorous_tech and humorous_non_tech. Judge each candidate independently. Keep it verbatim only if it has (1) one precise verified subject-action setup, (2) one clear comparison appropriate to its style, and (3) a distinct, clearly figurative comic consequence tied to that setup. Otherwise rewrite it. Never force an unrelated second visible detail into a joke. The tech caption must use exactly one natural technology comparison and preserve visible speed: running, sprinting, racing, or rapid movement must not be compared to dial-up, loading, buffering, latency, lag, or another slow process. The non-tech caption must contain no technology vocabulary, use one familiar everyday comparison, and explicitly name a verified subject and action rather than “the visible sequence”, “grounded moments”, or a family photo album. Never use “X feels/is like Y, except…”, “the only thing…”, a loose jargon list, or a generic description with no comic turn. Never invent literal absence, stillness, failure, identity, intent, speech, brands, backstory, viewer circumstances or unseen events. Preserve exact subject-action-object-location relationships: never relocate an action onto another visible object or surface. Facts listed separately must remain parallel facts; never say that one approaches, passes, touches or affects another unless the evidence explicitly states that relationship. Preserve montage order when relevant. Avoid recycled templates: tech must not use “high-end GPU”, “high-end processor”, “fiber-optic cable”, “speed of a modern”, “crashed tablet”, “human statues”, or “overclocking”; non-tech must not use “toddler”, “last slice of pizza”, “with such intensity”, “frantic energy of”, or “energy of someone trying”. Each caption must be one sentence of 24–42 words.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCANDIDATES:\n${JSON.stringify({ humorous_tech: captions.humorous_tech, humorous_non_tech: captions.humorous_non_tech })}`;
       const raw = await askGemma([{ type: 'text', text: prompt }], 600);
       const polished = await parseGemmaJson(raw, ['humorous_tech', 'humorous_non_tech'], {
         humorous_tech: captions.humorous_tech,
@@ -453,7 +489,7 @@
       };
     }
     function wordCount(value) { return String(value || '').trim().split(/\s+/).filter(Boolean).length; }
-    function hasPipelineLeak(value) { return /\b(?:\d+\s+frames?|frames?|thumbnails?|sampling|prompts?|models?|analysis|processing)\b/i.test(String(value || '')); }
+    function hasPipelineLeak(value) { return /\b(?:\d+\s+frames?|frames?|thumbnails?|sampling|prompts?|models?|analysis|processing|twenty[- ]four times|24 times)\b/i.test(String(value || '')); }
     function preserveVerifiedDetails(candidates, verified) {
       const output = {};
       for (const style of REQUIRED_STYLES) {
@@ -508,6 +544,14 @@
     function hasGenericHumour(style, value) {
       return style === 'humorous_non_tech' && /\b(?:the visible sequence|grounded moments?|each grounded|family photo album|own little entrance|everyday moment arriving)\b/i.test(String(value || ''));
     }
+    function hasStaleComedyTemplate(style, value) {
+      const patterns = {
+        sarcastic: /\b(?:masterclass|truly monumental|truly majestic|groundbreaking|a display of immense|a sweeping epic of)\b/i,
+        humorous_tech: /\b(?:high[- ]end (?:gpu|processor)|fiber[- ]optic (?:cable|connection)|overclock(?:s|ed|ing)?|speed of a modern|crashed tablet|human statues?)\b/i,
+        humorous_non_tech: /\b(?:toddler|last slice of pizza|with such intensity|frantic energy of|energy of someone trying)\b/i
+      };
+      return Boolean(patterns[style]?.test(String(value || '')));
+    }
     function hasSpeedInversion(style, evidence, value) {
       if (style !== 'humorous_tech') return false;
       const fastEvidence = /\b(?:run(?:s|ning)?|race(?:s|d|ing)?|sprint(?:s|ing)?|rapid(?:ly)?|quick(?:ly)?|fast|speed(?:s|ing)?|rush(?:es|ing)?|swift(?:ly)?)\b/i.test(String(evidence || ''));
@@ -516,13 +560,13 @@
       return fastEvidence && slowMetaphor && !explicitlyFaster;
     }
     function hasCaptionQualityRisk(evidence, value, style = '') {
-      return hasLexicalCorruption(value, evidence) || hasUnsupportedAbsolute(evidence, value) || hasGenericHumour(style, value) || hasSpeedInversion(style, evidence, value);
+      return hasLexicalCorruption(value, evidence) || hasUnsupportedAbsolute(evidence, value) || hasGenericHumour(style, value) || hasSpeedInversion(style, evidence, value) || hasStaleComedyTemplate(style, value) || hasPipelineLeak(value);
     }
     async function repairCaptionQualityV18(evidence, captions) {
       let affected = REQUIRED_STYLES.filter(style => hasCaptionQualityRisk(evidence, captions[style], style));
       if (!affected.length) return captions;
       setStatus(`V18 detected corrupted wording or an unsupported absolute in ${affected.join(', ')}; repairing captions without repeating video analysis…`, 'warning');
-      const prompt = `You are a strict copy editor repairing quality defects in four grounded video captions. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. Preserve each caption's supported facts, sequence, style, comparison and intended joke. Repair malformed words, accidental letter runs, duplicated fragments and broken grammar. Also remove or replace absolute claims such as stationary, frozen, permanent, never moving or unchanged when the verified evidence does not explicitly support them. If the evidence contains motion, the repaired joke must use the visible motion or pace rather than a freeze or stillness metaphor. Replace generic non-tech fallbacks with a joke that explicitly names a verified subject and action. A fast visible action must not be compared to dial-up, loading, buffering, latency, lag, or another slow process. Do not add or reinterpret factual claims. Do not add commentary.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCAPTIONS TO CHECK:\n${JSON.stringify(captions)}`;
+      const prompt = `You are a strict copy editor repairing quality defects in four grounded video captions. Return ONLY valid JSON with exactly these string keys: formal, sarcastic, humorous_tech, humorous_non_tech. Preserve each caption's supported facts, sequence, style, comparison and intended joke. Repair malformed words, accidental letter runs, duplicated fragments and broken grammar. Also remove or replace absolute claims such as stationary, frozen, permanent, never moving or unchanged when the verified evidence does not explicitly support them. If the evidence contains motion, the repaired joke must use the visible motion or pace rather than a freeze or stillness metaphor. Replace generic non-tech fallbacks with a joke that explicitly names a verified subject and action. A fast visible action must not be compared to dial-up, loading, buffering, latency, lag, or another slow process. Replace these stale templates: masterclass, truly monumental, truly majestic, groundbreaking, a display of immense, a sweeping epic of, high-end GPU, high-end processor, fiber-optic cable, speed of a modern, crashed tablet, human statues, overclocking, toddler, last slice of pizza, with such intensity, frantic energy of, and energy of someone trying. Remove frame-count or pipeline wording. Do not add or reinterpret factual claims. Do not add commentary.\n\nVERIFIED EVIDENCE:\n${evidence}\n\nCAPTIONS TO CHECK:\n${JSON.stringify(captions)}`;
       try {
         const repaired = validateCaptions(await parseGemmaJson(await askGemma([{ type: 'text', text: prompt }], CAPTION_MAX_TOKENS), REQUIRED_STYLES, captions));
         captions = repaired;
@@ -530,7 +574,7 @@
       affected = REQUIRED_STYLES.filter(style => hasCaptionQualityRisk(evidence, captions[style], style));
       if (affected.length) {
         const retries = await Promise.allSettled(affected.map(async style => {
-          const prompt = `Repair ONLY the quality defect in this ${style} video caption. Preserve every supported fact, the style and the joke. Remove malformed text and any claim of stillness, freezing, permanence, no movement or no change that is unsupported by the evidence. When motion is verified, anchor the repaired joke in that motion or its pace. For humorous_non_tech, explicitly name the verified subject and action instead of a generic sequence or family-album template. For humorous_tech, preserve the direction of visible speed and never compare fast action to dial-up, loading, buffering, latency, lag, or another slow process. Do not add facts. Return ONLY JSON: {"caption":"..."}.\n\nEVIDENCE:\n${evidence}\n\nCAPTION:\n${captions[style]}`;
+          const prompt = `Repair ONLY the quality defect in this ${style} video caption. Preserve every supported fact, the style and the joke. Remove malformed text and any claim of stillness, freezing, permanence, no movement or no change that is unsupported by the evidence. When motion is verified, anchor the repaired joke in that motion or its pace. For humorous_non_tech, explicitly name the verified subject and action instead of a generic sequence or family-album template. For humorous_tech, preserve the direction of visible speed and never compare fast action to dial-up, loading, buffering, latency, lag, or another slow process. Avoid masterclass, truly monumental, truly majestic, groundbreaking, high-end GPU, high-end processor, fiber-optic cable, speed of a modern, crashed tablet, human statues, overclocking, toddler, last slice of pizza, with such intensity, frantic energy of, and energy of someone trying. Remove frame-count or pipeline wording. Do not add facts. Return ONLY JSON: {"caption":"..."}.\n\nEVIDENCE:\n${evidence}\n\nCAPTION:\n${captions[style]}`;
           const result = await parseGemmaJson(await askGemma([{ type: 'text', text: prompt }], 320), ['caption'], { caption: captions[style] });
           return String(result.caption || captions[style]).trim();
         }));
@@ -617,7 +661,7 @@
     });
     caption.addEventListener('click', async () => { caption.disabled = true; try { await run(); } catch (error) { setStatus(error instanceof Error ? error.message : 'Captioning failed.', 'error'); } finally { caption.disabled = false; } });
     $('download').addEventListener('click', downloadCaptions);
-    $('forget').addEventListener('click', () => { localStorage.removeItem(SETTINGS_KEY); pipelineVersion.value = 'v17'; apiKey.value = ''; model.value = 'google/gemma-4-31b-it'; videoModel.value = 'google/gemma-4-26b-a4b-it'; taskId.value = 'demo-v1'; rememberKey.checked = false; updateVersionUi(); setStatus('Local settings removed.'); });
+    $('forget').addEventListener('click', () => { localStorage.removeItem(SETTINGS_KEY); pipelineVersion.value = 'v18'; apiKey.value = ''; model.value = 'google/gemma-4-31b-it'; videoModel.value = 'google/gemma-4-26b-a4b-it'; taskId.value = 'demo-v1'; rememberKey.checked = false; updateVersionUi(); setStatus('Local settings removed. V18 is selected.'); });
     $('clearHistory').addEventListener('click', () => { localStorage.removeItem(HISTORY_KEY); renderHistory(); setStatus('Local caption history cleared.'); });
   </script>
 </body>
