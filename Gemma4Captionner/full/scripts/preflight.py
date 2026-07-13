@@ -95,7 +95,6 @@ def _docker_contract_run(image: str) -> bool:
         "-e",
         "FIREWORKS_API_KEY=",
         "-e",
-        "-e",
         "OPENROUTER_API_KEY=",
         image,
     ]
@@ -106,7 +105,7 @@ def _docker_contract_run(image: str) -> bool:
         return False
 
     results = output_dir / "results.json"
-    ok = _check_results_contract(results)
+    ok = _check_results_contract(results, input_dir / "tasks.json")
     ok &= _run("docker degraded self-check", [PY, "eval/self_check.py", "--results", str(results.relative_to(ROOT))])
     _record("docker degraded elapsed", elapsed < 60, f"{elapsed:.2f}s")
     return ok
@@ -141,17 +140,28 @@ def _check_no_secret_literals() -> bool:
     return _record("secret literal scan", not offenders, ", ".join(offenders[:10]) if offenders else "no obvious secret literals")
 
 
-def _check_results_contract(path: Path) -> bool:
+def _check_results_contract(path: Path, tasks_path: Path | None = None) -> bool:
     if not path.exists():
         return _record("degraded results exists", False, f"missing {path}")
     data = json.loads(path.read_text(encoding="utf-8"))
     required = {"formal", "sarcastic", "humorous_tech", "humorous_non_tech"}
     ok = isinstance(data, list) and data and all(
-        isinstance(row.get("captions"), dict)
-        and required <= set(row["captions"])
+        isinstance(row.get("task_id"), str)
+        and isinstance(row.get("captions"), dict)
+        and set(row["captions"]) == required
         and all(isinstance(v, str) and v.strip() for v in row["captions"].values())
         for row in data
     )
+    if tasks_path and tasks_path.exists():
+        tasks = json.loads(tasks_path.read_text(encoding="utf-8"))
+        expected_ids = [str(task.get("task_id", "")) for task in tasks]
+        actual_ids = [str(row.get("task_id", "")) for row in data] if isinstance(data, list) else []
+        ok &= actual_ids == expected_ids
+        return _record(
+            "degraded results contract",
+            ok,
+            f"{len(actual_ids)} row(s), task IDs and four caption styles match mounted tasks.json",
+        )
     return _record("degraded results contract", ok, f"{len(data) if isinstance(data, list) else 0} row(s)")
 
 
@@ -207,7 +217,7 @@ def main() -> int:
             "OPENROUTER_API_KEY": "",
         },
     )
-    ok &= _check_results_contract(ROOT / degraded_out)
+    ok &= _check_results_contract(ROOT / degraded_out, ROOT / "data" / "sample_tasks.json")
     ok &= _run("degraded self-check", [PY, "eval/self_check.py", "--results", degraded_out])
     ok &= _run("degraded quality audit", [PY, "eval/quality_audit.py", "--results", degraded_out])
     ok &= _check_no_secret_literals()

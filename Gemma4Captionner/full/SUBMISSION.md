@@ -1,4 +1,4 @@
-# Gemma Hybrid V20
+# Gemma Hybrid V20.3
 
 ## Short description
 
@@ -12,19 +12,16 @@ exclusively by Gemma 4 models. Its fast path samples 24 ordered frames at up to
 640 pixels and asks Gemma 4 31B for formal, sarcastic, humorous-tech, and
 humorous-non-tech captions in one multimodal JSON response.
 
-V20 automatically activates its V18 evidence pipeline when the fast request
-times out or returns malformed, generic, contradictory, corrupted, internally
-leaked, or near-duplicate text. The recovery route independently analyzes the
-frames, can inspect two 60-second MP4 segments with Gemma 4 26B A4B, and uses
-Gemma 4 31B to write, strengthen, and verify every style. A final batch guard
-also detects substantial joke wording reused across different videos and can
-recover affected tasks while respecting the ten-minute global budget.
+V20.3 uses a 55-second fast-model timeout and permits one 45-second bounded
+V18 evidence recovery per batch. Local quality gates repair style-level risks
+from an accepted formal caption; batch reruns stay disabled so one difficult
+clip cannot consume the budget of later clips.
 
 The public Linux amd64 container reads `/input/tasks.json`, guarantees every
 requested style, validates the complete result, and writes strict JSON to
 `/output/results.json`.
 
-- Repository: `https://github.com/MVConceptLabAI/Gemma4Agent/tree/gemma4-submission-v20.2/Gemma4Captionner/full`
-- Image: `mvconceptlab/gemma4-captioner:gemma4-submission-v20.2`
+- Repository: `https://github.com/MVConceptLabAI/Gemma4Agent/tree/gemma4-submission-v20.3/Gemma4Captionner/full`
+- Image: `mvconceptlab/gemma4-captioner:gemma4-submission-v20.3`
 - Engine: `gemma_hybrid`
 - Models: `google/gemma-4-31b-it`, `google/gemma-4-26b-a4b-it`

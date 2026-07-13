@@ -1,7 +1,7 @@
-# Gemma Hybrid V20
+# Gemma Hybrid V20.3
 
-V20 is a Gemma 4-only Track 2 pipeline that combines the speed of V19 with the
-grounded recovery path of V18. It attempts one coherent 24-frame Gemma request
+V20.3 is a Gemma 4-only Track 2 pipeline that combines the speed of V19 with
+bounded V18 evidence recovery. It attempts one coherent 24-frame Gemma request
 first and spends the additional V18 calls only when the fast result is unsafe.
 
 ## Architecture
@@ -12,14 +12,12 @@ first and spends the additional V18 calls only when the fast result is unsafe.
 3. Parse and locally validate all four requested styles.
 4. Accept the fast result when it is complete, concrete, grammatically intact,
    stylistically distinct, and consistent with its formal factual anchor.
-5. On timeout, provider failure, malformed output, generic fallback, process
-   leak, lexical corruption, contradiction, or near-duplicate voice, recover
-   that task with the V18 evidence pipeline. V18 independently observes the
-   frames, optionally inspects up to two 60-second MP4 segments with Gemma 4
-   26B A4B, writes and verifies captions with Gemma 4 31B.
-6. After all tasks, detect exact content-heavy five-word joke spans reused
-   across videos. At most two affected tasks can receive bounded V18 recovery
-   while the global runtime budget permits.
+5. On provider failure, malformed output, generic fallback, process leak, or
+   lexical corruption, use one bounded V18 evidence recovery for the batch.
+   Other grounding and style risks are repaired locally from the accepted
+   formal caption, preserving capacity for later videos.
+6. The submission disables batch reruns so the global ten-minute budget remains
+   available for every input task.
 7. Validate and write `/output/results.json`.
 
 Every model request remains inside the Gemma 4 family.
@@ -27,11 +25,27 @@ Every model request remains inside the Gemma 4 family.
 ## Docker
 
 ```bash
-docker pull mvconceptlab/gemma4-captioner:gemma4-submission-v20.2
+mkdir -p input output
+cp data/sample_tasks.json input/tasks.json
+docker pull mvconceptlab/gemma4-captioner:gemma4-submission-v20.3
 docker run --rm \
-  -v "$PWD/in:/input:ro" \
-  -v "$PWD/out:/output" \
-  mvconceptlab/gemma4-captioner:gemma4-submission-v20.2
+  -v "$PWD/input:/input:ro" \
+  -v "$PWD/output:/output" \
+  mvconceptlab/gemma4-captioner:gemma4-submission-v20.3
+python eval/self_check.py --results output/results.json
+```
+
+This is the Track 2 contract: each mounted task contains `task_id`, `video_url`
+and requested `styles`; the output contains the same `task_id` plus a
+`captions` object. It is intentionally different from Track 1's `prompt` /
+`answer` schema.
+
+```json
+// input/tasks.json
+[{"task_id":"v1","video_url":"https://example.test/clip.mp4","styles":["formal","sarcastic","humorous_tech","humorous_non_tech"]}]
+
+// output/results.json
+[{"task_id":"v1","captions":{"formal":"...","sarcastic":"...","humorous_tech":"...","humorous_non_tech":"..."}}]
 ```
 
 The contest injects no runtime credentials, so the publish workflow embeds its
@@ -63,12 +77,15 @@ PowerShell uses the same variable names through `$env:NAME = 'value'`.
 | `DEMO_VIDEO_MODEL` | `google/gemma-4-26b-a4b-it` |
 | `NUM_FRAMES` | `24` |
 | `FRAME_MAX_EDGE` | `640` |
-| `HYBRID_FAST_TIMEOUT_S` | `185` |
-| `HYBRID_RECOVERY_TIMEOUT_S` | `220` |
-| `HYBRID_BATCH_RECOVERY_MAX` | `2` |
+| `GEMMA_FAST_MAX_TOKENS` | `500` |
+| `HYBRID_FAST_TIMEOUT_S` | `55` |
+| `HYBRID_RECOVERY_TIMEOUT_S` | `45` |
+| `HYBRID_RECOVERY_MAX_PER_RUN` | `1` |
+| `HYBRID_BATCH_RECOVERY_MAX` | `0` |
 | `MAX_CONCURRENCY` | `3` |
-| `PER_TASK_TIMEOUT_S` | `415` |
+| `PER_TASK_TIMEOUT_S` | `100` |
 | `GLOBAL_BUDGET_S` | `540` |
+| `GLOBAL_BUDGET_RESERVE_S` | `30` |
 
 ## Tests
 
