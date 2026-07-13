@@ -75,6 +75,17 @@ def test_local_json_and_validation() -> None:
     assert "stealing the spotlight" not in racing["humorous_non_tech"].lower()
     assert "window-shopping" in racing["humorous_non_tech"].lower()
 
+    microphone = gemma_fast._post_validate({
+        "formal": "A man wearing a blue polo shirt speaks into a vintage-style silver microphone in an indoor setting.",
+        "sarcastic": "The visible action receives the gravity of an event the history books nearly missed.",
+        "humorous_tech": "His setup is like a legacy hardware driver on a modern OS; it is outdated but still functioning.",
+        "humorous_non_tech": "He treats the microphone like a fancy milkshake, leaning in for a sip of fame.",
+    }, list(gemma_fast.REQUIRED_STYLES))
+    assert "national broadcast" in microphone["sarcastic"].lower()
+    assert "legacy" not in microphone["humorous_tech"].lower()
+    assert "outdated" not in microphone["humorous_tech"].lower()
+    assert "milkshake" in microphone["humorous_non_tech"].lower()
+
     malformed = (
         'formal: "A cat walks through leaves.", '
         '"sarcastic":"A cat conducts a very serious garden inspection.", '

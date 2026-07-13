@@ -126,9 +126,9 @@ def _too_similar(left: str, right: str) -> bool:
 
 
 def _unsafe_template(style: str, value: str) -> bool:
-    common = r"\b(?:frames?|sampling|prompts?|models?|analysis|caption|punchline|qa|masterclass|truly monumental|truly majestic|groundbreaking|a display of immense|a sweeping epic|thrilling)\b"
+    common = r"\b(?:frames?|sampling|prompts?|models?|analysis|caption|punchline|qa|visible action receives|history books nearly missed|masterclass|truly monumental|truly majestic|groundbreaking|a display of immense|a sweeping epic|thrilling)\b"
     patterns = {
-        "humorous_tech": common + r"|\b(?:algorithm|visual runtime|visual quality|network (?:traffic|packet)|data packet|graphics (?:server|engine)|pixel budget|high[- ]end gpu|speed of a modern|crashed tablet|human statues?|video quality|legacy (?:system|code)|single[- ]core processor|poorly optimized|code that refuses|hidden test|rollback)\b",
+        "humorous_tech": common + r"|\b(?:algorithm|visual runtime|visual quality|network (?:traffic|packet)|data packet|graphics (?:server|engine)|pixel budget|high[- ]end gpu|speed of a modern|crashed tablet|human statues?|video quality|legacy (?:system|code|hardware|driver)|outdated but still functioning|single[- ]core processor|poorly optimized|code that refuses|hidden test|rollback)\b",
         "humorous_non_tech": common + r"|\b(?:looks (?:great|good|beautiful|nice)|steal(?:s|ing) the spotlight|just wants? to go fast|trying to figure out if|penguins? in the cold|ignoring (?:their|the) drinks|shopper|shopping cart|cart that|toddler|with such intensity|watching paint dry|musical chairs|giant game|freshly cleaned floor)\b",
         "sarcastic": common + r"|\b(?:spends? (?:her|his|their) day|grueling schedule|schedule of (?:standing|sitting|talking)|very demanding way to spend|because (?:that|this) is (?:a )?(?:very )?(?:demanding|exciting|interesting)|most ambitious production|ceremony this ordinary moment|ordinary moment was apparently missing)\b",
         "formal": common,
@@ -235,6 +235,12 @@ def _fallbacks(formal: str) -> dict[str, str]:
             "The rooftop conversation unfolds with the gravity of a summit that remembered to order drinks.",
             "The rooftop conversation runs like a social server processing three animated users and several open drinks.",
             "The rooftop group talks with enough hand gestures to give every sentence its own traffic signals.",
+        )
+    elif re.search(r"\b(?:microphone|speaks?|speaking|singer|singing|podcast)\b", lower):
+        voices = (
+            "The man addresses the vintage microphone with the gravity of a national broadcast; the room somehow survives the weight of the occasion.",
+            "The silver microphone processes his performance like a polished audio server receiving its most important request of the day.",
+            "He leans toward the silver microphone like it is the last milkshake at a diner, except this one serves opinions instead of dessert.",
         )
     else:
         voices = (
