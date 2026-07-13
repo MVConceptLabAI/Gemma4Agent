@@ -535,6 +535,19 @@ def _has_weak_creative_grounding(style: str, evidence: str, value: str) -> bool:
     return _creative_anchor_count(evidence, value) < 3
 
 
+def _has_unsupported_creative_payoff(style: str, value: str) -> bool:
+    """Catch vivid jokes that smuggle in an unseen loss, price, intent, or failure."""
+    if style not in {"sarcastic", "humorous_tech", "humorous_non_tech"}:
+        return False
+    return bool(re.search(
+        r"\b(?:lavish|luxurious|expensive|costly|pricey|spending (?:a )?fortune|"
+        r"delet(?:e|es|ed|ing) (?:every|all|your|saved)|saved passwords?|data loss|"
+        r"wrong map|confused tourists?|forgot(?:ten)? (?:the|their)|lost (?:the|their) way)\b",
+        value,
+        re.IGNORECASE,
+    ))
+
+
 def _has_speed_inversion(style: str, evidence: str, value: str) -> bool:
     if style != "humorous_tech":
         return False
@@ -565,6 +578,7 @@ def _has_caption_quality_risk(evidence: str, value: str, style: str = "") -> boo
         or _has_unsupported_absolute(evidence, value)
         or _has_generic_humour(style, value)
         or _has_weak_creative_grounding(style, evidence, value)
+        or _has_unsupported_creative_payoff(style, value)
         or _has_speed_inversion(style, evidence, value)
         or _has_stale_comedy_template(style, value)
         or _has_process_leak(value)
@@ -673,6 +687,8 @@ async def _repair_caption_quality(
         "human statues, overclocking, toddler, last slice of pizza, with such intensity, frantic energy of, or energy of someone trying. "
         "Each sarcastic or humorous caption must retain at least three concrete words or short phrases from the verified evidence, "
         "including a visible subject, action, object, or setting; never replace them with broad labels such as commute, traffic, or routine. "
+        "A comic payoff must remain clearly figurative and must not invent a price, luxury, data loss, deleted passwords, a wrong map, "
+        "confusion, a person's belief, or any unseen failure. "
         "Do not reinterpret factual claims. Do not add commentary.\n\nVERIFIED EVIDENCE:\n" + evidence
         + "\n\nCAPTIONS TO CHECK:\n" + json.dumps(captions)
     )
@@ -696,6 +712,7 @@ async def _repair_caption_quality(
             "high-end processor, fiber-optic cable, speed of a modern, crashed tablet, human statues, overclocking, toddler, "
             "last slice of pizza, with such intensity, frantic energy of, and energy of someone trying. Preserve at least three concrete "
             "evidence anchors, including a visible subject and action; do not collapse them into a generic commute, traffic, or routine. Do not add facts. "
+            "Do not invent a price, luxury, data loss, deleted passwords, a wrong map, confusion, private intent, or an unseen failure. "
             "Return ONLY JSON: {\"caption\":\"...\"}."
             "\n\nEVIDENCE:\n" + evidence + "\n\nCAPTION:\n" + captions[style]
         )

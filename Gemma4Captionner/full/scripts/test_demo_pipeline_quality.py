@@ -5,6 +5,7 @@ import asyncio
 from app.demo_pipeline import (
     _ask_json_object,
     _has_caption_quality_risk,
+    _has_unsupported_creative_payoff,
     _has_weak_creative_grounding,
     _has_generic_humour,
     _has_lexical_corruption,
@@ -85,6 +86,22 @@ def main() -> None:
         "humorous_non_tech",
         traffic_evidence,
         "Vehicles enter the concrete tunnel like a family squeezing every suitcase into one car.",
+    )
+    assert _has_unsupported_creative_payoff(
+        "sarcastic",
+        "Vehicles offer a lavish tour of concrete walls and overpasses.",
+    )
+    assert _has_unsupported_creative_payoff(
+        "humorous_tech",
+        "Cars move like a software update that deletes every saved password.",
+    )
+    assert _has_unsupported_creative_payoff(
+        "humorous_non_tech",
+        "Cars enter the tunnel like confused tourists following the wrong map.",
+    )
+    assert not _has_unsupported_creative_payoff(
+        "humorous_non_tech",
+        "Cars enter the tunnel like guests squeezing through one crowded doorway.",
     )
     assert "Vehicles travel along a multi-lane road" in _safe_caption("humorous_non_tech", traffic_evidence)
 
