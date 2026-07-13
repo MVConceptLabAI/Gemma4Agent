@@ -23,6 +23,10 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and publish public linux/amd64 image
         uses: docker/build-push-action@v6
         with:
@@ -36,10 +40,14 @@ jobs:
           tags: |
             ghcr.io/mvconceptlabai/gemma4-captioner:${{ github.ref_name }}
             ghcr.io/mvconceptlabai/gemma4-captioner:latest
+            mvconceptlab/gemma4-captioner:${{ github.ref_name }}
+            mvconceptlab/gemma4-captioner:latest
           # The hackathon does not inject runtime variables. These repository
           # secrets are intentionally passed only when publishing a submission
           # image; never commit literal values to this repository.
           build-args: |
             OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
-      - name: Verify published manifest
-        run: docker buildx imagetools inspect ghcr.io/mvconceptlabai/gemma4-captioner:${{ github.ref_name }}
+      - name: Verify published manifests
+        run: |
+          docker buildx imagetools inspect ghcr.io/mvconceptlabai/gemma4-captioner:${{ github.ref_name }}
+          docker buildx imagetools inspect mvconceptlab/gemma4-captioner:${{ github.ref_name }}

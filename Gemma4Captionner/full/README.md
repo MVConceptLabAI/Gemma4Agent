@@ -27,11 +27,11 @@ Every model request remains inside the Gemma 4 family.
 ## Docker
 
 ```bash
-docker pull ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v20
+docker pull mvconceptlab/gemma4-captioner:gemma4-submission-v20.2
 docker run --rm \
   -v "$PWD/in:/input:ro" \
   -v "$PWD/out:/output" \
-  ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v20
+  mvconceptlab/gemma4-captioner:gemma4-submission-v20.2
 ```
 
 The contest injects no runtime credentials, so the publish workflow embeds its

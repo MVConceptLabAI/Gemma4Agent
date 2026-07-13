@@ -24,7 +24,7 @@ The public Linux amd64 container reads `/input/tasks.json`, guarantees every
 requested style, validates the complete result, and writes strict JSON to
 `/output/results.json`.
 
-- Repository: `https://github.com/MVConceptLabAI/Gemma4Agent/tree/codex/gemma4-submission-v20/Gemma4Captionner/full`
-- Image: `ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v20`
+- Repository: `https://github.com/MVConceptLabAI/Gemma4Agent/tree/gemma4-submission-v20.2/Gemma4Captionner/full`
+- Image: `mvconceptlab/gemma4-captioner:gemma4-submission-v20.2`
 - Engine: `gemma_hybrid`
 - Models: `google/gemma-4-31b-it`, `google/gemma-4-26b-a4b-it`
