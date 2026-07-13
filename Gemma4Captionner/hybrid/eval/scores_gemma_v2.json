@@ -1,0 +1,110 @@
+[
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible elements in the frames and adheres strictly to a formal, objective tone without any stylistic deviations.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "formal",
+    "caption": "A time-lapse captures the energetic flow of cars and trucks along a city street bordered by trees with bright yellow autumn leaves. Tall apartment buildings rise in the background, while traffic lights manage intersections and pink and blue banners adorn roadside railings."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 0.8,
+    "reason": "The caption correctly notes the traffic and autumn leaves but misses specific details like the time of day or urban setting, and the sarcasm is understated but present.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "sarcastic",
+    "caption": "A spectacle of vehicles patiently waiting to arrive wherever it is people go at this hour. The autumn leaves are a nice touch, honestly."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the busy traffic and humorously anthropomorphizes lanes as filing 'latency complaints,' a clear tech reference with a punchline fitting the humorous_tech style.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "humorous_tech",
+    "caption": "On the tree-lined city road, the traffic scheduler is live in production and every lane is filing a latency complaint."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the autumn city scene with traffic and uses warm, funny everyday humor without tech jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "humorous_non_tech",
+    "caption": "The city's autumn rush hour, proving even the prettiest yellow leaves can't make commutes relaxing. Everyone's going *somewhere*."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the kitten's appearance, movement, and environment, and uses a formal, objective tone without jargon or humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "formal",
+    "caption": "A fluffy, light orange kitten with white paws walks forward through leafy branches in a forest setting, looking directly at the camera. Dappled sunlight filters through the green leaves and illuminates the dirt ground as the kitten approaches in a static, eye-level close-up shot."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the kitten's cautious approach and matches the sarcastic, dry tone without overstatement or inappropriate humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "sarcastic",
+    "caption": "An orange kitten, clearly unimpressed with the forest, deigns to approach the camera. One assumes it requires tribute."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the kitten's movement through foliage and uses a clever tech pun about 'stress-testing' and 'runtime error' that fits the humorous_tech style perfectly.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "humorous_tech",
+    "caption": "The fluffy orange kitten is stress-testing the forest's branch network, hoping to avoid a runtime error when reaching the camera."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the kitten's curious posture and adds humorous context without tech jargon, matching the requested style.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "humorous_non_tech",
+    "caption": "This orange kitten is absolutely certain there's a very important meeting happening right in front of my face. It involves leaves."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible elements in the frames and adheres strictly to the formal style with objective, factual language.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "formal",
+    "caption": "A woman with dark curly hair, wearing a beige jacket and orange top, types on a black keyboard at a white desk in an office. A large silver computer monitor sits to her right, while a plant in a white pot is positioned behind her, all under circular ceiling lights."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 1.0,
+    "reason": "The caption is sarcastic and matches the requested tone, but it inaccurately describes the woman as having an 'impressively tidy bun' when her hair is styled in a natural afro puff, not a bun.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "sarcastic",
+    "caption": "The woman and her impressively tidy bun are engaged in a staring contest with a silver computer monitor. It's a demanding relationship."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the woman debugging on a computer and uses a tech pun ('frantic runtime errors') with a humorous tone.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "humorous_tech",
+    "caption": "The woman's beige jacket hides the frantic runtime errors she's debugging while staring at the silver computer monitor."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the scene with humor and warmth, matching the requested style without tech jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "humorous_non_tech",
+    "caption": "At the white desk, the keyboard gets all the attention while the potted plant quietly carries the room."
+  }
+]

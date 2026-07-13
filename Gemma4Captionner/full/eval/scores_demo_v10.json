@@ -1,0 +1,110 @@
+[
+  {
+    "accuracy": 0.9,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the scene with concrete details and adheres strictly to a formal, objective tone without any stylistic deviations.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "formal",
+    "caption": "Bright golden sunlight illuminates a wide urban street where numerous vehicles-including red buses and white trucks-flow through several lanes."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the scene with sarcastic tone, noting the yellow trees and engineering building while mocking the idea of progress.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "sarcastic",
+    "caption": "A spectacle of vehicles dutifully transport people past some remarkably yellow trees and a building advertising engineering. Progress, one assumes."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the traffic and ginkgo trees while humorously comparing the road to a 'traffic pipeline' with tech terms like 'high throughput' and 'questionable routing decisions', fitting the humorous_tech style perfectly.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "humorous_tech",
+    "caption": "This city's traffic pipeline, complete with yellow-leafed ginkgo trees, is experiencing sustained high throughput and questionable routing decisions."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the busy street and vibrant yellow trees, and the humorous tone matches the requested style without tech jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v1",
+    "style": "humorous_non_tech",
+    "caption": "All those yellow trees are just showing off while everyone else is trying to get home. Definitely a \"move it or lose it\" kind of street."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "formal",
+    "caption": "A fluffy ginger kitten with a white chest walks slowly toward the camera through a sun-dappled thicket of green leaves. The low-angle shot captures the kitten's raised paw as it navigates a dirt path framed by foliage and a large tree trunk."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the ginger kitten’s movement and demeanor, and the sarcastic tone is dry, ironic, and understated as requested.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "sarcastic",
+    "caption": "A ginger kitten makes a stately procession through the undergrowth, clearly unimpressed with the paparazzi. It's a very important walk, naturally."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the kitten's slow movement and humorously references a tech concept (runtime test, leafy pipeline) with a clear, funny punchline.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "humorous_tech",
+    "caption": "That ginger kitten is performing a crucial runtime test of the garden's leafy pipeline, one slow, adorable step at a time."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the fluffy ginger kitten walking through a sunlit garden and uses warm, funny language without tech jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v2",
+    "style": "humorous_non_tech",
+    "caption": "Sun-dappled garden and one very fluffy ginger kitten practicing their slow-motion approach. The leaves are just obstacles, naturally."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible details in the frames and maintains a formal, objective tone without jokes or jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "formal",
+    "caption": "A woman with curly black hair in a high bun works at a white desk in an office, typing on a black keyboard and using a wired mouse. She wears a beige button-up shirt over an orange top and a silver cross pendant necklace while looking at a large computer monitor."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible details and matches the sarcastic, understated tone without exaggeration or inappropriate content.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "sarcastic",
+    "caption": "She's expertly navigating the digital world from a white desk, accessorized with a coiled cable and a subtle cross pendant. It's a look."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the tangled cable and uses a tech joke about latency, matching the humorous_tech style with a clear punchline.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "humorous_tech",
+    "caption": "That tangled cable on her desk is a clear indication her production server has a higher tolerance for latency than she does right now."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the woman's actions and visible details like pink nail polish and a silver cross, and delivers the humor in a warm, everyday style without tech jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "v3",
+    "style": "humorous_non_tech",
+    "caption": "The woman is expertly navigating the day, one keystroke and glance at the monitor at a time. A little pink nail polish and a silver cross for good measure."
+  }
+]

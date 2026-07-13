@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Track 2 Captioner - Demo Live</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0e1116;
+      --panel: #171d25;
+      --panel-2: #1f2732;
+      --text: #eef3f8;
+      --muted: #a9b4c0;
+      --line: #303b48;
+      --accent: #4fd1b5;
+      --warn: #f6b85f;
+      --danger: #ff6f6f;
+      --blue: #78a6ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 32px clamp(18px, 4vw, 52px) 22px;
+      border-bottom: 1px solid var(--line);
+      background: #111720;
+    }
+    main { padding: 26px clamp(18px, 4vw, 52px) 44px; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(28px, 4vw, 48px); letter-spacing: 0; }
+    header p { color: var(--muted); margin-top: 10px; max-width: 860px; line-height: 1.55; }
+    .bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      align-items: center;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 8px 11px;
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .pill strong { color: var(--text); }
+    .ok { color: var(--accent); }
+    .warn { color: var(--warn); }
+    .danger { color: var(--danger); }
+    .scoreboard {
+      display: grid;
+      grid-template-columns: minmax(260px, 1.1fr) minmax(260px, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      min-width: 0;
+    }
+    .panel > header {
+      padding: 16px;
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--line);
+    }
+    .panel > header p {
+      max-width: none;
+      margin-top: 6px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border-bottom: 1px solid var(--line);
+    }
+    .metric {
+      padding: 16px;
+      border-right: 1px solid var(--line);
+    }
+    .metric:last-child { border-right: 0; }
+    .metric b {
+      display: block;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .metric span {
+      display: block;
+      color: var(--muted);
+      margin-top: 8px;
+      font-size: 13px;
+    }
+    .issue-list {
+      display: grid;
+      gap: 0;
+    }
+    .issue {
+      padding: 13px 16px;
+      border-top: 1px solid var(--line);
+      color: #e8edf2;
+      line-height: 1.45;
+    }
+    .issue:first-child { border-top: 0; }
+    .issue small {
+      display: block;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .gate-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(130px, 1fr));
+      gap: 0;
+    }
+    .gate {
+      padding: 14px;
+      border-right: 1px solid var(--line);
+      border-top: 1px solid var(--line);
+    }
+    .gate:nth-child(4n) { border-right: 0; }
+    .gate strong { display: block; margin-bottom: 5px; }
+    .gate span { color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 22px;
+    }
+    .clip {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      min-width: 0;
+    }
+    .clip header {
+      padding: 16px;
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--line);
+    }
+    .clip h2 { font-size: 20px; }
+    .video-wrap {
+      background: #090c10;
+      border-bottom: 1px solid var(--line);
+      aspect-ratio: 16 / 9;
+    }
+    video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #090c10;
+    }
+    .source {
+      display: block;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+    .caption {
+      padding: 15px 16px;
+      border-top: 1px solid var(--line);
+    }
+    .caption:first-of-type { border-top: 0; }
+    .caption h3 {
+      color: var(--blue);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+    .score-chip {
+      letter-spacing: 0;
+      text-transform: none;
+      color: var(--text);
+      background: #101720;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 7px;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .caption p {
+      line-height: 1.5;
+      color: #e8edf2;
+      overflow-wrap: anywhere;
+    }
+    .actions {
+      margin-top: 24px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .flow {
+      margin-top: 24px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .flow header {
+      padding: 16px;
+      background: var(--panel-2);
+    }
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      gap: 0;
+    }
+    .flow-step {
+      border: 0;
+      border-right: 1px solid var(--line);
+      border-radius: 0;
+      background: transparent;
+      text-align: left;
+      min-height: 100px;
+    }
+    .flow-step:last-child { border-right: 0; }
+    .flow-step strong { display: block; color: var(--accent); margin-bottom: 8px; }
+    .flow-step span { display: block; color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .flow-step.active { background: #223140; }
+    .flow-detail {
+      border-top: 1px solid var(--line);
+      padding: 16px;
+      color: #e8edf2;
+      line-height: 1.55;
+    }
+    a, button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 10px 12px;
+      text-decoration: none;
+      font: inherit;
+      cursor: pointer;
+    }
+    button:hover, a:hover { border-color: var(--accent); }
+    pre {
+      display: none;
+      margin-top: 18px;
+      background: #090c10;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      max-height: 360px;
+      overflow: auto;
+      color: #d8e3ee;
+    }
+    .command-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 24px;
+    }
+    .command-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .command-card header {
+      padding: 13px 14px;
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .command-card code {
+      display: block;
+      padding: 14px;
+      color: #d8e3ee;
+      background: #090c10;
+      min-height: 98px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .error {
+      border: 1px solid #9f3d3d;
+      background: #2a1717;
+      padding: 14px;
+      border-radius: 8px;
+      color: #ffd6d6;
+      margin-top: 20px;
+    }
+    @media (max-width: 980px) {
+      .grid, .scoreboard, .command-grid { grid-template-columns: 1fr; }
+      .flow-grid { grid-template-columns: 1fr; }
+      .flow-step { border-right: 0; border-bottom: 1px solid var(--line); }
+      .metrics, .gate-grid { grid-template-columns: 1fr; }
+      .metric, .gate { border-right: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Demo live du captioner</h1>
+    <p>
+      Cette page lit la meilleure sortie mesuree par le pipeline local. Le mode
+      qualite actuel utilise OpenRouter/Qwen pour maximiser le score proxy, avec
+      Groq et Fireworks gardes en relais configurables et testes.
+    </p>
+    <div class="bar">
+      <span class="pill"><strong>Understand</strong> openrouter -> groq -> fireworks</span>
+      <span class="pill"><strong>Style</strong> openrouter -> groq -> fireworks</span>
+      <span class="pill"><strong>Status</strong> <span class="ok">self-check + taste + detail + grounding OK</span></span>
+      <span class="pill"><strong>Sortie</strong> out/demo_quality_results.json</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="scoreboard" aria-label="Score proxy et prochaine optimisation">
+      <article class="panel">
+        <header>
+          <h2>Score proxy leaderboard</h2>
+          <p>Juge local OpenRouter sur les 3 clips publics. Ce n'est pas le jury officiel, mais c'est notre thermometre d'iteration.</p>
+        </header>
+        <div class="metrics" id="metrics">
+          <div class="metric"><b>--</b><span>accuracy moyenne</span></div>
+          <div class="metric"><b>--</b><span>style match moyen</span></div>
+          <div class="metric"><b>--</b><span>score final proxy</span></div>
+        </div>
+        <div class="gate-grid">
+          <div class="gate"><strong class="ok">JSON</strong><span>4 styles obligatoires, sortie valide.</span></div>
+          <div class="gate"><strong class="ok">Taste</strong><span>Audit anti-slop et anti-jokes sensibles.</span></div>
+          <div class="gate"><strong class="ok">Detail</strong><span>Densite visuelle minimale par caption.</span></div>
+          <div class="gate"><strong class="ok">Grounding</strong><span>Termes douteux bloques apres inspection frames.</span></div>
+          <div class="gate"><strong class="warn">Fireworks</strong><span>Branche et teste; garde en fallback car le judge local rencontre encore des 429/sorties non JSON.</span></div>
+        </div>
+      </article>
+      <article class="panel">
+        <header>
+          <h2>Ou gagner des points</h2>
+          <p>Les lignes les plus basses deviennent la backlog d'optimisation. On ameliore ce qui est mesure.</p>
+        </header>
+        <div id="issues" class="issue-list">
+          <div class="issue">Chargement des scores...</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="flow" aria-label="Deroule du pipeline">
+      <header>
+        <h2>Derouler le pipeline</h2>
+        <p>Chaque clip suit ce chemin. Clique une etape pour voir son role dans la demo.</p>
+      </header>
+      <div class="flow-grid">
+        <button class="flow-step active" data-detail="Le runtime lit data/sample_tasks.json. Chaque entree contient task_id, video_url et les quatre styles demandes par le hackathon."><strong>1. Lire</strong><span>tasks.json</span></button>
+        <button class="flow-step" data-detail="Le MP4 est telecharge en streaming depuis storage.googleapis.com, sans tout charger en memoire. Les erreurs transitoires sont retentees."><strong>2. Charger</strong><span>video distante</span></button>
+        <button class="flow-step" data-detail="FFmpeg extrait des frames utiles: scene-change d'abord, puis sampling uniforme. En mode Groq, on limite a cinq images pour respecter les limites vision."><strong>3. Voir</strong><span>frames + limites</span></button>
+        <button class="flow-step" data-detail="Le profil qualite mesure utilise OpenRouter/Qwen en premier car c'est le meilleur score stable aujourd'hui. Groq reste disponible pour le mode simple et fiable; Fireworks est branche comme relais et terrain d'A/B, mais pas promu tant qu'il ne bat pas la sortie canonique sans sorties non JSON."><strong>4. Comprendre</strong><span>OpenRouter puis fallback</span></button>
+        <button class="flow-step" data-detail="Le systeme produit formal, sarcastic, humorous_tech et humorous_non_tech, puis self_check, quality_audit et local_judge mesurent le resultat."><strong>5. Valider</strong><span>12 captions scorees</span></button>
+      </div>
+      <div id="flowDetail" class="flow-detail">Le runtime lit data/sample_tasks.json. Chaque entree contient task_id, video_url et les quatre styles demandes par le hackathon.</div>
+    </section>
+
+    <section id="results" class="grid" aria-live="polite"></section>
+    <div id="error"></div>
+    <div class="actions">
+      <a href="/docs/mission-control.html">Ouvrir Mission Control</a>
+      <a href="/out/demo_quality_results.json">Voir le JSON brut</a>
+      <a href="/eval/scores_quality_openrouter.json">Voir les scores</a>
+      <a href="/docs/quality-research.md">Recherche qualite</a>
+      <button id="toggleRaw" type="button">Afficher la charge JSON</button>
+    </div>
+    <section class="command-grid" aria-label="Commandes top 1">
+      <article class="command-card">
+        <header><strong>Gate qualite</strong><button type="button" class="copy" data-copy="python scripts/quality_gate.py --results out/demo_quality_results.json --scores eval/scores_quality_openrouter.json">Copier</button></header>
+        <code>python scripts/quality_gate.py --results out/demo_quality_results.json --scores eval/scores_quality_openrouter.json</code>
+      </article>
+      <article class="command-card">
+        <header><strong>Run qualite</strong><button type="button" class="copy" data-copy="DESCRIBE_PROVIDER_ORDER=openrouter,groq,fireworks STYLE_PROVIDER_ORDER=openrouter,groq,fireworks DESCRIBE_MAX_TOKENS=900 STYLE_MAX_TOKENS=180 python -m app.main">Copier</button></header>
+        <code>DESCRIBE_PROVIDER_ORDER=openrouter,groq,fireworks
+STYLE_PROVIDER_ORDER=openrouter,groq,fireworks
+DESCRIBE_MAX_TOKENS=900
+STYLE_MAX_TOKENS=180
+python -m app.main</code>
+      </article>
+      <article class="command-card">
+        <header><strong>Juge proxy</strong><button type="button" class="copy" data-copy="JUDGE_PROVIDER_ORDER=openrouter,groq,fireworks python eval/local_judge.py --results out/demo_quality_results.json --clips eval/clips.json --out eval/scores_quality_openrouter.json">Copier</button></header>
+        <code>JUDGE_PROVIDER_ORDER=openrouter,groq,fireworks
+python eval/local_judge.py --results out/demo_quality_results.json --clips eval/clips.json --out eval/scores_quality_openrouter.json</code>
+      </article>
+    </section>
+    <pre id="raw"></pre>
+  </main>
+
+  <script>
+    const labels = {
+      formal: "Formal",
+      sarcastic: "Sarcastic",
+      humorous_tech: "Humorous tech",
+      humorous_non_tech: "Humorous non-tech"
+    };
+
+    const results = document.querySelector("#results");
+    const raw = document.querySelector("#raw");
+    const error = document.querySelector("#error");
+    const metrics = document.querySelector("#metrics");
+    const issues = document.querySelector("#issues");
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[c]));
+    }
+
+    function mean(values) {
+      return values.length ? values.reduce((a, b) => a + Number(b || 0), 0) / values.length : 0;
+    }
+
+    function formatMetric(value) {
+      return (Math.round((Number(value || 0) + 1e-9) * 1000) / 1000).toFixed(3);
+    }
+
+    function renderScores(scores) {
+      if (!scores.length) {
+        issues.innerHTML = `<div class="issue">Aucun score charge. Lance le juge proxy pour remplir ce panneau.</div>`;
+        return;
+      }
+      const acc = mean(scores.map(s => s.accuracy));
+      const style = mean(scores.map(s => s.style_match));
+      const final = mean(scores.map(s => (Number(s.accuracy || 0) + Number(s.style_match || 0)) / 2));
+      metrics.innerHTML = `
+        <div class="metric"><b>${formatMetric(acc)}</b><span>accuracy moyenne</span></div>
+        <div class="metric"><b>${formatMetric(style)}</b><span>style match moyen</span></div>
+        <div class="metric"><b>${formatMetric(final)}</b><span>score final proxy</span></div>
+      `;
+      const weak = [...scores]
+        .map(s => ({ ...s, final: (Number(s.accuracy || 0) + Number(s.style_match || 0)) / 2 }))
+        .sort((a, b) => a.final - b.final)
+        .slice(0, 4);
+      issues.innerHTML = weak.map(s => `
+        <div class="issue">
+          <strong>${escapeHtml(s.task_id)} / ${escapeHtml(labels[s.style] || s.style)}</strong>
+          <span class="${s.final >= .95 ? "ok" : "warn"}"> score ${s.final.toFixed(2)}</span>
+          <small>${escapeHtml(s.reason || "Aucun commentaire du juge.")}</small>
+        </div>
+      `).join("");
+    }
+
+    function render(data, tasks, scores) {
+      const taskById = Object.fromEntries(tasks.map(task => [task.task_id, task]));
+      const scoreByKey = Object.fromEntries(scores.map(score => [`${score.task_id}:${score.style}`, score]));
+      results.innerHTML = data.map(item => {
+        const task = taskById[item.task_id] || {};
+        const videoUrl = task.video_url || "";
+        const captions = Object.entries(item.captions || {}).map(([style, text]) => `
+          <div class="caption">
+            <h3>
+              <span>${labels[style] || style}</span>
+              ${scoreByKey[`${item.task_id}:${style}`] ? `<span class="score-chip">${(((scoreByKey[`${item.task_id}:${style}`].accuracy || 0) + (scoreByKey[`${item.task_id}:${style}`].style_match || 0)) / 2).toFixed(2)}</span>` : ""}
+            </h3>
+            <p>${escapeHtml(text)}</p>
+          </div>
+        `).join("");
+
+        return `
+          <article class="clip">
+            <header><h2>${item.task_id}</h2></header>
+            <div class="video-wrap">
+              <video controls preload="metadata" src="${escapeHtml(videoUrl)}"></video>
+            </div>
+            <a class="source" href="${escapeHtml(videoUrl)}" target="_blank" rel="noreferrer">${escapeHtml(videoUrl)}</a>
+            ${captions}
+          </article>
+        `;
+      }).join("");
+      renderScores(scores);
+      raw.textContent = JSON.stringify({ tasks, results: data, scores }, null, 2);
+    }
+
+    Promise.all([
+      fetch("/out/demo_quality_results.json", { cache: "no-store" }).then(response => {
+        if (!response.ok) throw new Error(`results HTTP ${response.status}`);
+        return response.json();
+      }),
+      fetch("/data/sample_tasks.json", { cache: "no-store" }).then(response => {
+        if (!response.ok) throw new Error(`tasks HTTP ${response.status}`);
+        return response.json();
+      }),
+      fetch("/eval/scores_quality_openrouter.json", { cache: "no-store" }).then(response => {
+        if (!response.ok) return [];
+        return response.json();
+      }).catch(() => [])
+    ])
+      .then(([data, tasks, scores]) => render(data, tasks, scores))
+      .catch(err => {
+        error.innerHTML = `<div class="error">Impossible de charger la demo: ${err.message}</div>`;
+      });
+
+    document.querySelector("#toggleRaw").addEventListener("click", () => {
+      raw.style.display = raw.style.display === "block" ? "none" : "block";
+    });
+
+    document.querySelectorAll(".flow-step").forEach(step => {
+      step.addEventListener("click", () => {
+        document.querySelectorAll(".flow-step").forEach(item => item.classList.remove("active"));
+        step.classList.add("active");
+        document.querySelector("#flowDetail").textContent = step.dataset.detail;
+      });
+    });
+
+    document.querySelectorAll(".copy").forEach(button => {
+      button.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(button.dataset.copy || "");
+        button.textContent = "Copie";
+        setTimeout(() => { button.textContent = "Copier"; }, 1200);
+      });
+    });
+  </script>
+</body>
+</html>

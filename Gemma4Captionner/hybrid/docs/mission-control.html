@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Track 2 Mission Control</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg2: #121923;
+      --panel: #17202b;
+      --panel2: #1e2936;
+      --ink: #edf2f7;
+      --soft: #aab7c5;
+      --muted: #728094;
+      --line: #2a3646;
+      --green: #58c88a;
+      --blue: #69a7ff;
+      --amber: #f2b455;
+      --red: #ee6b64;
+      --cyan: #65d6d3;
+      --paper: #f4efe6;
+      --shadow: 0 28px 80px rgba(0, 0, 0, .34);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Bahnschrift", "Aptos", "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,.035) 1px, transparent 1px),
+        radial-gradient(circle at 20% 20%, rgba(105,167,255,.18), transparent 34%),
+        radial-gradient(circle at 84% 16%, rgba(88,200,138,.16), transparent 30%),
+        linear-gradient(135deg, #0b0e13, #101823 42%, #0d1117);
+      background-size: 32px 32px, 32px 32px, auto, auto, auto;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035), rgba(255,255,255,0) 2px);
+      background-size: 100% 4px;
+      mix-blend-mode: screen;
+      opacity: .28;
+    }
+
+    a { color: inherit; }
+
+    .app {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 12px 0 18px;
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, var(--panel), #0b1017);
+      border-radius: 8px;
+      box-shadow: inset 0 0 18px rgba(101,214,211,.12);
+    }
+
+    .mark svg { width: 24px; height: 24px; }
+
+    nav {
+      justify-self: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 6px;
+      border: 1px solid var(--line);
+      background: rgba(13, 17, 23, .72);
+      border-radius: 8px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--soft);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--ink);
+      background: var(--panel2);
+    }
+
+    .status-pill {
+      border: 1px solid rgba(88,200,138,.34);
+      color: var(--green);
+      background: rgba(88,200,138,.08);
+      padding: 9px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .hero {
+      min-height: calc(100vh - 92px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(340px, .9fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .hero-main, .mission-panel, section {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(23,32,43,.94), rgba(16,23,32,.95));
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-main {
+      position: relative;
+      overflow: hidden;
+      min-height: 620px;
+      padding: 34px;
+    }
+
+    .hero-main::after {
+      content: "";
+      position: absolute;
+      left: 34px;
+      right: 34px;
+      bottom: 34px;
+      height: 210px;
+      background:
+        linear-gradient(90deg, transparent 0 5%, rgba(105,167,255,.6) 5% 5.6%, transparent 5.6% 22%, rgba(88,200,138,.65) 22% 22.6%, transparent 22.6% 40%, rgba(242,180,85,.65) 40% 40.6%, transparent 40.6% 62%, rgba(101,214,211,.6) 62% 62.6%, transparent 62.6% 84%, rgba(238,107,100,.6) 84% 84.6%, transparent 84.6%),
+        linear-gradient(180deg, transparent, rgba(105,167,255,.08));
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      clip-path: polygon(0 28%, 8% 28%, 8% 8%, 21% 8%, 21% 48%, 39% 48%, 39% 18%, 61% 18%, 61% 70%, 83% 70%, 83% 36%, 100% 36%, 100% 100%, 0 100%);
+      opacity: .78;
+    }
+
+    .label {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      color: var(--cyan);
+      background: rgba(101,214,211,.08);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      margin: 20px 0 18px;
+      max-width: 980px;
+      font-size: clamp(48px, 7.4vw, 116px);
+      line-height: .88;
+      letter-spacing: 0;
+    }
+
+    .hero-lead {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      color: var(--soft);
+      font-size: 20px;
+      line-height: 1.55;
+    }
+
+    .hero-actions {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    button, .button-link {
+      border: 1px solid var(--line);
+      background: var(--panel2);
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 11px 14px;
+      cursor: pointer;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    button:hover, .button-link:hover {
+      border-color: var(--blue);
+      transform: translateY(-1px);
+    }
+
+    button.primary {
+      color: #061019;
+      background: linear-gradient(135deg, var(--green), var(--cyan));
+      border-color: transparent;
+    }
+
+    .mission-panel {
+      padding: 18px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 16px;
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 14px;
+    }
+
+    .panel-title h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .panel-title small {
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .radar {
+      display: grid;
+      place-items: center;
+      min-height: 280px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        radial-gradient(circle, transparent 0 18%, rgba(101,214,211,.08) 18.5% 19%, transparent 19.5% 38%, rgba(101,214,211,.08) 38.5% 39%, transparent 39.5% 58%, rgba(101,214,211,.08) 58.5% 59%, transparent 59.5%),
+        conic-gradient(from 20deg, rgba(101,214,211,.22), transparent 46deg 360deg),
+        #101923;
+    }
+
+    .radar svg {
+      width: min(86%, 330px);
+      height: auto;
+      filter: drop-shadow(0 10px 22px rgba(0,0,0,.38));
+    }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .mini-stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: rgba(13,17,23,.48);
+    }
+
+    .mini-stat strong {
+      display: block;
+      font-size: 22px;
+      color: var(--ink);
+    }
+
+    .mini-stat span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    section {
+      margin-top: 18px;
+      overflow: hidden;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      padding: 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.02);
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 32px;
+      letter-spacing: 0;
+    }
+
+    .section-head p {
+      margin: 8px 0 0;
+      color: var(--soft);
+      line-height: 1.5;
+      max-width: 900px;
+    }
+
+    .section-body { padding: 22px; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 15px;
+      background: rgba(13,17,23,.48);
+      min-height: 160px;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .card p, .card li {
+      color: var(--soft);
+      font-size: 14px;
+      line-height: 1.48;
+    }
+
+    .card ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .pipe-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 16px;
+    }
+
+    .steps {
+      display: grid;
+      gap: 8px;
+    }
+
+    .step {
+      width: 100%;
+      text-align: left;
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 12px;
+      align-items: center;
+      background: rgba(13,17,23,.62);
+    }
+
+    .step.active {
+      border-color: var(--cyan);
+      background: rgba(101,214,211,.10);
+    }
+
+    .step b {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      color: #07131b;
+      background: var(--cyan);
+    }
+
+    .step span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .detail-panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: linear-gradient(145deg, rgba(30,41,54,.95), rgba(13,17,23,.82));
+      padding: 22px;
+      min-height: 420px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 18px;
+    }
+
+    .detail-panel h3 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .detail-panel p {
+      color: var(--soft);
+      font-size: 17px;
+      line-height: 1.6;
+      max-width: 880px;
+    }
+
+    .flow-art {
+      position: relative;
+      min-height: 170px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #0b121a;
+    }
+
+    .flow-art svg {
+      width: 100%;
+      height: 100%;
+      min-height: 170px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 9px;
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 900;
+      background: rgba(255,255,255,.035);
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tab.active {
+      color: #07131b;
+      background: var(--amber);
+      border-color: transparent;
+    }
+
+    .tab-panel {
+      display: none;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      background: rgba(13,17,23,.48);
+    }
+
+    .tab-panel.active { display: block; }
+
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+
+    .event {
+      display: grid;
+      grid-template-columns: 160px 1fr auto;
+      gap: 14px;
+      align-items: start;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(13,17,23,.48);
+    }
+
+    .event time {
+      color: var(--cyan);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .event strong { display: block; margin-bottom: 4px; }
+    .event p { margin: 0; color: var(--soft); line-height: 1.45; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 70px;
+      border-radius: 999px;
+      padding: 6px 8px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .pass { color: #061019; background: var(--green); }
+    .wait { color: #16100a; background: var(--amber); }
+    .risk { color: #190807; background: var(--red); }
+    .info { color: #061019; background: var(--blue); }
+
+    .proof-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .proof {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: rgba(13,17,23,.48);
+    }
+
+    .proof strong { display: block; margin-bottom: 8px; }
+    .proof span { color: var(--soft); font-size: 14px; line-height: 1.45; }
+
+    .command-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .command {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #090d13;
+    }
+
+    .command header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      color: var(--soft);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px;
+      overflow: auto;
+      color: #d8e8f5;
+      font: 13px/1.55 "Cascadia Mono", Consolas, monospace;
+    }
+
+    .copy {
+      padding: 7px 9px;
+      font-size: 12px;
+    }
+
+    footer {
+      color: var(--muted);
+      text-align: center;
+      padding: 32px 0 12px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 1100px) {
+      .hero, .pipe-grid { grid-template-columns: 1fr; }
+      .cards, .proof-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .topbar { grid-template-columns: 1fr; }
+      nav { justify-self: start; }
+    }
+
+    @media (max-width: 720px) {
+      .app { padding: 12px; }
+      .hero-main { min-height: 560px; padding: 22px; }
+      .hero-main::after { left: 22px; right: 22px; bottom: 22px; height: 150px; }
+      .cards, .proof-grid, .command-grid, .mini-stats { grid-template-columns: 1fr; }
+      .event { grid-template-columns: 1fr; }
+      h1 { font-size: 46px; }
+      .section-head { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none">
+            <path d="M10 46h44M16 42V22l16-8 16 8v20" stroke="#65d6d3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M23 42V28h18v14" stroke="#58c88a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        Track 2 Mission Control
+      </div>
+      <nav aria-label="Navigation">
+        <a href="#mission">Mission</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="#work">Travail</a>
+        <a href="#proof">Preuves</a>
+        <a href="#commands">Commandes</a>
+      </nav>
+      <div class="status-pill">Docker local: PASS</div>
+    </div>
+
+    <main>
+      <div class="hero" id="mission">
+        <div class="hero-main">
+          <span class="label">AMD Hackathon ACT II / Video Captioning</span>
+          <h1>Objectif: finir premier, pas seulement soumettre.</h1>
+          <p class="hero-lead">
+            Cette app explique le projet, les choix techniques, les ameliorations deja faites
+            et les preuves obtenues. Le systeme lit des videos, comprend la scene, puis produit
+            quatre captions anglaises dans les styles imposes par le Track 2.
+          </p>
+          <div class="hero-actions">
+            <button class="primary" data-jump="#pipeline">Explorer le pipeline</button>
+            <button data-jump="#proof">Voir les preuves</button>
+            <button data-jump="#next">Voir les blocages</button>
+          </div>
+        </div>
+
+        <aside class="mission-panel">
+          <div class="panel-title">
+            <h2>Tableau de bord</h2>
+            <small>Dernier check: 23:44</small>
+          </div>
+          <div class="radar" aria-label="Diagramme de mission">
+            <svg viewBox="0 0 360 260" role="img" aria-label="Flux video vers captions">
+              <defs>
+                <linearGradient id="beam" x1="0" x2="1">
+                  <stop stop-color="#65d6d3"/>
+                  <stop offset="1" stop-color="#58c88a"/>
+                </linearGradient>
+              </defs>
+              <rect x="24" y="44" width="84" height="52" rx="8" fill="#17202b" stroke="#69a7ff"/>
+              <text x="66" y="75" text-anchor="middle" fill="#edf2f7" font-size="13" font-weight="700">VIDEO</text>
+              <rect x="138" y="24" width="84" height="52" rx="8" fill="#17202b" stroke="#65d6d3"/>
+              <text x="180" y="55" text-anchor="middle" fill="#edf2f7" font-size="13" font-weight="700">FACTS</text>
+              <rect x="252" y="44" width="84" height="52" rx="8" fill="#17202b" stroke="#58c88a"/>
+              <text x="294" y="75" text-anchor="middle" fill="#edf2f7" font-size="13" font-weight="700">STYLE x4</text>
+              <rect x="92" y="154" width="176" height="58" rx="8" fill="#17202b" stroke="#f2b455"/>
+              <text x="180" y="178" text-anchor="middle" fill="#edf2f7" font-size="13" font-weight="700">results.json</text>
+              <text x="180" y="196" text-anchor="middle" fill="#aab7c5" font-size="11">validated output</text>
+              <path d="M108 70h30M222 50h30M294 96c0 52-114 12-114 58M66 96c0 52 114 12 114 58" stroke="url(#beam)" stroke-width="4" fill="none" stroke-linecap="round"/>
+              <circle cx="180" cy="118" r="16" fill="#0d1117" stroke="#65d6d3" stroke-width="3"/>
+              <path d="M172 118l6 6 12-14" stroke="#58c88a" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="mini-stats">
+            <div class="mini-stat"><strong>4</strong><span>styles obligatoires</span></div>
+            <div class="mini-stat"><strong>amd64</strong><span>architecture valide</span></div>
+            <div class="mini-stat"><strong>252 MB</strong><span>taille inspectee</span></div>
+            <div class="mini-stat"><strong>4.96 s</strong><span>run degrade local</span></div>
+          </div>
+        </aside>
+      </div>
+
+      <section id="why">
+        <div class="section-head">
+          <div>
+            <h2>Interet du projet</h2>
+            <p>
+              Le Track 2 juge deux choses: est-ce que la caption respecte vraiment la video,
+              et est-ce que le ton demande est net. Notre architecture optimise ces deux axes
+              separement pour eviter les captions jolies mais fausses.
+            </p>
+          </div>
+          <span class="badge info">Accuracy + Style</span>
+        </div>
+        <div class="section-body cards">
+          <article class="card">
+            <h3>Pour le hackathon</h3>
+            <p>Produire un Docker public, robuste, en anglais, sous les limites de temps, avec un JSON strict.</p>
+          </article>
+          <article class="card">
+            <h3>Pour le score</h3>
+            <p>Une seule analyse factuelle solide alimente les quatre styles, ce qui garde la coherence entre captions.</p>
+          </article>
+          <article class="card">
+            <h3>Pour le bonus</h3>
+            <p>Gemma reste dans la couche de style, avec Fireworks documente dans le README et le runbook.</p>
+          </article>
+          <article class="card">
+            <h3>Pour la securite</h3>
+            <p>Pas de cle dans le repo, pas de cache cross-run, pas de hardcoding des clips exemples.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="pipeline">
+        <div class="section-head">
+          <div>
+            <h2>Pipeline interactif</h2>
+            <p>Clique une etape: tu vois ce qu'elle fait, pourquoi elle existe, et quel risque elle reduit.</p>
+          </div>
+          <span class="badge pass">Operable</span>
+        </div>
+        <div class="section-body pipe-grid">
+          <div class="steps">
+            <button class="step active" data-title="01 - Ingest" data-copy="Le container lit /input/tasks.json au demarrage. Pydantic valide les taches et force les quatre styles obligatoires quand l'entree est incomplete." data-risk="Risque reduit: entree invalide, style manquant, score zero sur JSON."><b>01</b><div>Ingest<span>/input/tasks.json</span></div></button>
+            <button class="step" data-title="02 - Download" data-copy="Le MP4 est telecharge en streaming vers le disque avec retry. Cela evite de charger de grosses videos en RAM et absorbe les erreurs reseau temporaires." data-risk="Risque reduit: crash memoire, erreur HTTP transitoire, run interrompu."><b>02</b><div>Download<span>stream + retry</span></div></button>
+            <button class="step" data-title="03 - Sample" data-copy="FFmpeg extrait des images par detection de scene puis complete par sampling uniforme. Le VLM voit les moments importants sans exploser le payload." data-risk="Risque reduit: comprehension partielle, cout inutile, latence trop haute."><b>03</b><div>Sample<span>scene + uniform frames</span></div></button>
+            <button class="step" data-title="04 - Direct video option" data-copy="Si DIRECT_VIDEO_MODEL est fourni, le pipeline peut envoyer video 360p + audio Ogg a un deploiement Fireworks dedie comme Qwen3 Omni. Sinon il retombe sur les frames." data-risk="Risque reduit: meilleure comprehension future sans casser le chemin serverless actuel."><b>04</b><div>Direct<span>Qwen3 Omni optionnel</span></div></button>
+            <button class="step" data-title="05 - Understand" data-copy="Le modele vision produit un JSON factuel: resume, setting, sujets, actions, mood, audio_hint, tech_visible. C'est la source de verite." data-risk="Risque reduit: hallucinations entre styles, captions contradictoires."><b>05</b><div>Understand<span>facts JSON</span></div></button>
+            <button class="step" data-title="06 - Style x4" data-copy="Quatre appels style partent en parallele: formal, sarcastic, humorous_tech, humorous_non_tech. Chaque style a ses prompts et few-shots." data-risk="Risque reduit: style flou, generation lente, melange des tons."><b>06</b><div>Style<span>parallel captions</span></div></button>
+            <button class="step" data-title="07 - Validate" data-copy="Le runtime normalise les captions: non vides, 300 caracteres max, anglais probable, bans de style, puis Pydantic valide le fichier final." data-risk="Risque reduit: JSON malforme, sortie non anglaise, jargon interdit."><b>07</b><div>Validate<span>/output/results.json</span></div></button>
+          </div>
+          <div class="detail-panel">
+            <div>
+              <h3 id="detail-title">01 - Ingest</h3>
+              <p id="detail-copy">Le container lit /input/tasks.json au demarrage. Pydantic valide les taches et force les quatre styles obligatoires quand l'entree est incomplete.</p>
+            </div>
+            <div class="flow-art" aria-hidden="true">
+              <svg viewBox="0 0 900 220" preserveAspectRatio="none">
+                <path d="M0 180 C160 40 260 80 380 110 S620 200 900 70" fill="none" stroke="#2a3646" stroke-width="18"/>
+                <path id="pulsePath" d="M0 180 C160 40 260 80 380 110 S620 200 900 70" fill="none" stroke="#65d6d3" stroke-width="4" stroke-linecap="round"/>
+                <g fill="#17202b" stroke="#69a7ff" stroke-width="2">
+                  <rect x="40" y="132" width="110" height="46" rx="8"/>
+                  <rect x="230" y="62" width="110" height="46" rx="8"/>
+                  <rect x="420" y="92" width="110" height="46" rx="8"/>
+                  <rect x="610" y="142" width="110" height="46" rx="8"/>
+                  <rect x="760" y="48" width="110" height="46" rx="8"/>
+                </g>
+              </svg>
+            </div>
+            <div class="chips">
+              <span class="chip" id="detail-risk">Risque reduit: entree invalide, style manquant, score zero sur JSON.</span>
+              <span class="chip">Pas de hardcoding</span>
+              <span class="chip">Fallbacks partout</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="work">
+        <div class="section-head">
+          <div>
+            <h2>Ce qui a ete ameliore</h2>
+            <p>Les modifications sont organisees par impact: robustesse, score, recherche, presentation.</p>
+          </div>
+          <span class="badge pass">Integre</span>
+        </div>
+        <div class="section-body">
+          <div class="tabs">
+            <button class="tab active" data-tab="tab-robust">Robustesse</button>
+            <button class="tab" data-tab="tab-score">Score</button>
+            <button class="tab" data-tab="tab-research">Recherche</button>
+            <button class="tab" data-tab="tab-design">Design</button>
+          </div>
+          <div class="tab-panel active" id="tab-robust">
+            <div class="cards">
+              <article class="card"><h3>Validation stricte</h3><p>Pydantic pour les entrees et sorties, self-check zero cout et contract test.</p></article>
+              <article class="card"><h3>English only</h3><p>Filtre runtime et self-check contre les sorties non anglaises ou non ASCII-safe.</p></article>
+              <article class="card"><h3>Retry reseau</h3><p>Download stream, retry HTTP, timeouts par tache et fallbacks non vides.</p></article>
+              <article class="card"><h3>Secrets</h3><p>Scan literals, .env ignore, aucun credential bake dans Docker.</p></article>
+            </div>
+          </div>
+          <div class="tab-panel" id="tab-score">
+            <div class="cards">
+              <article class="card"><h3>Model chain</h3><p>Qwen2.5-VL 7B vers 32B vers MiniMax M3 pour la comprehension.</p></article>
+              <article class="card"><h3>Gemma style</h3><p>Gemma 3 27B garde le positionnement bonus pour les rewrites de style.</p></article>
+              <article class="card"><h3>Direct video</h3><p>Option Qwen3 Omni/Molmo2 via deploiement dedie, desactivee par defaut.</p></article>
+              <article class="card"><h3>LoRA ready</h3><p>Dataset v2 et dry-run train Gemma LoRA deja valides.</p></article>
+            </div>
+          </div>
+          <div class="tab-panel" id="tab-research">
+            <div class="cards">
+              <article class="card"><h3>Zips audites</h3><p>Kit, starter v1 et starter v2 inventories. V2 integre dans le canon.</p></article>
+              <article class="card"><h3>Concurrents</h3><p>ClipForger et Stryvo confirment le pattern: voir, comprendre, styliser.</p></article>
+              <article class="card"><h3>Fireworks + Groq</h3><p>Fireworks reste la voie concours; Groq est valide comme pont live temporaire.</p></article>
+              <article class="card"><h3>Ponytail</h3><p>Utilise comme methode: moins de code, plus de preuve, pas de dependance.</p></article>
+            </div>
+          </div>
+          <div class="tab-panel" id="tab-design">
+            <div class="cards">
+              <article class="card"><h3>Affiche HTML</h3><p>Une premiere affiche explicative a ete creee.</p></article>
+              <article class="card"><h3>Mission Control</h3><p>Cette version rend le projet consultable comme une app de briefing.</p></article>
+              <article class="card"><h3>Sans serveur requis</h3><p>HTML/CSS/JS pur, ouvrable directement ou via preview locale.</p></article>
+              <article class="card"><h3>Responsive</h3><p>Layouts adaptes desktop/mobile, textes contraints, controls stables.</p></article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="proof">
+        <div class="section-head">
+          <div>
+            <h2>Preuves et risques</h2>
+            <p>Les cases vertes sont prouvees localement. Les cases orange attendent une cle, un deploiement ou un registre public.</p>
+          </div>
+          <span class="badge pass">Groq live OK</span>
+        </div>
+        <div class="section-body proof-grid">
+          <div class="proof"><strong><span class="badge pass">PASS</span> Python compile</strong><span>Tous les modules runtime, eval, scripts et finetune compilent.</span></div>
+          <div class="proof"><strong><span class="badge pass">PASS</span> Contract test</strong><span>Styles, fallbacks, model candidates et filtre langue sont verrouilles.</span></div>
+          <div class="proof"><strong><span class="badge pass">PASS</span> Docker amd64</strong><span>Image inspectee: architecture=amd64, os=linux, size=252351797.</span></div>
+          <div class="proof"><strong><span class="badge pass">PASS</span> Docker I/O</strong><span>Run monte /input et /output, results.json valide, self-check OK.</span></div>
+          <div class="proof"><strong><span class="badge pass">PASS</span> Groq live</strong><span>3 clips samples, 12 captions, self-check OK avec provider Groq prioritaire.</span></div>
+          <div class="proof"><strong><span class="badge wait">WAIT</span> Fireworks</strong><span>Le juge miroir et la voie finale concours attendent FIREWORKS_API_KEY.</span></div>
+          <div class="proof"><strong><span class="badge wait">WAIT</span> Public image</strong><span>Push/pull anonyme et taille compressee attendent PUBLIC_IMAGE.</span></div>
+        </div>
+      </section>
+
+      <section id="timeline">
+        <div class="section-head">
+          <div>
+            <h2>Chronologie du travail</h2>
+            <p>Lecture projet, integration v2, audit, recherche web, durcissement et presentation.</p>
+          </div>
+        </div>
+        <div class="section-body timeline">
+          <div class="event"><time>1. Comprendre</time><div><strong>Extraction du prompt master et objectifs</strong><p>Les fichiers kit ont ete lus et transformes en stack d'objectifs: Docker, JSON, styles, scoring, bonus Gemma.</p></div><span class="badge pass">fait</span></div>
+          <div class="event"><time>2. Integrer</time><div><strong>Starter v2 et doublons</strong><p>Audio, frames, self-check, mock run, dataset v2, LoRA et scripts de verification ont ete integres au projet canonique.</p></div><span class="badge pass">fait</span></div>
+          <div class="event"><time>3. Durcir</time><div><strong>Runtime robuste</strong><p>Timeouts, fallbacks, validation, anti-jargon, English-only, streaming download, fallback model chain.</p></div><span class="badge pass">fait</span></div>
+          <div class="event"><time>4. Verifier</time><div><strong>Preflight + Docker</strong><p>Build linux/amd64, run degrade, self-check, secret scan et dry-run LoRA passent.</p></div><span class="badge pass">fait</span></div>
+          <div class="event"><time>5. Pont live</time><div><strong>Groq en attendant Fireworks</strong><p>Provider Groq prioritaire, 5 frames, concurrency 1: sortie valide et controlee.</p></div><span class="badge pass">fait</span></div>
+          <div class="event"><time>6. Gagner</time><div><strong>Score reel</strong><p>Prochaine etape: vraie inference Fireworks, juge miroir, 20+ clips, image publique.</p></div><span class="badge wait">attend</span></div>
+        </div>
+      </section>
+
+      <section id="commands">
+        <div class="section-head">
+          <div>
+            <h2>Commandes utiles</h2>
+            <p>Les commandes sont copiables. Les checks sans API et le pont Groq sont utilisables maintenant.</p>
+          </div>
+        </div>
+        <div class="section-body command-grid">
+          <div class="command">
+            <header>Preflight local <button class="copy" data-copy="python scripts/preflight.py">Copier</button></header>
+            <pre>python scripts/preflight.py</pre>
+          </div>
+          <div class="command">
+            <header>Docker build + run <button class="copy" data-copy="python scripts/preflight.py --docker-build --docker-run">Copier</button></header>
+            <pre>python scripts/preflight.py --docker-build --docker-run</pre>
+          </div>
+          <div class="command">
+            <header>Run strict avec API <button class="copy" data-copy="python scripts/preflight.py --strict --docker-build --docker-run">Copier</button></header>
+            <pre>set FIREWORKS_API_KEY=...
+python scripts/preflight.py --strict --docker-build --docker-run</pre>
+          </div>
+          <div class="command">
+            <header>Run Groq live <button class="copy" data-copy="PROVIDER_ORDER=groq,fireworks,openrouter MAX_CONCURRENCY=1 NUM_FRAMES=5 FRAME_MAX_EDGE=512 INPUT_PATH=data/sample_tasks.json OUTPUT_PATH=out/groq_results_final.json python -m app.main">Copier</button></header>
+            <pre>PROVIDER_ORDER=groq,fireworks,openrouter \
+MAX_CONCURRENCY=1 NUM_FRAMES=5 FRAME_MAX_EDGE=512 \
+INPUT_PATH=data/sample_tasks.json OUTPUT_PATH=out/groq_results_final.json \
+python -m app.main</pre>
+          </div>
+          <div class="command">
+            <header>Publier image <button class="copy" data-copy="PUBLIC_IMAGE=ghcr.io/&lt;user&gt;/track2-captioner:final make publish">Copier</button></header>
+            <pre>PUBLIC_IMAGE=ghcr.io/&lt;user&gt;/track2-captioner:final make publish
+PUBLIC_IMAGE=ghcr.io/&lt;user&gt;/track2-captioner:final make verify-public</pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="next">
+        <div class="section-head">
+          <div>
+            <h2>Ce qu'il faut pour passer au niveau scoring</h2>
+            <p>Le socle est pret. Il manque les pieces externes qui permettent de mesurer le vrai classement.</p>
+          </div>
+          <span class="badge risk">Non prouve</span>
+        </div>
+        <div class="section-body cards">
+          <article class="card"><h3>FIREWORKS_API_KEY</h3><p>Necessaire pour vraie comprehension VLM, styling Gemma et local judge.</p></article>
+          <article class="card"><h3>GROQ_API_KEY</h3><p>Fournie localement: pont live valide, utile aussi pour Whisper audio.</p></article>
+          <article class="card"><h3>DIRECT_VIDEO_MODEL</h3><p>Optionnel: deploiement Fireworks dedie Qwen3 Omni/Molmo2 pour video+audio direct.</p></article>
+          <article class="card"><h3>PUBLIC_IMAGE</h3><p>Necessaire pour push, pull anonyme, taille compressee et soumission finale.</p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer>Track 2 Captioner Mission Control - fichier HTML autonome genere localement.</footer>
+  </div>
+
+  <script>
+    const navLinks = [...document.querySelectorAll("nav a")];
+    const sections = navLinks.map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+
+    document.querySelectorAll("[data-jump]").forEach(btn => {
+      btn.addEventListener("click", () => document.querySelector(btn.dataset.jump).scrollIntoView({ behavior: "smooth" }));
+    });
+
+    document.querySelectorAll(".step").forEach(step => {
+      step.addEventListener("click", () => {
+        document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+        step.classList.add("active");
+        document.querySelector("#detail-title").textContent = step.dataset.title;
+        document.querySelector("#detail-copy").textContent = step.dataset.copy;
+        document.querySelector("#detail-risk").textContent = step.dataset.risk;
+      });
+    });
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.querySelector("#" + tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    document.querySelectorAll(".copy").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(btn.dataset.copy);
+          const old = btn.textContent;
+          btn.textContent = "Copie";
+          setTimeout(() => btn.textContent = old, 900);
+        } catch {
+          btn.textContent = "Ctrl+C";
+        }
+      });
+    });
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + entry.target.id));
+      });
+    }, { rootMargin: "-35% 0px -55% 0px" });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>

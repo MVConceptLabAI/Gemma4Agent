@@ -1,0 +1,17 @@
+[
+  {
+    "task_id": "v1",
+    "video_url": "https://storage.googleapis.com/amd-hackathon-clips/1860079-uhd_2560_1440_25fps.mp4",
+    "content_hint": "Urban autumn boulevard with golden trees and city traffic"
+  },
+  {
+    "task_id": "v2",
+    "video_url": "https://storage.googleapis.com/amd-hackathon-clips/13825391-uhd_3840_2160_30fps.mp4",
+    "content_hint": "Orange kitten among green foliage in a garden"
+  },
+  {
+    "task_id": "v3",
+    "video_url": "https://storage.googleapis.com/amd-hackathon-clips/3044693-uhd_3840_2160_24fps.mp4",
+    "content_hint": "Office worker at a desktop computer in a modern open-plan office"
+  }
+]
