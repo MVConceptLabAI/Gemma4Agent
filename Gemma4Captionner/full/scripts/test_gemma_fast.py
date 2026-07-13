@@ -94,6 +94,56 @@ def test_local_json_and_validation() -> None:
     )
     assert gemma_fast._parse_local(malformed)["formal"] == "A cat walks through leaves."
 
+    battery = gemma_fast._post_validate({
+        "formal": "An animation shows lithium ions moving between battery electrodes as a light bulb illuminates.",
+        "sarcastic": "The battery moves ions around with all the ceremony required to illuminate one bulb.",
+        "humorous_tech": "The ions move like packets of data in a flood of packets through a server.",
+        "humorous_non_tech": "The small visible moment carries on like it is delighted to have an audience.",
+    }, list(gemma_fast.REQUIRED_STYLES))
+    assert "packets" not in battery["humorous_tech"].lower()
+    assert "ions" in battery["humorous_tech"].lower()
+    assert "software thread" not in battery["humorous_tech"].lower()
+    assert "commuters" in battery["humorous_non_tech"].lower()
+    assert "burn out" not in gemma_fast._post_validate({
+        **battery,
+        "sarcastic": "The battery powers a bulb that still manages to burn out in the end.",
+    }, list(gemma_fast.REQUIRED_STYLES))["sarcastic"].lower()
+
+    sports = gemma_fast._fallbacks(
+        "An aerial view shows players in athletic wear on a grassy field with two goals."
+    )
+    assert "field" in sports["humorous_tech"].lower()
+    assert "track" not in sports["humorous_tech"].lower()
+    assert "software" in sports["humorous_tech"].lower()
+
+    dance = gemma_fast._post_validate({
+        "formal": "A man performs a dance routine on a wooden floor in a large room.",
+        "sarcastic": "The dancer gives the empty room all the ceremony it requested.",
+        "humorous_tech": "The dancer moves like software executing expressive code.",
+        "humorous_non_tech": "The small visible moment carries on like it is delighted to have an audience.",
+    }, list(gemma_fast.REQUIRED_STYLES))
+    assert "dancer" in dance["humorous_non_tech"].lower()
+    assert "small visible moment" not in dance["humorous_non_tech"].lower()
+    assert "software thread" not in dance["humorous_tech"].lower()
+
+    repeated = gemma_fast._post_validate({
+        "formal": "A dancer performs alone in a large room.",
+        "sarcastic": "The dancer uses the room with admirable confidence.",
+        "humorous_tech": "The dancer moves like a single thread executing code without server support.",
+        "humorous_non_tech": "He dances like a man who left the oven on at home.",
+    }, list(gemma_fast.REQUIRED_STYLES))
+    assert "single thread" not in repeated["humorous_tech"].lower()
+    assert "oven on at home" not in repeated["humorous_non_tech"].lower()
+
+    assert gemma_fast._contradicts_formal(
+        "A black car drives along a city road and through a tunnel.",
+        "A high-speed chase races through the tunnel.",
+    )
+    assert gemma_fast._contradicts_formal(
+        "Vehicles travel on a road through a tunnel and under overpasses.",
+        "The cars move like confused tourists searching for a hidden landmark.",
+    )
+
 
 async def test_exactly_one_request() -> None:
     calls = 0

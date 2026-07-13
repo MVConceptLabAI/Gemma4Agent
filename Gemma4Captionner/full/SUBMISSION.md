@@ -1,29 +1,30 @@
-# Gemma Fast V19
+# Gemma Hybrid V20
 
 ## Short description
 
-A Gemma 4-only video-captioning agent that turns 24 ordered frames into all four
-required styles in one multimodal JSON call, followed by strict local validation.
+A Gemma 4-only video-captioning agent that uses a fast 24-frame call first and
+automatically activates a deeper Gemma evidence pipeline when quality is at risk.
 
 ## Long description
 
-Gemma Fast V19 is a speed-focused AMD Developer Hackathon Track 2 agent powered
-exclusively by Gemma 4 31B through OpenRouter. It samples 24 uniformly spaced
-frames at up to 640 pixels and sends the entire ordered visual sequence in one
-multimodal request. Gemma returns formal, sarcastic, humorous-tech, and
-humorous-non-tech captions together in one JSON object, keeping every voice tied
-to one coherent view of the clip.
+Gemma Hybrid V20 is a grounded AMD Developer Hackathon Track 2 agent powered
+exclusively by Gemma 4 models. Its fast path samples 24 ordered frames at up to
+640 pixels and asks Gemma 4 31B for formal, sarcastic, humorous-tech, and
+humorous-non-tech captions in one multimodal JSON response.
 
-After inference, deterministic local checks salvage malformed JSON, guarantee
-every requested style, limit caption length, require a genuine technology
-reference in tech humour, remove technology from non-tech humour, reject
-near-duplicate voices, and replace internal pipeline wording or recycled comedy
-templates. These checks make no additional model request.
+V20 automatically activates its V18 evidence pipeline when the fast request
+times out or returns malformed, generic, contradictory, corrupted, internally
+leaked, or near-duplicate text. The recovery route independently analyzes the
+frames, can inspect two 60-second MP4 segments with Gemma 4 26B A4B, and uses
+Gemma 4 31B to write, strengthen, and verify every style. A final batch guard
+also detects substantial joke wording reused across different videos and can
+recover affected tasks while respecting the ten-minute global budget.
 
-The public Linux amd64 container reads `/input/tasks.json`, writes validated
-`/output/results.json`, and keeps V18 available as a rollback baseline.
+The public Linux amd64 container reads `/input/tasks.json`, guarantees every
+requested style, validates the complete result, and writes strict JSON to
+`/output/results.json`.
 
-- Repository: `https://github.com/MVConceptLabAI/Gemma4Agent/tree/codex/gemma4-submission-v19/Gemma4Captionner/full`
-- Image: `ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v19`
-- Engine: `gemma_fast`
-- Model: `google/gemma-4-31b-it`
+- Repository: `https://github.com/MVConceptLabAI/Gemma4Agent/tree/codex/gemma4-submission-v20/Gemma4Captionner/full`
+- Image: `ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v20`
+- Engine: `gemma_hybrid`
+- Models: `google/gemma-4-31b-it`, `google/gemma-4-26b-a4b-it`

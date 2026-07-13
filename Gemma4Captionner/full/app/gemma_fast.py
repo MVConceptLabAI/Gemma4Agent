@@ -49,6 +49,9 @@ def _prompt() -> str:
         "mention images, frames, sampling, prompts, models, or analysis. Avoid stock phrases including "
         "masterclass, truly monumental, a sweeping epic, thrilling time, thrilling footage, high-end GPU, "
         "speed of a modern, legacy system, single-core processor, poorly optimized, code that refuses, "
+        "data packet, packets of data, data transfer, data overflow, flood of packets, "
+        "single thread, single-threaded, left the oven on at home, left the windows open at home, "
+        "software thread, background thread, "
         "musical chairs, freshly cleaned floor, ordinary moment ceremony, toddler, with such intensity, "
         "watching paint dry, looks great, stealing the spotlight, just wants to go fast, and a very demanding way to spend the day. "
         "Use double-quoted JSON strings with no Markdown."
@@ -126,11 +129,11 @@ def _too_similar(left: str, right: str) -> bool:
 
 
 def _unsafe_template(style: str, value: str) -> bool:
-    common = r"\b(?:frames?|sampling|prompts?|models?|analysis|caption|punchline|qa|visible action receives|history books nearly missed|masterclass|truly monumental|truly majestic|groundbreaking|a display of immense|a sweeping epic|thrilling)\b"
+    common = r"\b(?:frames?|sampling|prompts?|models?|analysis|caption|punchline|qa|visible action receives|small visible moment|history books nearly missed|masterclass|truly monumental|truly majestic|groundbreaking|a display of immense|a sweeping epic|thrilling)\b"
     patterns = {
-        "humorous_tech": common + r"|\b(?:algorithm|visual runtime|visual quality|network (?:traffic|packet)|data packet|graphics (?:server|engine)|pixel budget|high[- ]end gpu|speed of a modern|crashed tablet|human statues?|video quality|legacy (?:system|code|hardware|driver)|outdated but still functioning|single[- ]core processor|poorly optimized|code that refuses|hidden test|rollback)\b",
-        "humorous_non_tech": common + r"|\b(?:looks (?:great|good|beautiful|nice)|steal(?:s|ing) the spotlight|just wants? to go fast|trying to figure out if|penguins? in the cold|ignoring (?:their|the) drinks|shopper|shopping cart|cart that|toddler|with such intensity|watching paint dry|musical chairs|giant game|freshly cleaned floor)\b",
-        "sarcastic": common + r"|\b(?:spends? (?:her|his|their) day|grueling schedule|schedule of (?:standing|sitting|talking)|very demanding way to spend|because (?:that|this) is (?:a )?(?:very )?(?:demanding|exciting|interesting)|most ambitious production|ceremony this ordinary moment|ordinary moment was apparently missing)\b",
+        "humorous_tech": common + r"|\b(?:algorithm|visual runtime|visual quality|network (?:traffic|packet)|data packets?|packets? of data|data (?:transfer|overflow)|flood of packets|ssd data|solid[- ]state drive.{0,30}transfer|software thread|background thread|graphics (?:server|engine)|pixel budget|high[- ]end gpu|speed of a modern|crashed tablet|human statues?|video quality|legacy (?:system|code|hardware|driver)|outdated but still functioning|single[- ](?:core processor|thread(?:ed)?)|poorly optimized|code that refuses|hidden test|rollback)\b",
+        "humorous_non_tech": common + r"|\b(?:looks (?:great|good|beautiful|nice)|steal(?:s|ing) the spotlight|just wants? to go fast|trying to figure out if|penguins? in the cold|ignoring (?:their|the) drinks|shopper|shopping cart|cart that|last slice of pizza|left .{0,30} (?:on|open) at home|toddler|with such intensity|watching paint dry|musical chairs|giant game|freshly cleaned floor)\b",
+        "sarcastic": common + r"|\b(?:truly the (?:peak|most)|spends? (?:her|his|their) day|grueling schedule|schedule of (?:standing|sitting|talking)|very demanding way to spend|because (?:that|this) is (?:a )?(?:very )?(?:demanding|exciting|interesting)|most ambitious production|ceremony this ordinary moment|ordinary moment was apparently missing)\b",
         "formal": common,
     }
     return bool(re.search(patterns[style], value, re.IGNORECASE))
@@ -164,7 +167,13 @@ def _fallbacks(formal: str) -> dict[str, str]:
             "The intersection becomes a backend load balancer distributing pedestrians and vehicles across every available lane.",
             "The crossing becomes an orderly race in which everyone remembers a different version of the rules.",
         )
-    elif re.search(r"\b(?:race|racing|racecar|race car|circuit|driver|pit lane|motorsport)\b", lower):
+    elif (
+        re.search(r"\b(?:race|racing|racecar|race car|driver|pit lane|motorsport)\b", lower)
+        or (
+            re.search(r"\bcircuit\b", lower)
+            and re.search(r"\b(?:car|vehicle|driver|track|racing)\b", lower)
+        )
+    ):
         voices = (
             "The racing scene advances from pit-lane talk to cockpit and track; apparently standing beside the red car was far too pedestrian.",
             "The race sequence shifts from interview to cockpit and circuit like software promoting its fastest process into production.",
@@ -224,11 +233,29 @@ def _fallbacks(formal: str) -> dict[str, str]:
             "The kitchen processes ingredients like software dividing one large input into tidy data chunks.",
             "The ingredients line up so neatly that dinner appears to have read the recipe in advance.",
         )
+    elif re.search(r"\b(?:battery|batteries|lithium|ions?|electrode|anode|cathode)\b", lower):
+        voices = (
+            "The battery moves ions between electrodes with the ceremony of a tiny power station announcing another routine shift.",
+            "Ions cross the battery like scheduled API calls handing energy to the circuit without crashing the hardware.",
+            "The ions hurry between the battery electrodes like commuters changing platforms to keep one very demanding light bulb awake.",
+        )
+    elif re.search(r"\b(?:football|soccer|players?|goals?|grassy field|playing a game)\b", lower):
+        voices = (
+            "The players spread across the field with the solemn scale of a championship apparently attended by every blade of grass.",
+            "The players cross the field like software characters in an open-world simulation whose map is much larger than the current mission.",
+            "The players chase the ball across the wide field like guests pursuing the last snack at a picnic.",
+        )
     elif re.search(r"\b(?:runner|running|athletic|stadium|sport)\b", lower):
         voices = (
             "The runner crosses the track before an empty grandstand, delivering peak drama to an audience of seats.",
             "The runner processes the track like optimized software clearing every checkpoint before the timeout.",
             "The runner moves fast enough to make their own shadow reconsider entering the race.",
+        )
+    elif re.search(r"\b(?:dance|dancer|dances|dancing|choreography)\b", lower):
+        voices = (
+            "The dancer commands the empty room with the confidence of a performance whose audience wisely left plenty of floor space.",
+            "The dancer moves across the room like a rendering engine executing expressive choreography code at full frame rate.",
+            "The dancer crosses the wooden floor like someone turning an empty room into a private celebration before the guests arrive.",
         )
     elif re.search(r"\b(?:rooftop|table|conversation|drinks)\b", lower):
         voices = (
@@ -288,10 +315,26 @@ def _contradicts_formal(formal: str, styled: str) -> bool:
         and re.search(r"\b(?:walk|stroll|pedestrian)\b", candidate)
     ):
         return True
+    if (
+        (
+            re.search(r"\b(?:light bulb|bulb).{0,30}(?:illuminat\w*|lights? up|turns? on)\b", anchor)
+            or re.search(r"\bpower\w*.{0,20}(?:light bulb|bulb)\b", anchor)
+        )
+        and re.search(r"\b(?:burns? out|goes? dark|fails?|turns? off)\b", candidate)
+    ):
+        return True
+    if (
+        re.search(r"\b(?:high[- ]speed )?chase\b", candidate)
+        and not re.search(r"\b(?:chase|race|racing|pursu)\w*\b", anchor)
+    ):
+        return True
     # Concrete scene nouns may be used metaphorically only when they are
     # already grounded by the factual anchor. This catches plausible-sounding
     # additions such as a city in a mountain clip or a cart at an intersection.
-    guarded_nouns = ("city", "mountain", "train", "boat", "cat", "dog", "office", "kitchen", "cart", "shopper")
+    guarded_nouns = (
+        "city", "skyline", "mountain", "train", "boat", "cat", "dog",
+        "office", "kitchen", "cart", "shopper", "tourist", "landmark",
+    )
     return any(re.search(rf"\b{noun}s?\b", candidate) and not re.search(rf"\b{noun}s?\b", anchor) for noun in guarded_nouns)
 
 

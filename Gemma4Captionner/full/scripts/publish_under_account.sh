@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Publish the current V19 tag through the repository-level GitHub workflow.
+# Publish the current V20 tag through the repository-level GitHub workflow.
 set -euo pipefail
 
 EXPECTED="${1:-MVConceptLabAI}"
@@ -22,7 +22,7 @@ if [[ -f Gemma4Captionner/full/.env ]]; then
     --repo "$EXPECTED/Gemma4Agent" --env OPENROUTER_API_KEY
 fi
 
-TAG=gemma4-submission-v19
+TAG=gemma4-submission-v20
 git tag -f "$TAG"
 git push origin "refs/tags/$TAG" --force
 

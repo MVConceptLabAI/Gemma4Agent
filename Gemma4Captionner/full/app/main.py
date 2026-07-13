@@ -146,6 +146,13 @@ async def _run_one(sem: asyncio.Semaphore, task: dict[str, Any]) -> dict[str, An
                     caption_gemma_fast(video_url=video_url, styles=styles),
                     timeout=task_timeout,
                 )
+            elif CAPTION_ENGINE == "gemma_hybrid":
+                from app.gemma_hybrid import caption_gemma_hybrid
+
+                captions = await asyncio.wait_for(
+                    caption_gemma_hybrid(video_url=video_url, styles=styles),
+                    timeout=task_timeout,
+                )
             elif CAPTION_ENGINE == "qwen_direct":
                 # Opt-in experimental path. Lazy import keeps the default and
                 # legacy v36 paths unchanged unless explicitly selected.
@@ -196,6 +203,11 @@ async def _amain() -> int:
 
     sem = asyncio.Semaphore(MAX_CONCURRENCY)
     results = await asyncio.gather(*(_run_one(sem, t) for t in tasks_in))
+
+    if CAPTION_ENGINE == "gemma_hybrid":
+        from app.gemma_hybrid import recover_batch_repetitions
+
+        results = await recover_batch_repetitions(tasks_in, results, _remaining_budget)
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     validated = validate_results(results)

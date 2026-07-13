@@ -1,23 +1,23 @@
-# V19 submission status
+# V20 submission status
 
 ## Implemented
 
-- Branch: `codex/gemma4-submission-v19`
-- Engine: `gemma_fast`
-- 24 uniform frames at maximum edge 640
-- exactly one Gemma multimodal request per successful clip
-- four styles returned in one JSON object
-- local JSON salvage, schema validation, style distinction and safe fallbacks
-- V18 preserved as the rollback image
+- Branch: `codex/gemma4-submission-v20`
+- Engine: `gemma_hybrid`
+- V19 one-call 24-frame path with a 185-second fast budget
+- bounded V18 evidence recovery for failed or unsafe tasks
+- direct Gemma 4 video recovery for clips up to two 60-second segments
+- final schema, grounding, corruption, voice-distinction and repetition checks
+- maximum two batch repetition recoveries within the global budget
+- V18 and V19 preserved as immutable rollback images
 
 ## Promotion gate
 
-Passed on the complete 15-task `data/official_tasks.json` set:
+- 8-video long-form container run: exit 0 in 327.1 seconds, 32/32 captions
+- targeted weak-case run: urban, people, sports and technology completed in 232.9 seconds
+- final deterministic replay: 16/16 valid captions, zero exact duplicates and zero repeated four-grams
+- final Gemma 4 batch audit: pass, style quality 0.90, diversity 0.90, accuracy risk 0.10
+- local image: Linux amd64, 254 MB
 
-- 60/60 valid captions and zero exact duplicates
-- 161.4 seconds versus 406.0 seconds for the V18 comparison run
-- Gemma 4 full-JSON audit: pass
-- style quality 0.90, diversity 0.90, accuracy risk 0.00
-- no shared templates or cliches reported by the final audit
-
-V18 remains available as the conservative rollback image.
+The remaining publication gates are the GitHub Actions build, anonymous pull,
+public manifest and clean-container contract verification of the tagged image.

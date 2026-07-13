@@ -3,7 +3,7 @@
 set -euo pipefail
 
 if [[ -z "${PUBLIC_IMAGE:-}" ]]; then
-    echo "PUBLIC_IMAGE is required, e.g. ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v19" >&2
+    echo "PUBLIC_IMAGE is required, e.g. ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v20" >&2
     exit 2
 fi
 

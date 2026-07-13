@@ -3,7 +3,7 @@
 # Base slim + FFmpeg. Build for linux/amd64 explicitly (judging VM runs amd64).
 #
 #   docker buildx build --platform linux/amd64 \
-#     --tag ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v19 --push .
+#     --tag ghcr.io/mvconceptlabai/gemma4-captioner:gemma4-submission-v20 --push .
 # =============================================================================
 FROM python:3.11-slim-bookworm
 
@@ -30,12 +30,22 @@ COPY app/ ./app/
 
 # The harness mounts /input and /output at runtime and injects NO env vars,
 # so the submission profile is pinned here. Non-secret config is plain ENV.
-# V19 Gemma Fast: 24 ordered frames enter one Gemma multimodal JSON request.
-# Schema, style, similarity, length, safety, and repetition checks are local.
+# V20 Hybrid: try the V19 24-frame request first. A timed-out, malformed,
+# generic, contradictory, or repeated result is recovered through the grounded
+# V18 evidence pipeline. Every inference request remains inside Gemma 4.
 ENV PYTHONPATH=/app \
-    CAPTION_ENGINE=gemma_fast \
+    CAPTION_ENGINE=gemma_hybrid \
     GEMMA_FAST_MODEL=google/gemma-4-31b-it \
     GEMMA_FAST_MAX_TOKENS=700 \
+    DEMO_GEMMA_MODEL=google/gemma-4-31b-it \
+    DEMO_VIDEO_MODEL=google/gemma-4-26b-a4b-it \
+    DEMO_OBSERVATION_CONCURRENCY=9 \
+    VIDEO_CONTEXT_MAX_SECONDS=60 \
+    VIDEO_CONTEXT_MAX_BYTES=12000000 \
+    HYBRID_FAST_TIMEOUT_S=185 \
+    HYBRID_RECOVERY_TIMEOUT_S=220 \
+    HYBRID_BATCH_RECOVERY_TIMEOUT_S=200 \
+    HYBRID_BATCH_RECOVERY_MAX=2 \
     SCENE_DETECT_ENABLED=0 \
     TIMESTAMP_FRAMES=0 \
     TRUST_GENERATED_HUMOROUS_TECH=1 \
@@ -43,8 +53,8 @@ ENV PYTHONPATH=/app \
     NUM_FRAMES=24 \
     FRAME_MAX_EDGE=640 \
     MAX_CONCURRENCY=3 \
-    PER_TASK_TIMEOUT_S=120 \
-    GLOBAL_BUDGET_S=480
+    PER_TASK_TIMEOUT_S=415 \
+    GLOBAL_BUDGET_S=540
 # Judging VM = 2 vCPU / 4 GB RAM (Participant Guide p.5). Scene-detection
 # decodes the ENTIRE UHD clip per video and three parallel ffmpeg passes
 # thrash 2 cores into the 10-minute wall - uniform -ss seeks are near-free.
