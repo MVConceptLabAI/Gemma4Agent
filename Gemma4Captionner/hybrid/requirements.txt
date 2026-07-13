@@ -1,0 +1,10 @@
+# Minimal, pinned. Keep image < 5 GB compressed.
+openai==1.54.4           # Fireworks is OpenAI-compatible via base_url
+httpx==0.27.2
+tenacity==9.0.0          # Retries with exponential backoff for API flakiness
+pydantic==2.9.2
+python-dotenv==1.0.1     # For LOCAL dev only — do NOT bundle a .env in the image
+Pillow==11.0.0
+numpy==2.1.3
+# faster-whisper is optional (audio). Uncomment if you ship Whisper local:
+# faster-whisper==1.1.0

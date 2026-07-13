@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "caption-webapp", "runtimeExecutable": "python", "runtimeArgs": ["-m", "app.webapp"], "port": 8799 }
+  ]
+}

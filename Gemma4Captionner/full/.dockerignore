@@ -1,0 +1,16 @@
+# Never bake secrets or eval data into the image
+.env
+.env.*
+*.env
+in/
+out/
+eval/
+finetune/
+scripts/
+data/sample_tasks.json
+.git/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+node_modules/

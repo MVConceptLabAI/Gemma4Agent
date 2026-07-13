@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AMD Track 2 - Affiche interactive</title>
+  <style>
+    :root {
+      --ink: #17202a;
+      --muted: #5d6875;
+      --line: #d8e0ea;
+      --paper: #fbfcfe;
+      --panel: #ffffff;
+      --green: #2f8f6a;
+      --blue: #2c6fbb;
+      --red: #b4443f;
+      --amber: #a66b12;
+      --violet: #6b5bb7;
+      --shadow: 0 18px 50px rgba(20, 31, 49, .12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.96)),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='720' viewBox='0 0 1200 720'%3E%3Cdefs%3E%3Cpattern id='g' width='60' height='60' patternUnits='userSpaceOnUse'%3E%3Cpath d='M60 0H0v60' fill='none' stroke='%23c9d5e4' stroke-width='1' opacity='.45'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='1200' height='720' fill='%23f5f8fc'/%3E%3Crect width='1200' height='720' fill='url(%23g)'/%3E%3Cpath d='M120 560 C260 430, 360 520, 505 372 S805 205, 1080 325' fill='none' stroke='%232c6fbb' stroke-width='18' opacity='.10'/%3E%3Cpath d='M80 210 C245 120, 360 210, 530 155 S840 42, 1125 145' fill='none' stroke='%232f8f6a' stroke-width='14' opacity='.12'/%3E%3C/svg%3E");
+      background-size: cover;
+    }
+
+    a { color: inherit; }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    header {
+      min-height: 82vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(310px, .85fr);
+      gap: 28px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      color: var(--blue);
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 13px;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 14px 0 18px;
+      font-size: clamp(42px, 7vw, 92px);
+      line-height: .94;
+      letter-spacing: 0;
+      max-width: 850px;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.55;
+      max-width: 760px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    button, .link-button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-weight: 750;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(23, 32, 42, .06);
+      text-decoration: none;
+    }
+
+    button:hover, .link-button:hover { border-color: var(--blue); }
+    button.active { background: var(--ink); color: white; border-color: var(--ink); }
+
+    .scoreboard {
+      background: rgba(255,255,255,.86);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .scoreboard h2 {
+      margin: 0 0 16px;
+      font-size: 22px;
+    }
+
+    .metric {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .metric:first-of-type { border-top: 0; }
+    .metric strong { font-size: 15px; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    .badge {
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 12px;
+      font-weight: 850;
+      color: white;
+      white-space: nowrap;
+    }
+
+    .pass { background: var(--green); }
+    .wait { background: var(--amber); }
+    .risk { background: var(--red); }
+    .info { background: var(--blue); }
+
+    main { padding: 34px 0 70px; }
+
+    section {
+      margin-top: 34px;
+      background: rgba(255,255,255,.9);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 12px 40px rgba(20, 31, 49, .08);
+      overflow: hidden;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      padding: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+
+    .section-head p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 780px;
+      line-height: 1.5;
+    }
+
+    .content { padding: 24px; }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(130px, 1fr));
+      gap: 12px;
+    }
+
+    .step {
+      position: relative;
+      min-height: 150px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 14px;
+      cursor: pointer;
+    }
+
+    .step.active {
+      border-color: var(--blue);
+      box-shadow: inset 0 0 0 2px rgba(44, 111, 187, .18);
+    }
+
+    .step small {
+      color: var(--blue);
+      font-weight: 850;
+    }
+
+    .step h3 {
+      margin: 8px 0;
+      font-size: 18px;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 14px;
+    }
+
+    .detail {
+      margin-top: 16px;
+      border-left: 4px solid var(--blue);
+      padding: 16px;
+      background: #f3f7fc;
+      border-radius: 0 8px 8px 0;
+      min-height: 92px;
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .tile {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 150px;
+    }
+
+    .tile h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .tile p, .tile li {
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .tile ul { padding-left: 18px; margin: 0; }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab-panel {
+      display: none;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 18px;
+      line-height: 1.55;
+    }
+
+    .tab-panel.active { display: block; }
+
+    .checks {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: var(--paper);
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-top: 5px;
+      background: var(--green);
+    }
+
+    .dot.wait { background: var(--amber); }
+
+    code {
+      background: #eef3f8;
+      border: 1px solid #d8e0ea;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: .92em;
+    }
+
+    pre {
+      overflow: auto;
+      background: #111827;
+      color: #e7edf5;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .poster-footer {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      header { grid-template-columns: 1fr; min-height: auto; padding: 46px 0; }
+      .pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid { grid-template-columns: 1fr; }
+      .checks { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .shell { padding: 16px; }
+      .pipeline { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      h1 { font-size: 44px; }
+      .lead { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <div class="eyebrow">AMD Developer Hackathon ACT II - Track 2</div>
+        <h1>Un agent qui comprend une vidéo, puis écrit quatre captions stylées.</h1>
+        <p class="lead">
+          Le projet vise une soumission Docker robuste pour le Track 2 :
+          lire des clips vidéo cachés, produire quatre captions anglaises par clip,
+          respecter le style demandé, et ne jamais tomber sur les pièges éliminatoires.
+        </p>
+        <div class="hero-actions">
+          <button data-jump="#pipeline">Voir le pipeline</button>
+          <button data-jump="#work">Ce qui a été fait</button>
+          <button data-jump="#proof">Preuves locales</button>
+          <button data-jump="#next">Ce qu’il manque</button>
+        </div>
+      </div>
+
+      <aside class="scoreboard" aria-label="Résumé du statut">
+        <h2>État actuel</h2>
+        <div class="metric">
+          <div><strong>Contrat JSON</strong><br><span>4 styles, captions non vides, validation Pydantic</span></div>
+          <span class="badge pass">Prouvé</span>
+        </div>
+        <div class="metric">
+          <div><strong>Docker linux/amd64</strong><br><span>Build + run monté /input /output</span></div>
+          <span class="badge pass">Prouvé</span>
+        </div>
+        <div class="metric">
+          <div><strong>Image locale</strong><br><span>252,345,692 bytes inspectés, env. 978 MB local</span></div>
+          <span class="badge pass">OK</span>
+        </div>
+        <div class="metric">
+          <div><strong>Vraie inférence</strong><br><span>Fireworks requis pour score réel</span></div>
+          <span class="badge wait">À fournir</span>
+        </div>
+        <div class="metric">
+          <div><strong>Image publique</strong><br><span>Push/pull anonyme encore non vérifié</span></div>
+          <span class="badge wait">À faire</span>
+        </div>
+      </aside>
+    </header>
+
+    <main>
+      <section id="why">
+        <div class="section-head">
+          <div>
+            <h2>Pourquoi ce projet existe</h2>
+            <p>
+              Le hackathon ne récompense pas juste un joli texte. Il score chaque caption sur deux axes :
+              fidélité à la vidéo et respect du style. Le but est donc de séparer compréhension factuelle
+              et écriture créative.
+            </p>
+          </div>
+        </div>
+        <div class="content grid">
+          <div class="tile">
+            <h3>Objectif produit</h3>
+            <p>
+              Transformer une vidéo courte en captions utilisables par des créateurs, médias ou outils
+              d’accessibilité qui veulent adapter le ton sans réanalyser la vidéo.
+            </p>
+          </div>
+          <div class="tile">
+            <h3>Objectif concours</h3>
+            <p>
+              Maximiser <strong>Caption Accuracy</strong> et <strong>Style Match</strong>, tout en évitant
+              les zéros automatiques : JSON cassé, style manquant, timeout ou image Docker inaccessible.
+            </p>
+          </div>
+          <div class="tile">
+            <h3>Stratégie gagnante</h3>
+            <p>
+              Comprendre la vidéo une seule fois, produire des faits neutres, puis générer les quatre styles
+              en parallèle avec Gemma/Qwen/MiniMax via Fireworks.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="pipeline">
+        <div class="section-head">
+          <div>
+            <h2>Pipeline interactif</h2>
+            <p>Clique sur une étape pour voir ce qu’elle apporte au score et à la robustesse.</p>
+          </div>
+        </div>
+        <div class="content">
+          <div class="pipeline" role="list">
+            <article class="step active" data-detail="Le container lit /input/tasks.json au démarrage. Les tâches sont validées avec Pydantic pour éviter qu’une entrée malformée casse tout le run.">
+              <small>01</small><h3>Ingest</h3><p>Lecture et validation des tâches.</p>
+            </article>
+            <article class="step" data-detail="Les vidéos sont téléchargées en streaming vers le disque, avec retry HTTP. Intérêt : moins de RAM, moins de crash réseau, meilleure tolérance aux clips lourds.">
+              <small>02</small><h3>Download</h3><p>MP4 streamé, retry réseau.</p>
+            </article>
+            <article class="step" data-detail="FFmpeg extrait des frames par détection de scène puis complète uniformément. Intérêt : couvrir les changements importants sans envoyer trop d’images au VLM.">
+              <small>03</small><h3>Frames</h3><p>Échantillonnage hybride.</p>
+            </article>
+            <article class="step" data-detail="Optionnellement, Groq Whisper extrait une transcription audio. Intérêt : capter les indices de voix, sons ou contexte oral quand la clé GROQ_API_KEY est disponible.">
+              <small>04</small><h3>Audio</h3><p>Whisper optionnel.</p>
+            </article>
+            <article class="step" data-detail="Le VLM produit un JSON factuel unique : résumé, sujets, actions, ambiance, présence tech. Intérêt : une source de vérité commune pour les quatre captions.">
+              <small>05</small><h3>Understand</h3><p>Faits neutres via VLM.</p>
+            </article>
+            <article class="step" data-detail="Quatre appels style partent en parallèle : formal, sarcastic, humorous_tech, humorous_non_tech. Les résultats sont normalisés et validés avant écriture.">
+              <small>06</small><h3>Style x4</h3><p>Captions finales validées.</p>
+            </article>
+          </div>
+          <div class="detail" id="pipeline-detail">
+            Le container lit /input/tasks.json au démarrage. Les tâches sont validées avec Pydantic pour éviter qu’une entrée malformée casse tout le run.
+          </div>
+        </div>
+      </section>
+
+      <section id="work">
+        <div class="section-head">
+          <div>
+            <h2>Ce que j’ai fait</h2>
+            <p>Chaque onglet explique une famille de changements et son intérêt concret pour le concours.</p>
+          </div>
+        </div>
+        <div class="content">
+          <div class="tabs">
+            <button class="tab active" data-tab="hardening">Robustesse</button>
+            <button class="tab" data-tab="score">Score</button>
+            <button class="tab" data-tab="docker">Soumission</button>
+            <button class="tab" data-tab="audit">Audit</button>
+          </div>
+
+          <div class="tab-panel active" id="hardening">
+            <h3>Robustesse : ne jamais perdre sur une erreur de forme</h3>
+            <ul>
+              <li>Validation Pydantic des entrées et sorties.</li>
+              <li>Fallbacks non vides si modèle, réseau ou timeout échoue.</li>
+              <li>Normalisation runtime alignée avec le self-check : longueur max, styles présents, jargon filtré.</li>
+              <li>Pas de secrets dans l’image ni dans le repo.</li>
+            </ul>
+          </div>
+
+          <div class="tab-panel" id="score">
+            <h3>Score : améliorer accuracy + style match</h3>
+            <ul>
+              <li>Architecture deux étages : comprendre une fois, styliser quatre fois.</li>
+              <li>Prompts séparés pour formal, sarcastic, humorous_tech et humorous_non_tech.</li>
+              <li>Fallback modèles : Qwen2.5-VL 7B, Qwen2.5-VL 32B, MiniMax M3, Gemma 3 27B.</li>
+              <li>Audio optionnel via Whisper pour enrichir les faits quand disponible.</li>
+            </ul>
+          </div>
+
+          <div class="tab-panel" id="docker">
+            <h3>Soumission : éviter les zéros automatiques</h3>
+            <ul>
+              <li>Docker buildx en <code>linux/amd64</code>.</li>
+              <li>Run monté avec <code>/input</code> et <code>/output</code>.</li>
+              <li>Scripts de publication et vérification publique.</li>
+              <li>GitHub Actions pour preflight offline et build Docker.</li>
+            </ul>
+          </div>
+
+          <div class="tab-panel" id="audit">
+            <h3>Audit : méthode Ponytail</h3>
+            <p>
+              Ponytail n’a pas été ajouté comme dépendance. Je l’ai utilisé comme règle de décision :
+              réutiliser l’existant, corriger le point central, ne pas ajouter de framework, garder les
+              preuves. Résultat : fallback multi-modèles et streaming HTTP dans le pipeline, sans usine à gaz.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="proof">
+        <div class="section-head">
+          <div>
+            <h2>Preuves locales</h2>
+            <p>Ce qui a été vérifié sur la machine, avec les limites clairement séparées.</p>
+          </div>
+        </div>
+        <div class="content">
+          <div class="checks">
+            <div class="check"><span class="dot"></span><div><strong>Compile Python</strong><br>Les modules principaux compilent.</div></div>
+            <div class="check"><span class="dot"></span><div><strong>Contract test</strong><br>Les invariants JSON/style passent.</div></div>
+            <div class="check"><span class="dot"></span><div><strong>Self-check</strong><br>3 tâches, 12 captions, bans respectés.</div></div>
+            <div class="check"><span class="dot"></span><div><strong>LoRA dry-run</strong><br>Dataset v2 chargé : 794 lignes.</div></div>
+            <div class="check"><span class="dot"></span><div><strong>Docker build</strong><br>Image inspectée en <code>amd64/linux</code>.</div></div>
+            <div class="check"><span class="dot"></span><div><strong>Docker run</strong><br>Contrat monté <code>/input</code> -> <code>/output</code> validé.</div></div>
+            <div class="check"><span class="dot wait"></span><div><strong>Vraie inférence</strong><br>Attend <code>FIREWORKS_API_KEY</code>.</div></div>
+            <div class="check"><span class="dot wait"></span><div><strong>Image publique</strong><br>Attend <code>PUBLIC_IMAGE</code>.</div></div>
+          </div>
+          <pre>python scripts/preflight.py --docker-build --docker-run
+
+PASS docker image inspect - architecture=amd64 os=linux size=252345692
+PASS docker degraded contract run
+PASS docker degraded self-check
+PASS docker degraded elapsed - 4.00s</pre>
+        </div>
+      </section>
+
+      <section id="next">
+        <div class="section-head">
+          <div>
+            <h2>Pour passer du solide au compétitif</h2>
+            <p>Les prochaines preuves nécessaires pour viser la première place, pas seulement une soumission valide.</p>
+          </div>
+        </div>
+        <div class="content grid">
+          <div class="tile">
+            <h3>1. Clé Fireworks</h3>
+            <p>
+              Lancer la vraie inférence VLM/style, comparer les captions et exécuter le juge miroir.
+              C’est la preuve la plus importante pour le score.
+            </p>
+          </div>
+          <div class="tile">
+            <h3>2. Dataset 20+ clips</h3>
+            <p>
+              Tester nature, urbain, animaux, personnes, sport, food, weather et tech.
+              Les 3 clips exemple ne suffisent pas pour conclure.
+            </p>
+          </div>
+          <div class="tile">
+            <h3>3. Image publique</h3>
+            <p>
+              Publier sur GHCR ou Docker Hub, vérifier un pull anonyme, la taille compressée,
+              puis chronométrer un run complet réel.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <p class="poster-footer">
+        Fichier généré localement pour expliquer le projet Track 2 Captioner et l’état de préparation.
+      </p>
+    </main>
+  </div>
+
+  <script>
+    document.querySelectorAll("[data-jump]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelector(button.dataset.jump).scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    const detail = document.querySelector("#pipeline-detail");
+    document.querySelectorAll(".step").forEach((step) => {
+      step.addEventListener("click", () => {
+        document.querySelectorAll(".step").forEach((s) => s.classList.remove("active"));
+        step.classList.add("active");
+        detail.textContent = step.dataset.detail;
+      });
+    });
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.querySelector("#" + tab.dataset.tab).classList.add("active");
+      });
+    });
+  </script>
+</body>
+</html>

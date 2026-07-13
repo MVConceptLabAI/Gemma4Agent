@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Gemma 4 SceneGate - Track 2 presentation</title>
+  <style>
+    @page { size: 16in 9in; margin: 0; }
+    :root { --ink:#edf4f8; --muted:#aebdca; --mint:#57e0c2; --blue:#82aaff; --bg:#071119; --card:#0e202b; --line:#234151; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,Arial,sans-serif; }
+    .slide { width:16in; height:9in; padding:.72in .9in; page-break-after:always; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:center; }
+    .slide:before { content:""; position:absolute; width:5.2in; height:5.2in; border-radius:50%; right:-1.8in; top:-2in; background:radial-gradient(circle,rgba(87,224,194,.25),transparent 67%); }
+    .slide:after { content:""; position:absolute; width:3.4in; height:3.4in; border-radius:50%; left:-1.7in; bottom:-1.5in; background:radial-gradient(circle,rgba(130,170,255,.18),transparent 67%); }
+    .content { position:relative; z-index:1; }
+    .eyebrow { color:var(--mint); font-size:15pt; font-weight:750; letter-spacing:3.4pt; text-transform:uppercase; margin-bottom:20pt; }
+    h1 { margin:0; font-size:50pt; line-height:1.02; letter-spacing:-1.8pt; max-width:11in; }
+    h2 { margin:0 0 20pt; font-size:35pt; line-height:1.08; letter-spacing:-1pt; max-width:11.5in; }
+    p, li { color:var(--muted); font-size:18pt; line-height:1.45; }
+    p { margin:0; max-width:10.6in; }
+    .lead { margin-top:24pt; color:var(--ink); font-size:23pt; max-width:10.8in; }
+    .mint { color:var(--mint); } .blue { color:var(--blue); } strong { color:var(--ink); } a { color:var(--mint); }
+    .footer { position:absolute; right:.9in; bottom:.35in; font-size:10pt; color:#66808f; letter-spacing:.4pt; }
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16pt; margin-top:26pt; max-width:13.9in; }
+    .card { min-height:1.56in; border:1px solid var(--line); border-radius:15pt; background:rgba(14,32,43,.85); padding:18pt 20pt; }
+    .card .num { color:var(--mint); font-size:29pt; font-weight:800; line-height:1; }
+    .card .label { color:var(--muted); font-size:14pt; line-height:1.35; margin-top:8pt; }
+    .flow { display:flex; align-items:stretch; gap:11pt; margin:26pt 0 22pt; max-width:13.7in; }
+    .node { flex:1; min-height:1.12in; display:flex; align-items:center; justify-content:center; text-align:center; border:1px solid var(--line); border-radius:13pt; background:rgba(14,32,43,.86); color:var(--ink); font-size:15pt; font-weight:700; padding:10pt; }
+    .node.highlight { border-color:var(--mint); color:var(--mint); background:rgba(87,224,194,.10); }
+    .arrow { align-self:center; color:var(--mint); font-size:24pt; }
+    ul { padding-left:25pt; margin:12pt 0 0; max-width:11.5in; } li { margin:10pt 0; }
+    .styles { display:grid; grid-template-columns:repeat(4,1fr); gap:14pt; margin-top:27pt; max-width:13.8in; }
+    .style { border-radius:14pt; min-height:1.62in; padding:18pt; border:1px solid var(--line); background:rgba(14,32,43,.88); }
+    .style b { display:block; font-size:18pt; margin-bottom:8pt; }.style span { font-size:13pt; color:var(--muted); line-height:1.35; display:block; }
+    .quote { border-left:4pt solid var(--mint); padding:8pt 0 8pt 22pt; margin-top:23pt; color:var(--ink); font-size:21pt; line-height:1.32; max-width:11in; }
+    @media screen { .slide { margin:0 auto 18px; box-shadow:0 18px 45px #0008; } }
+  </style>
+</head>
+<body>
+  <section class="slide">
+    <div class="content">
+      <div class="eyebrow">AMD Developer Hackathon - ACT II - Track 2</div>
+      <h1>Gemma 4 <span class="mint">SceneGate</span></h1>
+      <p class="lead">Grounded, multi-style video captioning: visual evidence first, expressive writing second.</p>
+      <div class="grid">
+        <div class="card"><div class="num">4</div><div class="label">required caption voices per video</div></div>
+        <div class="card"><div class="num">Gemma 4</div><div class="label">evidence-consolidation writer</div></div>
+        <div class="card"><div class="num">amd64</div><div class="label">container submission target</div></div>
+      </div>
+    </div>
+    <div class="footer">MVConceptLabAI / Gemma4Agent</div>
+  </section>
+
+  <section class="slide">
+    <div class="content">
+      <div class="eyebrow">The problem</div>
+      <h2>Precision and personality pull in opposite directions.</h2>
+      <p>A useful caption must faithfully describe the same short video in four distinct voices. Rich language can invent details; overly cautious language can miss the scene. SceneGate separates seeing, verifying and writing so style never replaces evidence.</p>
+      <div class="quote">The objective is not merely fluent text. It is <span class="mint">grounded text</span> that remains recognizably factual in every required style.</div>
+    </div>
+    <div class="footer">Problem framing</div>
+  </section>
+
+  <section class="slide">
+    <div class="content">
+      <div class="eyebrow">Current Gemma 4 architecture</div>
+      <h2>Independent visual observations become one verified scene record.</h2>
+      <div class="flow">
+        <div class="node">FFmpeg<br><span class="blue">representative frames</span></div><div class="arrow">→</div>
+        <div class="node">Independent<br>vision observers</div><div class="arrow">→</div>
+        <div class="node highlight">Gemma 4 31B<br>evidence consolidation</div><div class="arrow">→</div>
+        <div class="node">4 validated<br>captions</div>
+      </div>
+      <p>Current observers independently list visible people, objects, actions, setting and motion. Gemma 4 receives those observation lists and writes only from cross-checked evidence.</p>
+    </div>
+    <div class="footer">Gemma 4 Full variant</div>
+  </section>
+
+  <section class="slide">
+    <div class="content">
+      <div class="eyebrow">Grounding policy</div>
+      <h2>Agreement raises confidence. Conflict removes claims.</h2>
+      <div class="grid">
+        <div class="card"><div class="num">1</div><div class="label"><strong>Cross-check:</strong> details reported by multiple observers are safe to retain.</div></div>
+        <div class="card"><div class="num">2</div><div class="label"><strong>Prune:</strong> isolated specific claims, uncertain text, colours and counts are dropped.</div></div>
+        <div class="card"><div class="num">3</div><div class="label"><strong>Write:</strong> Gemma 4 turns the supported record into clear style-specific captions.</div></div>
+      </div>
+      <p style="margin-top:25pt">This design targets the failure mode that matters most in captioning: a persuasive sentence that names something the video never showed.</p>
+    </div>
+    <div class="footer">Evidence before expression</div>
+  </section>
+
+  <section class="slide">
+    <div class="content">
+      <div class="eyebrow">One scene, four voices</div>
+      <h2>Style changes the framing, never the underlying scene.</h2>
+      <div class="styles">
+        <div class="style"><b class="mint">Formal</b><span>Objective, professional and detailed.</span></div>
+        <div class="style"><b class="blue">Sarcastic</b><span>Dry wit without changing visual facts.</span></div>
+        <div class="style"><b class="mint">Humorous tech</b><span>Visible-scene metaphors with disciplined technical framing.</span></div>
+        <div class="style"><b class="blue">Humorous non-tech</b><span>Warm everyday humour anchored in the same event.</span></div>
+      </div>
+      <p style="margin-top:27pt">The Gemma 4 Full writer produces a dedicated output for each voice while preserving the shared factual spine.</p>
+    </div>
+    <div class="footer">Required Track 2 styles</div>
+  </section>
+
+  <section class="slide">
+    <div class="content">
+      <div class="eyebrow">Submission engineering</div>
+      <h2>Built for a deterministic container contract.</h2>
+      <div class="flow">
+        <div class="node">/input/tasks.json</div><div class="arrow">→</div>
+        <div class="node highlight">Gemma 4 SceneGate<br>caption pipeline</div><div class="arrow">→</div>
+        <div class="node">/output/results.json</div>
+      </div>
+      <ul>
+        <li><strong>Linux amd64</strong> Docker target with FFmpeg for representative-frame extraction.</li>
+        <li>Schema validation keeps all four required caption fields present in the final results.</li>
+        <li>Fallback and normalization paths protect the output contract when an upstream model call fails.</li>
+      </ul>
+    </div>
+    <div class="footer">Submission-ready architecture</div>
+  </section>
+
+  <section class="slide">
+    <div class="content">
+      <div class="eyebrow">Why Gemma 4</div>
+      <h2>Gemma 4 gives the final writer a focused role: turn evidence into usable language.</h2>
+      <div class="grid">
+        <div class="card"><div class="num">Focused</div><div class="label">One model is accountable for reconciling the scene record before writing.</div></div>
+        <div class="card"><div class="num">Grounded</div><div class="label">Prompts explicitly reject unseen intent, identity, text and background details.</div></div>
+        <div class="card"><div class="num">Extensible</div><div class="label">Gemma 4 image input can support a future visual-observer ablation without changing the contract.</div></div>
+      </div>
+      <p style="margin-top:25pt">The current release uses Gemma 4 31B as the final evidence-consolidation writer; future evaluation can measure its direct visual-observer role separately.</p>
+    </div>
+    <div class="footer">Transparent model positioning</div>
+  </section>
+
+  <section class="slide">
+    <div class="content">
+      <div class="eyebrow">Gemma 4 SceneGate</div>
+      <h1>See carefully.<br><span class="mint">Write responsibly.</span></h1>
+      <p class="lead">A factual scene record, four compelling voices and a container-ready Track 2 delivery path.</p>
+      <div class="quote">Live local demo: <a href="demo.html">open the browser-only captioner</a><br>Repository: <span class="blue">github.com/MVConceptLabAI/Gemma4Agent</span></div>
+    </div>
+    <div class="footer">Gemma 4 Full - current presentation</div>
+  </section>
+</body>
+</html>

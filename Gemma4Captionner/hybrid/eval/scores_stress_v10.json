@@ -1,0 +1,434 @@
+[
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible actions and objects in the clip while maintaining a formal, objective tone without jargon or humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_city_banner",
+    "style": "formal",
+    "caption": "A gloved hand wearing a light blue nitrile glove dispenses pale green liquid into the circular wells of a clear plastic microplate within a laboratory."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the lab work and matches the sarcastic tone with understated irony.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_city_banner",
+    "style": "sarcastic",
+    "caption": "A gloved hand delicately adds tiny amounts of colorful fluids to a plastic grid, for reasons known only to science. It's a spectacle, honestly."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_city_banner",
+    "style": "humorous_tech",
+    "caption": "Production just received a gloved hand uses a pipette to dispense liquid into wells of a microplate in a laboratory setting. laboratory the pipette tip slowly lowers and dispenses; QA opened a ticket, but the visual runtime insists this is a feature."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible action of adding drops to a plate with a gloved hand and uses warm, relatable humor comparing the task to a grocery list, matching the requested style.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_city_banner",
+    "style": "humorous_non_tech",
+    "caption": "Someone's carefully adding little drops to the plate, and honestly, it looks way more stressful than my grocery list. A light blue glove is key to the operation."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 1.0,
+    "reason": "The caption is formal and factual, matching the requested style, but lacks specific details like the puppy's breed or the exact color of the object it's chewing.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_dog_eating",
+    "style": "formal",
+    "caption": "A cream-colored puppy with darker ears lies on a lawn of green grass, chewing a small brown object. The puppy, wearing a thin blue collar, stretches its front paws forward while relaxing in the natural daylight, with a patch of dirt visible in the background."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 1.0,
+    "reason": "The caption matches the sarcastic style with dry irony but misidentifies the object as 'a small, brown something' when it's clearly a leaf or small object the puppy is chewing.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_dog_eating",
+    "style": "sarcastic",
+    "caption": "The cream-colored puppy diligently tests the structural integrity of a small, brown something. A rigorous scientific pursuit, naturally."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 0.4,
+    "reason": "The caption humorously references tech terms but misidentifies the puppy as a 'worker' and the brown object as a test subject, while the punchline about 'latency before destruction' is weakly tied to the visual.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_dog_eating",
+    "style": "humorous_tech",
+    "caption": "The worker is running a critical stress test on that brown object, and initial logs suggest the latency before total destruction is surprisingly high."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the puppy's actions and matches the requested humorous, non-tech style with warmth and everyday humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_dog_eating",
+    "style": "humorous_non_tech",
+    "caption": "This puppy is deeply committed to quality control of whatever that little brown thing is. Serious work on the green grass."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_weather_city",
+    "style": "formal",
+    "caption": "A wide-angle view from outer space depicts Earth's curvature, with golden city lights concentrated over India and Southeast Asia. The planet's blue atmosphere glows along the terminator line, illuminated by a bright sun with lens flare in the upper left quadrant, against a backdrop of distant stars."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible elements of the clip and delivers a sarcastic tone with understated irony without using exclamations or jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_weather_city",
+    "style": "sarcastic",
+    "caption": "The scene presents a view of earth from space shows the planet's curvature with city lights glowing on the night side and a bright sun illuminating the edge of the atmosphere, with all the ceremony of a routine pretending to be an event."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the city lights as a distributed server network and humorously references a glacial cache refresh rate, matching the requested humorous_tech style with a clear tech pun.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_weather_city",
+    "style": "humorous_tech",
+    "caption": "Earth's nighttime city lights are a beautiful, unplanned distributed server network-unfortunately, the global cache refresh rate is glacial."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible city lights over India and uses warm, funny phrasing without tech jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_weather_city",
+    "style": "humorous_non_tech",
+    "caption": "Earth showing off again, as usual. Someone really went to town with the city lights over there in India."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible actions and objects in the frames while maintaining a formal, objective tone without any stylistic deviations.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_qwen_doc_clip",
+    "style": "formal",
+    "caption": "A person wearing blue nitrile gloves precisely positions a rectangular glass slide under the objective lenses of a microscope in a laboratory. The hands adjust the metal stage, marked with engraved ruler lines, while a clear plastic pipette rests nearby."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible actions and objects while matching the sarcastic, understated tone without exclamations or jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_qwen_doc_clip",
+    "style": "sarcastic",
+    "caption": "Someone is meticulously arranging a tiny world under a microscope, presumably to avoid making eye contact. The blue gloves are a nice touch."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the lab scene and humorously compares microscope adjustment to software debugging with a tech reference.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_qwen_doc_clip",
+    "style": "humorous_tech",
+    "caption": "The gloved hands are carefully tuning the microscope stage-a delicate pipeline for sample positioning, hoping for zero runtime errors."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible action of adjusting a microscope slide with gloved hands and humorously frames it as a 'laboratory drama,' matching the requested warm, everyday humor style without tech jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_qwen_doc_clip",
+    "style": "humorous_non_tech",
+    "caption": "The important work of moving things *very* slightly with blue gloves, hoping whatever's on that glass slide behaves. It's a laboratory drama."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_parking_management",
+    "style": "formal",
+    "caption": "A static, top-down aerial view depicts a city street lined with parked cars and a few vehicles in motion. Palm trees border the sidewalks alongside a long building featuring a red-tiled roof and repeating white arched openings, while a compass rose design is visible on the pavement."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_parking_management",
+    "style": "sarcastic",
+    "caption": "From this vantage, it's a remarkably organized arrangement of metal boxes and predictably symmetrical palm trees. One wonders about the compass rose, though."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the parking layout and humorously compares palm trees to a 'distributed cache of shade,' fitting the humorous_tech style with a clear tech reference and punchline.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_parking_management",
+    "style": "humorous_tech",
+    "caption": "This urban street's parking pipeline is surprisingly efficient, despite the palm trees acting as a distributed cache of shade."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the symmetrical layout of palm trees and cars and humorously notes the compass rose, matching the requested humorous, non-tech style.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_parking_management",
+    "style": "humorous_non_tech",
+    "caption": "Someone really likes symmetry with these palm trees and parked cars. Also, that compass rose is just showing off."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes all visible elements in the frames and adheres strictly to a formal, objective, third-person style without jargon or humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_homeoffice",
+    "style": "formal",
+    "caption": "A person wearing an olive-green shirt types and uses the trackpad on a silver laptop at a light wood desk near a window. A white ceramic mug with a brown interior sits to the right of the laptop, while a spiral-bound notebook rests behind it; a silver ring is visible on their left hand."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible elements and matches the sarcastic tone with dry, ironic phrasing.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_homeoffice",
+    "style": "sarcastic",
+    "caption": "A person engages in the ancient ritual of staring at a laptop, fueled by a beverage in a white mug. The ring is a nice touch."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 0.7,
+    "reason": "The caption humorously references debugging and caffeine, fitting the tech style, but lacks specific visible detail like the person’s actions or the exact setup.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_homeoffice",
+    "style": "humorous_tech",
+    "caption": "The person's hands are rapidly switching between keyboard and trackpad, clearly debugging a runtime error with a caffeine pipeline nearby."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible action of switching from keyboard to trackpad and humorously references the coffee mug, matching the requested warm, everyday humor style without tech jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_homeoffice",
+    "style": "humorous_non_tech",
+    "caption": "That moment when you switch from typing to trackpad, hoping no one notices the brief pause in productivity. The mug is ready for round two."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes all visible elements in the frames and uses a formal, objective tone without jargon or humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_vertical_activity",
+    "style": "formal",
+    "caption": "A hand with light skin reaches for and lifts a white ceramic coffee cup, decorated with heart-shaped latte art, from a white saucer. The cup ascends from a dark brown wooden table within a softly lit cafe interior, with a white and gray chevron rug visible in the background."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the coffee with heart latte art and matches the sarcastic, understated tone without jargon or exclamations.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_vertical_activity",
+    "style": "sarcastic",
+    "caption": "A hand delicately retrieves a heart-adorned coffee from its saucer, because mornings demand theatrics. It's a small victory for someone, somewhere."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_vertical_activity",
+    "style": "humorous_tech",
+    "caption": "That white coffee cup's graceful lift is a perfectly-threaded runtime, while the saucer patiently awaits the next request."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_vertical_activity",
+    "style": "humorous_non_tech",
+    "caption": "Option 2: That delicate moment of lifting the white cup off its saucer, hoping the heart in the coffee survives the trip from the wooden table."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the scene with specific, factual details and maintains a formal, objective tone throughout.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_food_social",
+    "style": "formal",
+    "caption": "Within an industrial workshop, a person wearing a camouflage hoodie and dark overalls manipulates a glowing orange-yellow metal bar with large tongs at a lit forge."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_food_social",
+    "style": "sarcastic",
+    "caption": "The person in camouflage confidently coaxes molten metal with tongs, ignoring the oddly specific '13' and '84' scrawled on the concrete. One assumes it's not a high score."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the forge worker and chalk logs while humorously comparing metal manipulation to a software hotfix and production incidents to real-world manufacturing issues, matching the humorous_tech style.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_food_social",
+    "style": "humorous_tech",
+    "caption": "The forge worker's metal manipulation is a hotfix for reality, but the concrete beam's chalk logs suggest previous production incidents."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 0.7,
+    "reason": "The caption humorously frames the scene as if the glowing metal bar is a customer service line, which fits the requested style, but it misses key visual details like the worker’s protective gear and the industrial setting.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_food_social",
+    "style": "humorous_non_tech",
+    "caption": "That moment when you realize you forgot oven mitts, but the glowing metal bar isn't taking requests. A little focused, a little warm."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_holiday_vertical",
+    "style": "formal",
+    "caption": "The American flag, displaying red and white stripes and a blue star field, waves against an overcast sky from atop a tall white flagpole. A static, low-angle camera captures the fully unfurled flag rippling in the wind, with layered gray and white clouds filling the background."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the flag and cloudy sky, and its sarcastic tone matches the dry, ironic style requested.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_holiday_vertical",
+    "style": "sarcastic",
+    "caption": "A rather dramatic display of fabric and a pole, bravely facing a moderately unpleasant sky. It's all quite patriotic, I suppose."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_holiday_vertical",
+    "style": "humorous_tech",
+    "caption": "This flag's graceful fluttering is a beautiful, low-latency API response to the wind-a surprisingly stable production environment considering the cloud cover."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the flag waving in the wind and matches the requested humorous, non-tech style with warm, everyday humor.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_holiday_vertical",
+    "style": "humorous_non_tech",
+    "caption": "The flag is having a much more exciting Tuesday than anyone else, clearly. That wind is really showing off."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the visible elements in the frames and adheres strictly to a formal, objective, third-person style without humor or jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_cartagena_city",
+    "style": "formal",
+    "caption": "A mountain biker in a blue and white jersey and orange shorts rides down a dirt trail within a dense forest, launching off a small ramp. Lush green ferns and moss-covered tree trunks line the path, while a decaying fallen log rests alongside the trail as the cyclist pedals forward."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the scene with dry sarcasm, mocking the rider's 'bravery' and 'lifestyle' while noting the mundane obstacles, matching the requested sarcastic tone precisely.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_cartagena_city",
+    "style": "sarcastic",
+    "caption": "Our athlete bravely navigates a moderately challenging dirt path, avoiding both the mossy trees and a perfectly serviceable fallen log. It's a lifestyle."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the biker's jump and uses tech jargon ('pipeline stage', 'runtime') humorously and appropriately, matching the requested humorous_tech style.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_cartagena_city",
+    "style": "humorous_tech",
+    "caption": "The mountain biker's jump over the dirt ramp was a successful, if unoptimized, pipeline stage in a very scenic forest runtime."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the biker's jump and the forest setting, and uses warm, funny language without tech jargon.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_cartagena_city",
+    "style": "humorous_non_tech",
+    "caption": "The mountain biker briefly achieved flight, then remembered gravity exists on this forest trail. Those ferns didn't stand a chance."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the worker's attire, actions, and environment in formal, objective language without any stylistic deviations.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_dog_collar",
+    "style": "formal",
+    "caption": "A worker wearing an orange hard hat and safety vest secures a solar panel with a metal tool on a white rooftop. The individual, protected by yellow leather gloves and a neck gaiter, bends forward while working on the panel's white-framed, grid-patterned surface under overcast daylight."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the worker's attire and action while delivering sarcastic tone with understated irony.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_dog_collar",
+    "style": "sarcastic",
+    "caption": "A person wearing a green shirt and orange safety vest uses a metal tool on a white rooftop. One can only imagine the sheer excitement of tightening a bolt."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the worker installing solar panels and uses a tech/programming joke ('critical path item') with a punchline about a torque driver causing a production incident, fitting the humorous_tech style.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_dog_collar",
+    "style": "humorous_tech",
+    "caption": "The worker's rooftop solar panel install is a critical path item, hoping this torque driver doesn't introduce a production incident."
+  },
+  {
+    "accuracy": 1.0,
+    "style_match": 0.7,
+    "reason": "The caption accurately describes the worker installing a solar panel and uses warm, humorous language, though the 'main event' metaphor is slightly over-the-top for the mundane task shown.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_dog_collar",
+    "style": "humorous_non_tech",
+    "caption": "A worker in safety gear installs or secures a solar panel on a rooftop using a tool, a small moment doing its best to become the main event."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 1.0,
+    "reason": "The caption is formal and objective but inaccurately states there are three individuals, while only two are visible; the gesture is correctly described as unity.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_repair_workshop",
+    "style": "formal",
+    "caption": "Three individuals stand before a large window with a gray frame and stack their hands in a gesture of unity within a modern office interior."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 1.0,
+    "reason": "The caption accurately describes the hand-stacking gesture and its setting, but misses the third person and the exact sequence of actions. The sarcastic tone is well-executed with dry irony and understated mockery.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_repair_workshop",
+    "style": "sarcastic",
+    "caption": "The scene presents three people stand near a window and stack their hands together in a gesture of unity before separating, with all the ceremony of a routine pretending to be an event."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 0.7,
+    "reason": "The caption humorously references QA and 'visual runtime' but misidentifies the number of people (only two are visible) and misses the specific gesture detail.",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_repair_workshop",
+    "style": "humorous_tech",
+    "caption": "Production just received three people stand near a window and stack their hands together in a gesture of unity before separating. modern office interior near a large window hands; QA opened a ticket, but the visual runtime insists this is a feature."
+  },
+  {
+    "accuracy": 0.7,
+    "style_match": 1.0,
+    "reason": "",
+    "judge_model": "openrouter:qwen/qwen3-vl-8b-instruct",
+    "task_id": "stress_repair_workshop",
+    "style": "humorous_non_tech",
+    "caption": "Team briefly achieved peak human tower before remembering everyone has actual work to do. That pink building outside is judging us."
+  }
+]
